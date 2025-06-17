@@ -1,0 +1,13 @@
+.DS_Store
+.idea/
+agent/
+main_old.py
+test.py
+test2.py
+venv/
+custom_llm.py
+metadata/
+config/__init__.py
+config/config.py
+config/config_test.py
+exports/

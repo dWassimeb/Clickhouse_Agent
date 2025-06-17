@@ -1,0 +1,8 @@
+clickhouse-driver
+clickhouse_connect
+langchain
+langchain-core
+langgraph
+pydantic
+python-dotenv
+pandas
