@@ -10,8 +10,8 @@ from langgraph.graph.message import add_messages
 from typing_extensions import Annotated, TypedDict
 
 # Import tools
-from tools.schema_analyzer_tool import SchemaAnalyzerTool
-from tools.sql_generator_tool import SqlGeneratorTool
+from tools.smart_intent_analyzer_tool import SmartIntentAnalyzerTool
+from tools.smart_sql_generator_tool import SmartSqlGeneratorTool
 from tools.query_execution_tool import QueryExecutionTool
 from tools.response_formatter_tool import ResponseFormatterTool
 from tools.csv_export_tool import CsvExportTool
@@ -24,10 +24,10 @@ logger = logging.getLogger(__name__)
 class AgentState(TypedDict):
     messages: Annotated[List[HumanMessage | AIMessage], add_messages]
     user_question: str
-    analysis_result: Dict[str, Any]
-    sql_result: Dict[str, Any]
-    execution_result: Dict[str, Any]
-    csv_export_result: Dict[str, Any]
+    analysis_result: Dict[str, Any]  # Intent analysis from SmartIntentAnalyzer
+    sql_result: Dict[str, Any]       # SQL generation from SmartSqlGenerator
+    execution_result: Dict[str, Any] # Query execution results
+    csv_export_result: Dict[str, Any] # CSV export results
     final_response: str
 
 class ClickHouseAgent:
@@ -35,8 +35,8 @@ class ClickHouseAgent:
 
     def __init__(self):
         # Initialize all tools
-        self.schema_analyzer = SchemaAnalyzerTool()
-        self.sql_generator = SqlGeneratorTool()
+        self.intent_analyzer = SmartIntentAnalyzerTool()
+        self.sql_generator = SmartSqlGeneratorTool()
         self.query_executor = QueryExecutionTool()
         self.response_formatter = ResponseFormatterTool()
         self.csv_exporter = CsvExportTool()
@@ -48,7 +48,7 @@ class ClickHouseAgent:
 
         # Add nodes
         workflow.add_node("route_question", self._route_question)
-        workflow.add_node("analyze_schema", self._analyze_schema)
+        workflow.add_node("analyze_intent", self._analyze_intent)
         workflow.add_node("generate_sql", self._generate_sql)
         workflow.add_node("execute_query", self._execute_query)
         workflow.add_node("export_csv", self._export_csv)
@@ -64,14 +64,14 @@ class ClickHouseAgent:
             "route_question",
             self._decide_route,
             {
-                "data_query": "analyze_schema",
+                "data_query": "analyze_intent",
                 "schema_request": "handle_schema_request",
                 "help_request": "handle_help_request"
             }
         )
 
-        # Data query flow
-        workflow.add_edge("analyze_schema", "generate_sql")
+        # Data query flow - clean pipeline
+        workflow.add_edge("analyze_intent", "generate_sql")
         workflow.add_edge("generate_sql", "execute_query")
         workflow.add_edge("execute_query", "export_csv")
         workflow.add_edge("export_csv", "format_response")
@@ -120,20 +120,25 @@ class ClickHouseAgent:
         # Default to data query
         return "data_query"
 
-    def _analyze_schema(self, state: AgentState) -> AgentState:
-        """Analyze the user question for relevant schema elements."""
-        logger.info("Analyzing schema...")
+    def _analyze_intent(self, state: AgentState) -> AgentState:
+        """Analyze user intent using smart LLM-powered analysis."""
+        logger.info("Analyzing intent with LLM...")
 
         user_question = state["user_question"]
-        analysis_result = self.schema_analyzer._run(user_question)
-        state["analysis_result"] = analysis_result
+        intent_result = self.intent_analyzer._run(user_question)
+        state["analysis_result"] = intent_result
 
-        logger.info(f"Schema analysis complete: {analysis_result.get('message', '')}")
+        if intent_result.get("success", False):
+            confidence = intent_result.get("overall_confidence", 0.5)
+            logger.info(f"Intent analysis complete: {intent_result.get('message', '')} (confidence: {confidence:.2f})")
+        else:
+            logger.warning(f"Intent analysis failed: {intent_result.get('error', 'Unknown error')}")
+
         return state
 
     def _generate_sql(self, state: AgentState) -> AgentState:
-        """Generate SQL query based on analysis."""
-        logger.info("Generating SQL...")
+        """Generate SQL using smart generator with intent analysis."""
+        logger.info("Generating SQL with smart context...")
 
         user_question = state["user_question"]
         analysis_result = state["analysis_result"]
@@ -141,15 +146,25 @@ class ClickHouseAgent:
         if not analysis_result.get("success", False):
             state["sql_result"] = {
                 "success": False,
-                "error": "Schema analysis failed",
-                "message": "Cannot generate SQL without schema analysis"
+                "error": "Intent analysis failed",
+                "message": "Cannot generate SQL without intent analysis"
             }
             return state
 
-        sql_result = self.sql_generator._run(user_question, analysis_result)
+        # Extract the parsed intent analysis for SQL generation
+        intent_data = {
+            key: analysis_result[key] for key in analysis_result
+            if key not in ['success', 'message', 'llm_raw_analysis', 'user_question']
+        }
+
+        sql_result = self.sql_generator._run(user_question, intent_data)
         state["sql_result"] = sql_result
 
-        logger.info(f"SQL generation complete: {sql_result.get('message', '')}")
+        if sql_result.get("success", False):
+            logger.info(f"SQL generation complete: {sql_result.get('message', '')}")
+        else:
+            logger.warning(f"SQL generation failed: {sql_result.get('error', 'Unknown error')}")
+
         return state
 
     def _execute_query(self, state: AgentState) -> AgentState:
@@ -180,8 +195,12 @@ class ClickHouseAgent:
         question = state["user_question"].lower()
 
         if "list tables" in question or "show tables" in question:
-            # Get all tables
-            tables = self.schema_analyzer.get_all_tables()
+            # Get all tables from schema metadata
+            from config.schemas import TABLE_SCHEMAS
+            tables = {
+                table_name: schema.get('description', 'No description')
+                for table_name, schema in TABLE_SCHEMAS.items()
+            }
             state["execution_result"] = {
                 "success": True,
                 "tables": tables,
@@ -194,28 +213,37 @@ class ClickHouseAgent:
             table_name = parts[1] if len(parts) > 1 else ""
 
             if table_name:
-                schema = self.schema_analyzer.get_table_schema(table_name)
+                from config.schemas import TABLE_SCHEMAS
+                schema = TABLE_SCHEMAS.get(table_name.upper(), {})
                 if schema:
                     state["execution_result"] = {
                         "success": True,
                         "schema": schema,
-                        "table_name": table_name,
-                        "message": f"Schema for table {table_name}"
+                        "table_name": table_name.upper(),
+                        "message": f"Schema for table {table_name.upper()}"
                     }
                 else:
+                    available_tables = list(TABLE_SCHEMAS.keys())
                     state["execution_result"] = {
                         "success": False,
                         "error": f"Table '{table_name}' not found",
-                        "available_tables": list(self.schema_analyzer.get_all_tables().keys())
+                        "available_tables": available_tables
                     }
             else:
                 # Show all schemas
-                tables = self.schema_analyzer.get_all_tables()
+                from config.schemas import TABLE_SCHEMAS
+                tables = {
+                    table_name: schema.get('description', 'No description')
+                    for table_name, schema in TABLE_SCHEMAS.items()
+                }
                 state["execution_result"] = {
                     "success": True,
                     "tables": tables,
                     "message": "All available table schemas"
                 }
+
+        # No CSV export for schema requests
+        state["csv_export_result"] = {"success": False, "message": "No data to export"}
 
         return state
 
