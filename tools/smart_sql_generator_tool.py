@@ -1,265 +1,226 @@
 """
-Smart SQL generator that uses LLM with comprehensive schema context.
+Streamlined Smart SQL Generator - Focused on efficient SQL generation
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any
 from langchain.tools import BaseTool
 from pydantic import Field
 import logging
 from llm.custom_gpt import CustomGPT
-from config.schemas import TABLE_SCHEMAS, TABLE_RELATIONSHIPS, BUSINESS_SCENARIOS
+from config.schemas import TABLE_SCHEMAS
 
 logger = logging.getLogger(__name__)
 
 class SmartSqlGeneratorTool(BaseTool):
-    """LLM-powered SQL generator with comprehensive schema understanding."""
+    """Streamlined SQL generator focused on accurate ClickHouse queries."""
 
     name: str = "generate_smart_sql"
-    description: str = """
-    Generate optimal SQL queries using LLM with full schema context and intent analysis.
-    Produces highly accurate, business-relevant SQL based on semantic understanding.
-    """
+    description: str = "Generate optimal SQL queries from intent analysis efficiently."
 
-    # Declare LLM field for Pydantic v2
     llm: CustomGPT = Field(default_factory=CustomGPT)
 
     def _run(self, user_question: str, intent_analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate SQL query using pre-analyzed intent data."""
+        """Generate SQL query from pre-analyzed intent."""
         try:
-            # Validate intent analysis input
+            # Validate input
             if not intent_analysis:
-                raise ValueError("Intent analysis is required for smart SQL generation")
+                raise ValueError("Intent analysis required for SQL generation")
 
-            # Build focused SQL context based on intent analysis
-            sql_context = self._build_focused_sql_context(intent_analysis)
+            # Build focused context
+            sql_context = self._build_sql_context(intent_analysis)
 
-            # Generate SQL with precise guidance
-            sql_query = self._generate_targeted_sql(user_question, sql_context, intent_analysis)
+            # Generate SQL
+            sql_query = self._generate_sql(user_question, sql_context, intent_analysis)
 
-            # Clean and validate SQL
-            cleaned_sql = self._clean_and_validate_sql(sql_query)
+            # Validate and clean
+            cleaned_sql = self._clean_sql(sql_query)
 
-            # Extract metadata from generated SQL
-            sql_metadata = self._extract_sql_metadata(cleaned_sql, intent_analysis)
+            # Extract metadata
+            metadata = self._extract_metadata(cleaned_sql)
 
             return {
                 'success': True,
                 'sql_query': cleaned_sql,
-                'sql_metadata': sql_metadata,
-                'intent_confidence': intent_analysis.get('overall_confidence', 0.8),
-                'message': "Smart SQL generation completed successfully"
+                'sql_metadata': metadata,
+                'message': "SQL generated successfully"
             }
 
         except Exception as e:
-            logger.error(f"Smart SQL generation failed: {e}")
+            logger.error(f"SQL generation failed: {e}")
             return {
                 'success': False,
                 'error': str(e),
-                'message': f"Smart SQL generation failed: {str(e)}"
+                'message': f"SQL generation failed: {str(e)}"
             }
 
-    def _build_focused_sql_context(self, intent_analysis: Dict[str, Any]) -> str:
-        """Build focused SQL context based on intent analysis results."""
+    def _build_sql_context(self, intent_analysis: Dict[str, Any]) -> str:
+        """Build minimal SQL context based on intent."""
 
-        # Get required tables from intent analysis
+        # Get required tables
         table_analysis = intent_analysis.get('table_analysis', {})
         required_tables = table_analysis.get('required_tables', ['RM_AGGREGATED_DATA'])
 
-        # Build minimal, focused context for only the needed tables
-        context = "# ClickHouse SQL Generation Context\n\n"
+        context = "# ClickHouse SQL Context\n\n"
 
-        # Add only relevant table schemas
-        context += "## Required Tables:\n\n"
+        # Only include relevant table schemas
         for table_name in required_tables:
             if table_name in TABLE_SCHEMAS:
                 schema = TABLE_SCHEMAS[table_name]
-                context += f"### {table_name}\n"
-                context += f"**Purpose:** {schema.get('description')}\n"
+                context += f"## {table_name}\n"
 
-                # Only show columns that are likely to be used
-                context += "**Key Columns:**\n"
+                # Essential columns only
                 for col_name, col_info in schema.get('columns', {}).items():
-                    context += f"- `{col_name}` ({col_info['type']}): {col_info['description']}\n"
-                    if col_info.get('foreign_key'):
-                        context += f"  → Links to: {col_info['foreign_key']}\n"
+                    context += f"- {col_name} ({col_info['type']}): {col_info['description']}\n"
                 context += "\n"
 
-        # Add specific join patterns from intent analysis
+        # Add specific join patterns if needed
         join_analysis = intent_analysis.get('join_analysis', {})
         required_joins = join_analysis.get('required_joins', [])
         if required_joins:
-            context += "## Required Join Patterns:\n"
+            context += "# Required Joins:\n"
             for join in required_joins:
-                context += f"**{join['from_table']} → {join['to_table']}:**\n"
-                context += f"```sql\n{join['from_table']} {join['join_type']} {join['to_table']} ON {join['join_condition']}\n```\n"
-                context += f"Purpose: {join['purpose']}\n\n"
+                context += f"- {join['from_table']} JOIN {join['to_table']} ON {join['join_condition']}\n"
+            context += "\n"
 
-        # Add business scenario template if detected
-        intent_info = intent_analysis.get('intent_analysis', {})
-        business_scenario = intent_info.get('business_scenario')
-        if business_scenario and business_scenario in BUSINESS_SCENARIOS:
-            scenario_info = BUSINESS_SCENARIOS[business_scenario]
-            context += f"## Recommended SQL Pattern:\n"
-            context += f"**Scenario:** {scenario_info['description']}\n"
-            context += f"```sql\n{scenario_info['sql_template']}\n```\n\n"
+        # Add ClickHouse specifics
+        context += """# ClickHouse Functions:
+- toDate(column) - Convert to date
+- now() - Current timestamp  
+- INTERVAL X DAY - Time intervals
+- COUNT(*) - Count rows
+- Percentage: COUNT(*) * 100.0 / (SELECT COUNT(*) FROM table WHERE conditions)
+
+# Critical Rules:
+- Geographic queries: Use PLMN.COUNTRY_ISO3 for countries
+- Time filters: Use RECORD_OPENING_TIME for date filtering
+- Always include LIMIT clauses
+"""
 
         return context
 
-    def _generate_targeted_sql(self, user_question: str, sql_context: str, intent_analysis: Dict[str, Any]) -> str:
-        """Generate SQL with highly targeted context - no redundant analysis."""
+    def _generate_sql(self, user_question: str, sql_context: str, intent_analysis: Dict[str, Any]) -> str:
+        """Generate SQL with focused prompting."""
 
-        # Build execution instructions based on intent analysis
-        execution_instructions = self._build_execution_instructions(intent_analysis)
+        # Build execution instructions
+        instructions = self._build_instructions(intent_analysis)
 
-        prompt = f"""You are a ClickHouse SQL expert. Generate the precise SQL query based on the pre-analyzed intent and focused schema context.
+        prompt = f"""Generate ClickHouse SQL query based on analyzed intent.
 
 {sql_context}
 
-## Pre-Analyzed Intent Requirements:
-{execution_instructions}
+## Analyzed Requirements:
+{instructions}
 
-## User Question:
-"{user_question}"
+## User Question: "{user_question}"
 
-## Task:
-Generate ONLY the SQL query that implements the analyzed requirements. Do not re-analyze the question - use the provided intent analysis.
-
+Generate ONLY the SQL query - no explanations or markdown.
 Requirements:
 - Use SELECT statements only
-- Follow the exact join patterns provided
-- Implement the specific aggregations and filters identified
-- Use the recommended table aliases
-- Include proper LIMIT clauses
+- Follow ClickHouse syntax (toDate, now(), INTERVAL)
+- Include appropriate LIMIT
+- For geographic analysis: ALWAYS use PLMN.COUNTRY_ISO3
 
 SQL Query:"""
 
         try:
             response = self.llm._call(prompt)
             return response.strip()
-
         except Exception as e:
-            logger.error(f"Targeted SQL generation failed: {e}")
+            logger.error(f"SQL generation failed: {e}")
             raise
 
-    def _build_execution_instructions(self, intent_analysis: Dict[str, Any]) -> str:
-        """Build precise execution instructions from intent analysis."""
-        instructions = ""
+    def _build_instructions(self, intent_analysis: Dict[str, Any]) -> str:
+        """Build concise execution instructions."""
+        instructions = []
 
-        # Table instructions
+        # Tables
         table_analysis = intent_analysis.get('table_analysis', {})
         if table_analysis.get('required_tables'):
-            instructions += f"**Tables to use:** {', '.join(table_analysis['required_tables'])}\n"
-            instructions += f"**Primary table:** {table_analysis.get('primary_table', 'RM_AGGREGATED_DATA')}\n"
+            instructions.append(f"Tables: {', '.join(table_analysis['required_tables'])}")
 
-        # Column instructions
-        column_analysis = intent_analysis.get('column_analysis', {})
-        if column_analysis.get('select_columns'):
-            instructions += "**Select columns:**\n"
-            for col in column_analysis['select_columns']:
-                alias = f" AS {col['alias']}" if col.get('alias') else ""
-                instructions += f"- {col['column']}{alias} ({col['purpose']})\n"
-
-        if column_analysis.get('grouping_columns'):
-            instructions += f"**Group by:** {', '.join(column_analysis['grouping_columns'])}\n"
-
-        # Aggregation instructions
-        if column_analysis.get('aggregation_needed'):
-            agg_functions = column_analysis.get('aggregation_functions', ['COUNT'])
-            instructions += f"**Aggregations:** {', '.join(agg_functions)}\n"
-
-        # Join instructions
+        # Joins
         join_analysis = intent_analysis.get('join_analysis', {})
         if join_analysis.get('required_joins'):
-            instructions += "**Joins required:**\n"
-            for join in join_analysis['required_joins']:
-                instructions += f"- {join['from_table']} {join['join_type']} {join['to_table']} ON {join['join_condition']}\n"
+            join_count = len(join_analysis['required_joins'])
+            instructions.append(f"Joins: {join_count} required")
 
-        # Time filter instructions
+        # Columns
+        column_analysis = intent_analysis.get('column_analysis', {})
+        if column_analysis.get('aggregation_needed'):
+            instructions.append("Aggregation: Required")
+        if column_analysis.get('grouping_columns'):
+            instructions.append(f"Group by: {', '.join(column_analysis['grouping_columns'])}")
+
+        # Time filters
         temporal_analysis = intent_analysis.get('temporal_analysis', {})
         if temporal_analysis.get('needs_time_filter'):
-            instructions += f"**Time filter:** {temporal_analysis.get('time_filter_sql', 'WHERE RECORD_OPENING_TIME >= now() - INTERVAL 2 DAY')}\n"
+            period = temporal_analysis.get('time_period', '7 days')
+            instructions.append(f"Time filter: Last {period}")
 
-        # Output requirements
+        # Output
         output_req = intent_analysis.get('output_requirements', {})
         if output_req.get('needs_percentage'):
-            instructions += "**Percentage calculation:** COUNT(*) * 100.0 / (SELECT COUNT(*) FROM ... WHERE same_conditions)\n"
-
+            instructions.append("Calculate: Percentages")
         if output_req.get('suggested_limit'):
-            instructions += f"**Limit:** LIMIT {output_req['suggested_limit']}\n"
+            instructions.append(f"Limit: {output_req['suggested_limit']}")
 
-        if output_req.get('sort_order') and output_req.get('sort_column'):
-            instructions += f"**Sort:** ORDER BY {output_req['sort_column']} {output_req['sort_order']}\n"
+        return "\n".join([f"- {inst}" for inst in instructions])
 
-        return instructions
-
-    def _clean_and_validate_sql(self, sql_query: str) -> str:
-        """Clean and validate the generated SQL."""
-        # Remove markdown code blocks if present
+    def _clean_sql(self, sql_query: str) -> str:
+        """Clean and validate SQL."""
+        # Remove markdown
         if sql_query.startswith('```'):
             lines = sql_query.split('\n')
             sql_query = '\n'.join(lines[1:-1]) if len(lines) > 2 else sql_query
 
-        # Remove any trailing semicolon and whitespace
+        # Clean up
         sql_query = sql_query.rstrip(';').strip()
 
         # Basic validation
-        if not sql_query.upper().strip().startswith('SELECT'):
-            raise ValueError("Generated query must be a SELECT statement")
+        sql_upper = sql_query.upper()
+        if not sql_upper.startswith('SELECT'):
+            raise ValueError("Query must be a SELECT statement")
 
         # Check for dangerous keywords
-        dangerous_keywords = ['DROP', 'DELETE', 'UPDATE', 'INSERT', 'ALTER', 'CREATE', 'TRUNCATE']
-        sql_upper = sql_query.upper()
-        for keyword in dangerous_keywords:
+        dangerous = ['DROP', 'DELETE', 'UPDATE', 'INSERT', 'ALTER', 'CREATE']
+        for keyword in dangerous:
             if keyword in sql_upper:
-                raise ValueError(f"Query contains dangerous keyword: {keyword}")
+                raise ValueError(f"Dangerous keyword detected: {keyword}")
 
         return sql_query
 
-    def _extract_sql_metadata(self, sql_query: str, intent_analysis: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Extract metadata from the generated SQL."""
-        metadata = {
-            'query_type': 'SELECT',
-            'estimated_complexity': 'medium',
-            'tables_used': [],
-            'joins_detected': [],
-            'aggregations_used': [],
-            'has_limit': False,
-            'has_time_filter': False
-        }
-
+    def _extract_metadata(self, sql_query: str) -> Dict[str, Any]:
+        """Extract basic metadata from SQL."""
         sql_upper = sql_query.upper()
 
-        # Detect tables
+        # Find tables
+        tables_used = []
         for table_name in TABLE_SCHEMAS.keys():
             if table_name in sql_upper:
-                metadata['tables_used'].append(table_name)
+                tables_used.append(table_name)
 
-        # Detect joins
-        if 'JOIN' in sql_upper:
-            metadata['joins_detected'] = ['JOIN detected']
-            metadata['estimated_complexity'] = 'high'
+        # Detect features
+        has_joins = 'JOIN' in sql_upper
+        has_aggregation = any(func in sql_upper for func in ['COUNT', 'SUM', 'AVG', 'MAX', 'MIN'])
+        has_limit = 'LIMIT' in sql_upper
+        has_time_filter = 'RECORD_OPENING_TIME' in sql_upper
 
-        # Detect aggregations
-        agg_functions = ['COUNT', 'SUM', 'AVG', 'MAX', 'MIN']
-        for func in agg_functions:
-            if func in sql_upper:
-                metadata['aggregations_used'].append(func)
-
-        # Detect other patterns
-        metadata['has_limit'] = 'LIMIT' in sql_upper
-        metadata['has_time_filter'] = 'RECORD_OPENING_TIME' in sql_upper or 'INTERVAL' in sql_upper
-
-        # Calculate complexity
-        complexity_score = 0
-        complexity_score += len(metadata['tables_used'])
-        complexity_score += len(metadata['joins_detected']) * 2
-        complexity_score += len(metadata['aggregations_used'])
-
+        # Estimate complexity
+        complexity_score = len(tables_used) + (2 if has_joins else 0) + (1 if has_aggregation else 0)
         if complexity_score <= 2:
-            metadata['estimated_complexity'] = 'simple'
-        elif complexity_score <= 5:
-            metadata['estimated_complexity'] = 'medium'
+            complexity = "simple"
+        elif complexity_score <= 4:
+            complexity = "medium"
         else:
-            metadata['estimated_complexity'] = 'complex'
+            complexity = "complex"
 
-        return metadata
+        return {
+            'query_type': 'SELECT',
+            'tables_used': tables_used,
+            'estimated_complexity': complexity,
+            'has_joins': has_joins,
+            'has_aggregation': has_aggregation,
+            'has_limit': has_limit,
+            'has_time_filter': has_time_filter,
+            'aggregations_used': [func for func in ['COUNT', 'SUM', 'AVG', 'MAX', 'MIN'] if func in sql_upper]
+        }
