@@ -11,15 +11,16 @@ This module contains the main agent architecture:
 
 from .agent import ClickHouseAgent, ClickHouseGraphAgent
 from .state import ClickHouseAgentState
-from .router import router_node
+from .router import router_node, route_condition
 from .tool_nodes import execute_query_node, export_csv_node, format_response_node
 from .graph_builder import create_clickhouse_graph
 
 __all__ = [
     'ClickHouseAgent',
-    'ClickHouseGraphAgent', 
+    'ClickHouseGraphAgent',
     'ClickHouseAgentState',
     'router_node',
+    'route_condition',
     'execute_query_node',
     'export_csv_node', 
     'format_response_node',

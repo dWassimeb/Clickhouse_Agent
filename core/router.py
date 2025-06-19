@@ -5,20 +5,18 @@ Router Node - Decision making logic for the ClickHouse Agent
 from typing import Literal
 from core.state import ClickHouseAgentState
 
-def router_node(state: ClickHouseAgentState) -> Literal["data_query", "schema_request", "help_request"]:
+def router_node(state: ClickHouseAgentState) -> ClickHouseAgentState:
     """
     Router node that analyzes the user question and decides which workflow path to take.
 
-    This is the entry point of the LangGraph workflow that determines:
-    - Data queries: Questions that need SQL generation and execution
-    - Schema requests: Questions about database structure
-    - Help requests: Questions asking for usage help
+    This node modifies the state with routing information but does NOT return routing decisions.
+    The routing decision is made by the separate condition function.
 
     Args:
         state: Current agent state containing the user question
 
     Returns:
-        Literal route decision for conditional edges
+        Modified state with query_type set
     """
 
     question = state["user_question"].lower().strip()
@@ -36,7 +34,7 @@ def router_node(state: ClickHouseAgentState) -> Literal["data_query", "schema_re
         if state.get("verbose", False):
             print(f"   🧭 DECISION: Schema request detected")
             print(f"   ➡️  ROUTE: Direct to response formatter (no SQL needed)")
-        return "schema_request"
+        return state
 
     # Help requests - questions asking for assistance
     help_keywords = ["help", "?", "aide", "assistant", "how to use", "usage"]
@@ -45,7 +43,7 @@ def router_node(state: ClickHouseAgentState) -> Literal["data_query", "schema_re
         if state.get("verbose", False):
             print(f"   🧭 DECISION: Help request detected")
             print(f"   ➡️  ROUTE: Direct to response formatter (no SQL needed)")
-        return "help_request"
+        return state
 
     # Default to data query - questions requiring SQL generation and execution
     state["query_type"] = "data_query"
@@ -54,4 +52,11 @@ def router_node(state: ClickHouseAgentState) -> Literal["data_query", "schema_re
         print(f"   ➡️  ROUTE: Through AI analysis pipeline (Intent → SQL → Execute)")
         print(f"   🎯 This will trigger the full AI reasoning workflow")
 
-    return "data_query"
+    return state
+
+def route_condition(state: ClickHouseAgentState) -> Literal["data_query", "schema_request", "help_request"]:
+    """
+    Condition function for conditional edges.
+    This function only returns the routing decision based on the state.
+    """
+    return state["query_type"]

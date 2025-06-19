@@ -275,6 +275,8 @@ class ResponseFormatterTool(BaseTool):
         info_parts.append("• **Note:** You can open this file in Excel, Google Sheets, or any CSV viewer")
 
         return "\n".join(info_parts)
+
+    def format_help_response(self) -> str:
         """Format help information."""
         return """
 🆘 **Help - How to use the ClickHouse Agent:**

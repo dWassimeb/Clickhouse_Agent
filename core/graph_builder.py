@@ -4,7 +4,7 @@ Graph Builder - Constructs the LangGraph workflow
 
 from langgraph.graph import StateGraph, END
 from core.state import ClickHouseAgentState
-from core.router import router_node
+from core.router import router_node, route_condition
 from core.tool_nodes import execute_query_node, export_csv_node, format_response_node
 
 def create_clickhouse_graph(verbose: bool = True) -> StateGraph:
@@ -58,10 +58,10 @@ def create_clickhouse_graph(verbose: bool = True) -> StateGraph:
     # Entry point
     workflow.set_entry_point("router")
 
-    # Conditional routing from router
+    # Conditional routing from router - FIXED: Use separate condition function
     workflow.add_conditional_edges(
         "router",
-        lambda state: state["query_type"],  # Use the router's decision
+        route_condition,  # Separate condition function
         {
             "data_query": "agent_intent_analysis",     # Full AI pipeline
             "schema_request": "format_response",        # Direct to formatter
