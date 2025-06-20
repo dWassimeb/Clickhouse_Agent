@@ -7,7 +7,7 @@ import logging
 from langchain_core.messages import HumanMessage
 
 from core.state import ClickHouseAgentState
-from core.router import router_node
+# Removed router import - it's handled by graph_builder
 from core.graph_builder import create_clickhouse_graph
 
 logger = logging.getLogger(__name__)
@@ -213,14 +213,14 @@ class ClickHouseGraphAgent:
             print(f"\n{'='*80}")
             print(f"🚀 LANGGRAPH WORKFLOW: Starting execution")
             print(f"   📝 Question: '{user_question}'")
-            print(f"   🎯 Flow: Router → Agent → Tools → Response")
+            print(f"   🎯 Flow: Smart Router → Agent → Tools → Response")
             print(f"{'='*80}")
 
         # Initialize state
         initial_state = ClickHouseAgentState(
             messages=[HumanMessage(content=user_question)],
             user_question=user_question,
-            query_type="data_query",
+            query_type="data_query",  # Will be overridden by smart router
             intent_analysis={},
             sql_generation={},
             query_execution={},

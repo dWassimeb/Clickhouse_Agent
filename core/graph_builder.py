@@ -1,20 +1,20 @@
 """
-Graph Builder - Constructs the LangGraph workflow
+Graph Builder - Constructs the LangGraph workflow with Smart Schema Tool
 """
 
 from langgraph.graph import StateGraph, END
 from core.state import ClickHouseAgentState
-from core.router import router_node, route_condition
-from core.tool_nodes import execute_query_node, export_csv_node, format_response_node
+from core.router import smart_router_node, route_condition
+from core.tool_nodes import execute_query_node, export_csv_node, format_response_node, smart_schema_node
 
 def create_clickhouse_graph(verbose: bool = True) -> StateGraph:
     """
     Create the complete LangGraph workflow for the ClickHouse Agent.
 
     This function builds the entire graph structure with:
-    - Router for decision making
+    - Smart LLM-powered router for decision making
     - Agent nodes for reasoning
-    - Tool nodes for execution
+    - Tool nodes for execution including Smart Schema Tool
     - Proper conditional edges and flow control
 
     Args:
@@ -26,8 +26,10 @@ def create_clickhouse_graph(verbose: bool = True) -> StateGraph:
 
     if verbose:
         print(f"🔧 GRAPH BUILDER: Constructing LangGraph workflow")
-        print(f"   📋 Components: Router + Agent + Tools")
-        print(f"   🔀 Flow: Conditional routing with linear tool execution")
+        print(f"   📋 Components: Smart Router + Agent + Tools + Smart Schema")
+        print(f"   🤖 Router: LLM-powered intent classification")
+        print(f"   🧠 Schema: LLM-powered with ClickHouse SDK integration")
+        print(f"   🔀 Flow: Conditional routing with specialized tool execution")
 
     # Initialize the agent for reasoning nodes
     from core.agent import ClickHouseAgent
@@ -38,8 +40,8 @@ def create_clickhouse_graph(verbose: bool = True) -> StateGraph:
 
     # ===== ADD NODES =====
 
-    # Router node (entry point with decision making)
-    workflow.add_node("router", router_node)
+    # Smart Router node (LLM-powered entry point with decision making)
+    workflow.add_node("router", smart_router_node)
 
     # Agent nodes (AI reasoning and decision making)
     workflow.add_node("agent_intent_analysis", agent.analyze_intent)
@@ -49,22 +51,23 @@ def create_clickhouse_graph(verbose: bool = True) -> StateGraph:
     workflow.add_node("execute_query", execute_query_node)
     workflow.add_node("export_csv", export_csv_node)
     workflow.add_node("format_response", format_response_node)
+    workflow.add_node("smart_schema", smart_schema_node)
 
     if verbose:
-        print(f"   ✅ Added 6 nodes: 1 router + 2 agent + 3 tools")
+        print(f"   ✅ Added 7 nodes: 1 smart router + 2 agent + 4 tools")
 
     # ===== DEFINE WORKFLOW EDGES =====
 
     # Entry point
     workflow.set_entry_point("router")
 
-    # Conditional routing from router - FIXED: Use separate condition function
+    # Conditional routing from smart router
     workflow.add_conditional_edges(
         "router",
-        route_condition,  # Separate condition function
+        route_condition,  # Uses LLM classification results
         {
             "data_query": "agent_intent_analysis",     # Full AI pipeline
-            "schema_request": "format_response",        # Direct to formatter
+            "schema_request": "smart_schema",           # Smart schema tool
             "help_request": "format_response"           # Direct to formatter
         }
     )
@@ -75,14 +78,19 @@ def create_clickhouse_graph(verbose: bool = True) -> StateGraph:
     workflow.add_edge("execute_query", "export_csv")
     workflow.add_edge("export_csv", "format_response")
 
-    # All paths end at format_response
+    # Schema workflow (smart schema processing)
+    workflow.add_edge("smart_schema", END)
+
+    # Help workflow
     workflow.add_edge("format_response", END)
 
     if verbose:
-        print(f"   ✅ Added conditional routing and linear execution flow")
+        print(f"   ✅ Added conditional routing and specialized execution flows")
         print(f"   🎯 Workflow paths:")
         print(f"      • Data queries: Router → Intent → SQL → Execute → CSV → Format → END")
-        print(f"      • Schema/Help:  Router → Format → END")
+        print(f"      • Schema queries: Router → Smart Schema → END")
+        print(f"      • Help requests: Router → Format → END")
+        print(f"   🧠 Smart features: LLM routing + ClickHouse SDK schema + Adaptive responses")
 
     # Compile the graph
     compiled_graph = workflow.compile()

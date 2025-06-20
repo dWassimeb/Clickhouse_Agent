@@ -126,6 +126,53 @@ def export_csv_node(state: ClickHouseAgentState) -> ClickHouseAgentState:
 
     return state
 
+def smart_schema_node(state: ClickHouseAgentState) -> ClickHouseAgentState:
+    """
+    Tool Node: Handle schema requests using LLM-powered Smart Schema Tool.
+
+    This node processes any schema-related question with intelligent analysis
+    and uses ClickHouse SDK when possible, falling back to hardcoded schemas.
+    """
+    if state.get("verbose", False):
+        print(f"\n🧠 TOOL NODE: Smart Schema Handler")
+        print(f"   🎯 Task: Process schema question with LLM reasoning")
+        print(f"   🔗 Method: ClickHouse SDK + LLM analysis + Hardcoded fallback")
+
+    try:
+        from tools.smart_schema_tool import SmartSchemaTool
+        tool = SmartSchemaTool()
+
+        user_question = state["user_question"]
+
+        if state.get("verbose", False):
+            print(f"   🧠 ANALYZING: Understanding schema requirements")
+
+        result = tool._run(user_question)
+
+        if result.get("success"):
+            state["final_response"] = result.get("formatted_response", "Schema information processed")
+
+            if state.get("verbose", False):
+                schema_intent = result.get("schema_intent", {})
+                operation = schema_intent.get("operation", "unknown")
+                source = result.get("schema_data", {}).get("source", "unknown")
+                print(f"   ✅ SUCCESS: {operation} completed using {source}")
+        else:
+            state["final_response"] = result.get("formatted_response", f"❌ Schema error: {result.get('error', 'Unknown error')}")
+            state["error_occurred"] = True
+            state["error_message"] = result.get("error", "Schema processing failed")
+
+            if state.get("verbose", False):
+                print(f"   ❌ FAILED: {result.get('error', 'Unknown error')}")
+
+    except Exception as e:
+        logger.error(f"Smart schema tool error: {e}")
+        state["final_response"] = f"❌ **Error:** Schema processing failed: {str(e)}"
+        state["error_occurred"] = True
+        state["error_message"] = str(e)
+
+    return state
+
 def format_response_node(state: ClickHouseAgentState) -> ClickHouseAgentState:
     """
     Tool Node: Format the final response for the user.
@@ -151,12 +198,11 @@ def format_response_node(state: ClickHouseAgentState) -> ClickHouseAgentState:
             state["final_response"] = tool.format_help_response()
 
         elif query_type == "schema_request":
-            # Handle schema requests
+            # This should not happen anymore since schema requests go to smart_schema_node
+            # But keeping as fallback
             if state.get("verbose", False):
-                print(f"   🗂️  TYPE: Schema request - showing database structure")
-            schema_result = _handle_schema_request(state)
-            format_result = tool._run(schema_result, state["user_question"], "schema")
-            state["final_response"] = format_result.get("formatted_response", "Schema information")
+                print(f"   🗂️  TYPE: Schema request - unexpected fallback route")
+            state["final_response"] = "❌ **Error:** Schema request should be handled by Smart Schema Tool"
 
         else:
             # Handle data query results
@@ -179,65 +225,3 @@ def format_response_node(state: ClickHouseAgentState) -> ClickHouseAgentState:
         state["error_message"] = str(e)
 
     return state
-
-def _handle_schema_request(state: ClickHouseAgentState) -> Dict[str, Any]:
-    """
-    Helper function to handle schema-related requests.
-
-    Processes schema requests without needing external tools,
-    using the metadata directly from config.
-    """
-    question = state["user_question"].lower()
-
-    try:
-        from config.schemas import TABLE_SCHEMAS
-
-        if "list tables" in question or "show tables" in question:
-            # Return all tables
-            tables = {
-                table_name: schema.get('description', 'No description')
-                for table_name, schema in TABLE_SCHEMAS.items()
-            }
-            return {
-                "success": True,
-                "tables": tables,
-                "message": f"Found {len(tables)} tables"
-            }
-
-        # Handle specific table schema requests
-        parts = state["user_question"].split()
-        if len(parts) > 1:
-            table_name = parts[1].upper()
-            schema = TABLE_SCHEMAS.get(table_name, {})
-            if schema:
-                return {
-                    "success": True,
-                    "schema": schema,
-                    "table_name": table_name,
-                    "message": f"Schema for table {table_name}"
-                }
-            else:
-                available_tables = list(TABLE_SCHEMAS.keys())
-                return {
-                    "success": False,
-                    "error": f"Table '{table_name}' not found",
-                    "available_tables": available_tables
-                }
-
-        # Default: return all tables
-        tables = {
-            table_name: schema.get('description', 'No description')
-            for table_name, schema in TABLE_SCHEMAS.items()
-        }
-        return {
-            "success": True,
-            "tables": tables,
-            "message": "All available table schemas"
-        }
-
-    except Exception as e:
-        return {
-            "success": False,
-            "error": f"Schema request failed: {str(e)}",
-            "message": "Could not process schema request"
-        }
