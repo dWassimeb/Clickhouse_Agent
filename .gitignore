@@ -11,5 +11,6 @@ config/__init__.py
 config/config.py
 config/config_test.py
 exports/
+visualizations/
 __pycache__/
 
