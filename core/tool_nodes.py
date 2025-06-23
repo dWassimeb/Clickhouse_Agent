@@ -110,10 +110,10 @@ def export_csv_node(state: ClickHouseAgentState) -> ClickHouseAgentState:
                 print(f"   ⏩ SKIPPED: No data to export")
 
         state["csv_export"] = result
-        state["next_action"] = "format_response"
+        state["next_action"] = "create_visualization"
 
         if state.get("verbose", False):
-            print(f"   ➡️  NEXT: Format final response for user")
+            print(f"   ➡️  NEXT: Create interactive visualization")
 
     except Exception as e:
         logger.error(f"CSV export tool error: {e}")
@@ -121,6 +121,72 @@ def export_csv_node(state: ClickHouseAgentState) -> ClickHouseAgentState:
             "success": False,
             "error": str(e),
             "message": "CSV export failed"
+        }
+        state["next_action"] = "create_visualization"
+
+    return state
+
+def create_visualization_node(state: ClickHouseAgentState) -> ClickHouseAgentState:
+    """
+    Tool Node: Create modern interactive visualizations from query results.
+
+    This node generates fancy, lightweight HTML visualizations with Chart.js
+    that can be easily integrated into future web interfaces.
+    """
+    if state.get("verbose", False):
+        print(f"\n📈 TOOL NODE: Modern Visualization Creator")
+        print(f"   🎯 Task: Generate interactive charts and dashboards")
+        print(f"   🎨 Style: Modern, fancy, lightweight with Chart.js")
+
+    try:
+        from tools.modern_visualization_tool import ModernVisualizationTool
+        tool = ModernVisualizationTool()
+
+        query_result = state["query_execution"]
+        user_question = state["user_question"]
+        csv_result = state.get("csv_export", {})
+
+        # Only create visualization if we have successful query results
+        if (query_result.get("success") and
+                query_result.get("result", {}).get("data")):
+
+            if state.get("verbose", False):
+                print(f"   🧠 ANALYZING: Determining best visualization type with LLM")
+
+            result = tool._run(query_result, user_question, csv_result)
+
+            if result.get("success"):
+                if state.get("verbose", False):
+                    viz_type = result.get("visualization_type", "unknown")
+                    filename = result.get("file_stats", {}).get("filename", "unknown")
+                    file_size = result.get("file_stats", {}).get("size_human", "unknown")
+                    print(f"   ✅ SUCCESS: Created {viz_type} chart → '{filename}' ({file_size})")
+            else:
+                if state.get("verbose", False):
+                    reason = result.get("reason", result.get("error", "Unknown reason"))
+                    print(f"   ⏩ SKIPPED: {reason}")
+        else:
+            # No data to visualize
+            result = {
+                "success": False,
+                "message": "No data available for visualization",
+                "reason": "Query returned no results or failed"
+            }
+            if state.get("verbose", False):
+                print(f"   ⏩ SKIPPED: No data available for visualization")
+
+        state["visualization"] = result
+        state["next_action"] = "format_response"
+
+        if state.get("verbose", False):
+            print(f"   ➡️  NEXT: Format final response with visualization links")
+
+    except Exception as e:
+        logger.error(f"Visualization creation tool error: {e}")
+        state["visualization"] = {
+            "success": False,
+            "error": str(e),
+            "message": "Visualization creation failed"
         }
         state["next_action"] = "format_response"
 
@@ -178,12 +244,12 @@ def format_response_node(state: ClickHouseAgentState) -> ClickHouseAgentState:
     Tool Node: Format the final response for the user.
 
     This node takes all the workflow results and creates a well-formatted,
-    user-friendly response with tables, insights, and download links.
+    user-friendly response with tables, insights, CSV downloads, and visualization links.
     """
     if state.get("verbose", False):
         print(f"\n📝 TOOL NODE: Response Formatter")
         print(f"   🎯 Task: Create user-friendly formatted response")
-        print(f"   📋 Input: Query results, CSV info, user question")
+        print(f"   📋 Input: Query results, CSV info, visualization info, user question")
 
     try:
         from tools.response_formatter_tool import ResponseFormatterTool
@@ -205,12 +271,15 @@ def format_response_node(state: ClickHouseAgentState) -> ClickHouseAgentState:
             state["final_response"] = "❌ **Error:** Schema request should be handled by Smart Schema Tool"
 
         else:
-            # Handle data query results
+            # Handle data query results with visualization
             if state.get("verbose", False):
-                print(f"   📊 TYPE: Data query - formatting results with insights")
+                print(f"   📊 TYPE: Data query - formatting results with insights + visualization")
             query_result = state["query_execution"]
             csv_result = state.get("csv_export", {})
-            format_result = tool._run(query_result, state["user_question"], "query", csv_result)
+            visualization_result = state.get("visualization", {})
+
+            # Enhanced formatting with visualization info
+            format_result = tool._run(query_result, state["user_question"], "query", csv_result, visualization_result)
             state["final_response"] = format_result.get("formatted_response", "No response generated")
 
         if state.get("verbose", False):

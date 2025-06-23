@@ -28,6 +28,7 @@ class ClickHouseAgentState(TypedDict):
     # Tool execution results
     query_execution: Dict[str, Any]     # Results from query executor
     csv_export: Dict[str, Any]          # Results from CSV exporter
+    visualization: Dict[str, Any]       # Results from visualization creator
 
     # Final output
     final_response: str

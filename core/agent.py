@@ -31,13 +31,15 @@ class ClickHouseAgent:
         from tools.query_execution_tool import QueryExecutionTool
         from tools.response_formatter_tool import ResponseFormatterTool
         from tools.csv_export_tool import CsvExportTool
+        from tools.modern_visualization_tool import ModernVisualizationTool
 
         return {
             "intent_analyzer": SmartIntentAnalyzerTool(),
             "sql_generator": SmartSqlGeneratorTool(),
             "query_executor": QueryExecutionTool(),
             "response_formatter": ResponseFormatterTool(),
-            "csv_exporter": CsvExportTool()
+            "csv_exporter": CsvExportTool(),
+            "visualization_creator": ModernVisualizationTool()
         }
 
     def analyze_intent(self, state: ClickHouseAgentState) -> ClickHouseAgentState:
@@ -213,7 +215,7 @@ class ClickHouseGraphAgent:
             print(f"\n{'='*80}")
             print(f"🚀 LANGGRAPH WORKFLOW: Starting execution")
             print(f"   📝 Question: '{user_question}'")
-            print(f"   🎯 Flow: Smart Router → Agent → Tools → Response")
+            print(f"   🎯 Flow: Smart Router → Agent → Tools → Visualization → Response")
             print(f"{'='*80}")
 
         # Initialize state
@@ -225,6 +227,7 @@ class ClickHouseGraphAgent:
             sql_generation={},
             query_execution={},
             csv_export={},
+            visualization={},  # Added visualization field
             final_response="",
             next_action="",
             verbose=self.verbose,
@@ -243,6 +246,11 @@ class ClickHouseGraphAgent:
                     print(f"   ⚠️  Completed with errors: {final_state.get('error_message', 'Unknown error')}")
                 else:
                     print(f"   ✅ Completed successfully")
+                    # Show visualization info if available
+                    viz_result = final_state.get("visualization", {})
+                    if viz_result.get("success"):
+                        viz_file = viz_result.get("file_stats", {}).get("filename", "unknown")
+                        print(f"   📈 Visualization created: {viz_file}")
                 print(f"{'='*80}")
 
             return response

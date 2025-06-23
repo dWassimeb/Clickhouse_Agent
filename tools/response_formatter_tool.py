@@ -1,5 +1,5 @@
 """
-Response formatter tool with embedded helper functions.
+Response formatter tool with embedded helper functions and visualization support.
 """
 
 from typing import Dict, Any, List
@@ -15,10 +15,11 @@ class ResponseFormatterTool(BaseTool):
     name: str = "format_response"
     description: str = """
     Format query results into clear, structured responses for users.
-    Takes query results and creates readable tables, insights, and summaries.
+    Takes query results and creates readable tables, insights, summaries, and visualization links.
     """
 
-    def _run(self, query_result: Dict[str, Any], user_question: str = "", response_type: str = "query", csv_result: Dict[str, Any] = None) -> Dict[str, Any]:
+    def _run(self, query_result: Dict[str, Any], user_question: str = "", response_type: str = "query",
+             csv_result: Dict[str, Any] = None, visualization_result: Dict[str, Any] = None) -> Dict[str, Any]:
         """Format the response based on type and content."""
         try:
             if response_type == "schema":
@@ -26,7 +27,7 @@ class ResponseFormatterTool(BaseTool):
             elif response_type == "error":
                 formatted_response = self._format_error_response(query_result)
             else:
-                formatted_response = self._format_query_response(query_result, user_question, csv_result)
+                formatted_response = self._format_query_response(query_result, user_question, csv_result, visualization_result)
 
             return {
                 'success': True,
@@ -42,8 +43,9 @@ class ResponseFormatterTool(BaseTool):
                 'formatted_response': f"Error formatting response: {str(e)}"
             }
 
-    def _format_query_response(self, result: Dict[str, Any], user_question: str, csv_result: Dict[str, Any] = None) -> str:
-        """Format query results into a structured response."""
+    def _format_query_response(self, result: Dict[str, Any], user_question: str,
+                              csv_result: Dict[str, Any] = None, visualization_result: Dict[str, Any] = None) -> str:
+        """Format query results into a structured response with visualization support."""
         if not result.get('success', True):
             return self._format_error_response(result)
 
@@ -58,6 +60,11 @@ class ResponseFormatterTool(BaseTool):
         # Add summary
         summary = query_result.get('summary', '')
         response_parts.append(f"📊 **Query Results Summary**\n{summary}")
+
+        # Add visualization information first (most prominent)
+        if visualization_result and visualization_result.get('success', False):
+            viz_info = self._format_visualization_info(visualization_result)
+            response_parts.append(viz_info)
 
         # Add data table
         formatted_table = self._format_data_table(query_result)
@@ -79,6 +86,35 @@ class ResponseFormatterTool(BaseTool):
             response_parts.append(f"🔍 **Executed Query**\n```sql\n{result['executed_query']}\n```")
 
         return "\n\n".join(response_parts)
+
+    def _format_visualization_info(self, visualization_result: Dict[str, Any]) -> str:
+        """Format visualization information for display."""
+        viz_type = visualization_result.get('visualization_type', 'chart')
+        file_stats = visualization_result.get('file_stats', {})
+        filename = file_stats.get('filename', 'visualization.html')
+        file_path = file_stats.get('absolute_path', '')
+        file_size = file_stats.get('size_human', 'Unknown')
+
+        viz_info_parts = [
+            "📈 **Interactive Visualization Created**",
+            f"• **Type:** {viz_type.title()} Chart",
+            f"• **File:** {filename}",
+            f"• **Size:** {file_size}",
+            f"• **Location:** {file_path}",
+            "",
+            "🎨 **Features:**",
+            "• Modern, responsive design",
+            "• Interactive hover effects",
+            "• Smooth animations",
+            "• Mobile-friendly",
+            "• Ready for web integration",
+            "",
+            "💻 **How to View:** Open the HTML file in any web browser for an interactive dashboard experience!",
+            "",
+            "🚀 **Perfect for:** Presentations, reports, web applications, and data sharing"
+        ]
+
+        return "\n".join(viz_info_parts)
 
     def _format_data_table(self, query_result: Dict[str, Any]) -> str:
         """Format data into a readable table."""
@@ -294,9 +330,16 @@ class ResponseFormatterTool(BaseTool):
 - "Which devices use the most data?"
 - "Show session data for customer ID 12345"
 
+**New Features:**
+- 📈 **Interactive Visualizations** - Automatic chart generation for your data
+- 📊 **Modern Dashboards** - Fancy, responsive charts with Chart.js
+- 📱 **Mobile-Friendly** - Visualizations work on all devices
+- 🎨 **Multiple Chart Types** - Bar, line, pie, scatter, and more
+
 **Tips:**
 - Be specific about what data you want to see
 - Mention time periods if relevant
 - Ask for limits (e.g., "top 10", "last 100 records")
 - Use natural language - the agent will convert it to SQL
+- Your results will include interactive visualizations automatically!
         """

@@ -5,14 +5,14 @@ This module contains the main agent architecture:
 - Agent: AI reasoning and decision making
 - State: Central state management
 - Router: Smart LLM-powered decision routing logic
-- Tool Nodes: Structured tool execution
+- Tool Nodes: Structured tool execution including visualization
 - Graph Builder: LangGraph construction
 """
 
 from .agent import ClickHouseAgent, ClickHouseGraphAgent
 from .state import ClickHouseAgentState
 from .router import smart_router_node, route_condition
-from .tool_nodes import execute_query_node, export_csv_node, format_response_node, smart_schema_node
+from .tool_nodes import execute_query_node, export_csv_node, format_response_node, smart_schema_node, create_visualization_node
 from .graph_builder import create_clickhouse_graph
 
 __all__ = [
@@ -25,5 +25,6 @@ __all__ = [
     'export_csv_node',
     'format_response_node',
     'smart_schema_node',
+    'create_visualization_node',
     'create_clickhouse_graph'
 ]
