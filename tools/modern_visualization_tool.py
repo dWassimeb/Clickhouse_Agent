@@ -1,5 +1,5 @@
 """
-UTF-8 Fixed Professional Visualization Tool - Handles encoding issues
+UTF-8 Fixed Professional Visualization Tool - FIXED INDENTATION ISSUE
 """
 
 from typing import Dict, Any, List, Optional
@@ -145,161 +145,161 @@ class ModernVisualizationTool(BaseTool):
 
         return has_numeric
 
-        def _analyze_data_for_visualization_safe(self, columns: List[str], data: List[List], user_question: str) -> Dict[str, Any]:
-            """Safely analyze data for visualization with CORRECTED axis mapping logic."""
+    def _analyze_data_for_visualization_safe(self, columns: List[str], data: List[List], user_question: str) -> Dict[str, Any]:
+        """Safely analyze data for visualization with CORRECTED axis mapping logic."""
 
-            # Prepare safe data sample for LLM analysis
-            sample_data = []
-            for i, row in enumerate(data[:3]):  # Show first 3 rows
-                row_dict = {}
-                for j, col in enumerate(columns):
-                    if j < len(row):
-                        value = row[j]
-                        # Clean the value for JSON serialization
-                        if isinstance(value, str):
-                            value = self._clean_string_utf8(value)
-                        row_dict[col] = value
-                sample_data.append(row_dict)
+        # Prepare safe data sample for LLM analysis
+        sample_data = []
+        for i, row in enumerate(data[:3]):  # Show first 3 rows
+            row_dict = {}
+            for j, col in enumerate(columns):
+                if j < len(row):
+                    value = row[j]
+                    # Clean the value for JSON serialization
+                    if isinstance(value, str):
+                        value = self._clean_string_utf8(value)
+                    row_dict[col] = value
+            sample_data.append(row_dict)
 
-            data_structure = {
-                'columns': columns,
-                'sample_data': sample_data,
-                'total_rows': len(data),
-                'data_types': self._analyze_column_types(columns, data)
-            }
+        data_structure = {
+            'columns': columns,
+            'sample_data': sample_data,
+            'total_rows': len(data),
+            'data_types': self._analyze_column_types(columns, data)
+        }
 
-            # IMPROVED prompt with clear axis instructions
-            prompt = f"""Analyze this query result and determine the best visualization approach.
+        # IMPROVED prompt with clear axis instructions
+        prompt = f"""Analyze this query result and determine the best visualization approach.
 
-    User Question: "{user_question}"
-    Data Structure: {json.dumps(data_structure, indent=2, default=str, ensure_ascii=True)}
+User Question: "{user_question}"
+Data Structure: {json.dumps(data_structure, indent=2, default=str, ensure_ascii=True)}
 
-    **CRITICAL AXIS MAPPING RULES:**
-    1. For horizontal bar charts (which show rankings/top N):
-       - CATEGORIES/NAMES go on the Y-axis (vertical labels)
-       - VALUES/NUMBERS go on the X-axis (horizontal bars)
-       - Example: Company names on Y-axis, ticket counts on X-axis
+**CRITICAL AXIS MAPPING RULES:**
+1. For horizontal bar charts (which show rankings/top N):
+   - CATEGORIES/NAMES go on the Y-axis (vertical labels)
+   - VALUES/NUMBERS go on the X-axis (horizontal bars)
+   - Example: Company names on Y-axis, ticket counts on X-axis
 
-    2. For vertical bar charts:
-       - CATEGORIES/NAMES go on the X-axis (bottom labels)  
-       - VALUES/NUMBERS go on the Y-axis (vertical bars)
+2. For vertical bar charts:
+   - CATEGORIES/NAMES go on the X-axis (bottom labels)  
+   - VALUES/NUMBERS go on the Y-axis (vertical bars)
 
-    **COLUMN IDENTIFICATION:**
-    - Text columns (company names, categories) = LABELS/CATEGORIES
-    - Numeric columns (counts, amounts, values) = VALUES/NUMBERS
+**COLUMN IDENTIFICATION:**
+- Text columns (company names, categories) = LABELS/CATEGORIES
+- Numeric columns (counts, amounts, values) = VALUES/NUMBERS
 
-    Choose the chart type and map columns correctly:
+Choose the chart type and map columns correctly:
 
-    Respond ONLY with valid JSON:
-    {{
-        "chart_type": "horizontal_bar|bar|line|area|scatter",
-        "title": "Clean title without emojis",
-        "label_column": "column_name_containing_categories_or_names",
-        "value_column": "column_name_containing_numeric_values",
-        "color_scheme": "professional_blue",
-        "show_legend": false,
-        "reasoning": "Brief explanation of column mapping"
-    }}
+Respond ONLY with valid JSON:
+{{
+    "chart_type": "horizontal_bar|bar|line|area|scatter",
+    "title": "Clean title without emojis",
+    "label_column": "column_name_containing_categories_or_names",
+    "value_column": "column_name_containing_numeric_values",
+    "color_scheme": "professional_blue",
+    "show_legend": false,
+    "reasoning": "Brief explanation of column mapping"
+}}
 
-    **REMEMBER:** 
-    - Label column = text/names (company names, categories)
-    - Value column = numbers (counts, amounts, measurements)
+**REMEMBER:** 
+- Label column = text/names (company names, categories)
+- Value column = numbers (counts, amounts, measurements)
 
-    JSON Response:"""
+JSON Response:"""
 
-            try:
-                response = self.llm._call(prompt)
-                clean_response = response.strip()
+        try:
+            response = self.llm._call(prompt)
+            clean_response = response.strip()
 
-                # Clean JSON response
-                if clean_response.startswith('```json'):
-                    clean_response = clean_response[7:]
-                if clean_response.endswith('```'):
-                    clean_response = clean_response[:-3]
+            # Clean JSON response
+            if clean_response.startswith('```json'):
+                clean_response = clean_response[7:]
+            if clean_response.endswith('```'):
+                clean_response = clean_response[:-3]
 
-                # Remove any trailing text after the JSON
-                json_end = clean_response.rfind('}')
-                if json_end != -1:
-                    clean_response = clean_response[:json_end + 1]
+            # Remove any trailing text after the JSON
+            json_end = clean_response.rfind('}')
+            if json_end != -1:
+                clean_response = clean_response[:json_end + 1]
 
-                parsed = json.loads(clean_response.strip())
+            parsed = json.loads(clean_response.strip())
 
-                # VALIDATION AND CORRECTION: Ensure correct mapping
-                label_col = parsed.get('label_column', '')
-                value_col = parsed.get('value_column', '')
+            # VALIDATION AND CORRECTION: Ensure correct mapping
+            label_col = parsed.get('label_column', '')
+            value_col = parsed.get('value_column', '')
 
-                # Validate that label column is actually text and value column is numeric
-                if label_col in columns and value_col in columns:
-                    # Check if we have the mapping backwards
-                    label_index = columns.index(label_col)
-                    value_index = columns.index(value_col)
+            # Validate that label column is actually text and value column is numeric
+            if label_col in columns and value_col in columns:
+                # Check if we have the mapping backwards
+                label_index = columns.index(label_col)
+                value_index = columns.index(value_col)
 
-                    # Sample values to check types
-                    label_samples = [row[label_index] for row in data[:3] if label_index < len(row)]
-                    value_samples = [row[value_index] for row in data[:3] if value_index < len(row)]
+                # Sample values to check types
+                label_samples = [row[label_index] for row in data[:3] if label_index < len(row)]
+                value_samples = [row[value_index] for row in data[:3] if value_index < len(row)]
 
-                    label_is_text = all(isinstance(v, str) for v in label_samples if v is not None)
-                    value_is_numeric = all(isinstance(v, (int, float)) for v in value_samples if v is not None)
+                label_is_text = all(isinstance(v, str) for v in label_samples if v is not None)
+                value_is_numeric = all(isinstance(v, (int, float)) for v in value_samples if v is not None)
 
-                    # If mapping is backwards, fix it
-                    if not label_is_text or not value_is_numeric:
-                        if self._should_log_debug():
-                            logger.warning(f"LLM mapping seems backwards - fixing automatically")
-                            logger.warning(f"  Original: label='{label_col}' (text: {label_is_text}), value='{value_col}' (numeric: {value_is_numeric})")
+                # If mapping is backwards, fix it
+                if not label_is_text or not value_is_numeric:
+                    if self._should_log_debug():
+                        logger.warning(f"LLM mapping seems backwards - fixing automatically")
+                        logger.warning(f"  Original: label='{label_col}' (text: {label_is_text}), value='{value_col}' (numeric: {value_is_numeric})")
 
-                        # Swap them
-                        parsed['label_column'] = value_col
-                        parsed['value_column'] = label_col
+                    # Swap them
+                    parsed['label_column'] = value_col
+                    parsed['value_column'] = label_col
 
-                        if self._should_log_debug():
-                            logger.warning(f"  Corrected: label='{value_col}', value='{label_col}'")
+                    if self._should_log_debug():
+                        logger.warning(f"  Corrected: label='{value_col}', value='{label_col}'")
 
-                # Final validation - ensure columns exist
-                if parsed.get('label_column') not in columns:
-                    parsed['label_column'] = columns[0] if columns else 'Category'
-                if parsed.get('value_column') not in columns:
-                    numeric_col = self._find_first_numeric_column(columns, data)
-                    parsed['value_column'] = numeric_col if numeric_col else columns[-1] if columns else 'Value'
+            # Final validation - ensure columns exist
+            if parsed.get('label_column') not in columns:
+                parsed['label_column'] = columns[0] if columns else 'Category'
+            if parsed.get('value_column') not in columns:
+                numeric_col = self._find_first_numeric_column(columns, data)
+                parsed['value_column'] = numeric_col if numeric_col else columns[-1] if columns else 'Value'
 
-                return parsed
+            return parsed
 
-            except Exception as e:
-                logger.warning(f"LLM visualization analysis failed: {e}")
-                # Intelligent fallback based on data structure
-                return self._create_smart_fallback_analysis(columns, data, user_question)
+        except Exception as e:
+            logger.warning(f"LLM visualization analysis failed: {e}")
+            # Intelligent fallback based on data structure
+            return self._create_smart_fallback_analysis(columns, data, user_question)
 
-        def _create_smart_fallback_analysis(self, columns: List[str], data: List[List], user_question: str) -> Dict[str, Any]:
-            """Create intelligent fallback when LLM fails - with CORRECT mapping."""
+    def _create_smart_fallback_analysis(self, columns: List[str], data: List[List], user_question: str) -> Dict[str, Any]:
+        """Create intelligent fallback when LLM fails - with CORRECT mapping."""
 
-            # Analyze column types
-            column_types = self._analyze_column_types(columns, data)
+        # Analyze column types
+        column_types = self._analyze_column_types(columns, data)
 
-            # Find text and numeric columns CORRECTLY
-            text_columns = [col for col, type_ in column_types.items() if type_ == 'text']
-            numeric_columns = [col for col, type_ in column_types.items() if type_ == 'numeric']
+        # Find text and numeric columns CORRECTLY
+        text_columns = [col for col, type_ in column_types.items() if type_ == 'text']
+        numeric_columns = [col for col, type_ in column_types.items() if type_ == 'numeric']
 
-            # CORRECT assignments
-            label_column = text_columns[0] if text_columns else columns[0]      # Text = labels
-            value_column = numeric_columns[0] if numeric_columns else columns[-1]  # Numbers = values
+        # CORRECT assignments
+        label_column = text_columns[0] if text_columns else columns[0]      # Text = labels
+        value_column = numeric_columns[0] if numeric_columns else columns[-1]  # Numbers = values
 
-            # Choose chart type based on question context
-            question_lower = user_question.lower()
-            if 'top' in question_lower or 'ranking' in question_lower or 'most' in question_lower:
-                chart_type = "horizontal_bar"
-            elif len(data) <= 15:
-                chart_type = "horizontal_bar"
-            else:
-                chart_type = "bar"
+        # Choose chart type based on question context
+        question_lower = user_question.lower()
+        if 'top' in question_lower or 'ranking' in question_lower or 'most' in question_lower:
+            chart_type = "horizontal_bar"
+        elif len(data) <= 15:
+            chart_type = "horizontal_bar"
+        else:
+            chart_type = "bar"
 
-            return {
-                "chart_type": chart_type,
-                "title": "Data Analysis",
-                "label_column": label_column,  # ✅ CORRECT: text column for labels
-                "value_column": value_column,  # ✅ CORRECT: numeric column for values
-                "color_scheme": "professional_blue",
-                "show_legend": False,
-                "reasoning": f"Fallback: Using {label_column} (text) as labels vs {value_column} (numeric) as values"
-            }
+        return {
+            "chart_type": chart_type,
+            "title": "Data Analysis",
+            "label_column": label_column,  # ✅ CORRECT: text column for labels
+            "value_column": value_column,  # ✅ CORRECT: numeric column for values
+            "color_scheme": "professional_blue",
+            "show_legend": False,
+            "reasoning": f"Fallback: Using {label_column} (text) as labels vs {value_column} (numeric) as values"
+        }
 
     def _analyze_column_types(self, columns: List[str], data: List[List]) -> Dict[str, str]:
         """Analyze what type of data each column contains."""
@@ -326,39 +326,6 @@ class ModernVisualizationTool(BaseTool):
             if sample_values and all(isinstance(val, (int, float)) for val in sample_values):
                 return col
         return None
-
-    def _create_smart_fallback_analysis(self, columns: List[str], data: List[List], user_question: str) -> Dict[str, Any]:
-        """Create intelligent fallback when LLM fails."""
-
-        # Analyze column types
-        column_types = self._analyze_column_types(columns, data)
-
-        # Find text and numeric columns
-        text_columns = [col for col, type_ in column_types.items() if type_ == 'text']
-        numeric_columns = [col for col, type_ in column_types.items() if type_ == 'numeric']
-
-        # Default assignments
-        x_axis = text_columns[0] if text_columns else columns[0]
-        y_axis = numeric_columns[0] if numeric_columns else columns[-1]
-
-        # Choose chart type based on question context
-        question_lower = user_question.lower()
-        if 'top' in question_lower or 'ranking' in question_lower or 'most' in question_lower:
-            chart_type = "horizontal_bar"
-        elif len(data) <= 15:
-            chart_type = "horizontal_bar"
-        else:
-            chart_type = "bar"
-
-        return {
-            "chart_type": chart_type,
-            "title": "Data Analysis",
-            "x_axis_column": x_axis,
-            "y_axis_column": y_axis,
-            "color_scheme": "professional_blue",
-            "show_legend": False,
-            "reasoning": f"Fallback: Using {x_axis} vs {y_axis} with {chart_type} chart"
-        }
 
     def _create_professional_visualization_safe(self, columns: List[str], data: List[List], viz_analysis: Dict[str, Any], user_question: str) -> str:
         """Create the professional HTML visualization file with safe UTF-8 handling."""
@@ -715,28 +682,19 @@ class ModernVisualizationTool(BaseTool):
         return html_template
 
     def _generate_professional_chart_config_safe(self, chart_data: Dict[str, Any], viz_analysis: Dict[str, Any], colors: List[str]) -> str:
-        """Generate professional Chart.js configuration with PRECISE hover interactions."""
+        """Generate professional Chart.js configuration with WORKING axis and tooltips."""
 
         chart_type = viz_analysis.get('chart_type', 'bar')
 
         # Clean labels for JSON
         clean_labels = [self._clean_string_utf8(str(label)) for label in chart_data['labels']]
 
-        # Different interaction settings based on chart type
-        if chart_type == 'horizontal_bar':
-            interaction_config = {
-                'intersect': True,  # More precise for horizontal bars
-                'mode': 'nearest'   # Find the nearest element
-            }
-        else:
-            interaction_config = {
-                'intersect': False,
-                'mode': 'index'
-            }
+        # For horizontal bar charts, we need specific configuration
+        is_horizontal = chart_type == 'horizontal_bar'
 
-        # Professional Chart.js configuration with precise interactions
+        # Professional Chart.js configuration
         config = {
-            'type': 'bar' if chart_type != 'line' else 'line',
+            'type': 'bar',  # Always use 'bar', horizontal is controlled by indexAxis
             'data': {
                 'labels': clean_labels,
                 'datasets': [{
@@ -745,11 +703,7 @@ class ModernVisualizationTool(BaseTool):
                     'backgroundColor': colors[0],
                     'borderColor': colors[0],
                     'borderWidth': 2,
-                    'borderRadius': 4 if chart_type in ['bar', 'horizontal_bar'] else 0,
-                    'tension': 0.2 if chart_type == 'line' else 0,
-                    'fill': False if chart_type == 'line' else True,
-                    'pointRadius': 4 if chart_type == 'line' else 0,
-                    'pointHoverRadius': 6 if chart_type == 'line' else 0,
+                    'borderRadius': 4,
                     'hoverBackgroundColor': '#63b3ed',
                     'hoverBorderColor': '#4299e1',
                     'hoverBorderWidth': 3
@@ -758,48 +712,16 @@ class ModernVisualizationTool(BaseTool):
             'options': {
                 'responsive': True,
                 'maintainAspectRatio': False,
-                'interaction': interaction_config,
+                'interaction': {
+                    'intersect': True if is_horizontal else False,
+                    'mode': 'nearest' if is_horizontal else 'index'
+                },
                 'plugins': {
                     'legend': {
-                        'display': viz_analysis.get('show_legend', False),
-                        'position': 'top',
-                        'labels': {
-                            'usePointStyle': False,
-                            'padding': 20,
-                            'font': {
-                                'size': 12,
-                                'family': 'Inter',
-                                'weight': '400'
-                            },
-                            'color': '#718096'
-                        }
-                    },
-                    'tooltip': {
-                        'enabled': True,
-                        'backgroundColor': '#ffffff',
-                        'titleColor': '#2d3748',
-                        'bodyColor': '#4a5568',
-                        'borderColor': '#e2e8f0',
-                        'borderWidth': 1,
-                        'cornerRadius': 6,
-                        'displayColors': False,
-                        'titleFont': {
-                            'size': 13,
-                            'family': 'Inter',
-                            'weight': '500'
-                        },
-                        'bodyFont': {
-                            'size': 12,
-                            'family': 'Inter',
-                            'weight': '400'
-                        },
-                        'padding': 12,
-                        'callbacks': {
-                            'label': '(context) => { const value = context.parsed.y || context.parsed.x; const formatted = Math.abs(value) >= 1000000 ? (value / 1000000).toFixed(2) + "M" : Math.abs(value) >= 1000 ? (value / 1000).toFixed(2) + "K" : value.toLocaleString(); return context.dataset.label + ": " + formatted; }'
-                        }
+                        'display': viz_analysis.get('show_legend', False)
                     }
                 },
-                'scales': self._get_scales_config(chart_type, chart_data),
+                'scales': {},
                 'animation': {
                     'duration': 600,
                     'easing': 'easeOutQuart'
@@ -807,11 +729,219 @@ class ModernVisualizationTool(BaseTool):
             }
         }
 
-        # Handle horizontal bar chart
-        if chart_type == 'horizontal_bar':
+        # Add indexAxis for horizontal bars
+        if is_horizontal:
             config['options']['indexAxis'] = 'y'
 
-        return json.dumps(config, indent=2, ensure_ascii=True)
+        # Configure scales based on chart orientation
+        if is_horizontal:
+            # For horizontal bars: X = values (numbers), Y = labels (categories)
+            config['options']['scales'] = {
+                'x': {
+                    'beginAtZero': True,
+                    'grid': {
+                        'color': '#f1f5f9',
+                        'lineWidth': 1
+                    },
+                    'ticks': {
+                        'color': '#718096',
+                        'font': {
+                            'size': 11,
+                            'family': 'Inter'
+                        }
+                    },
+                    'title': {
+                        'display': True,
+                        'text': chart_data['y_axis'],  # The values (ticket_count)
+                        'font': {
+                            'size': 12,
+                            'family': 'Inter',
+                            'weight': '500'
+                        },
+                        'color': '#4a5568'
+                    }
+                },
+                'y': {
+                    'grid': {
+                        'color': '#f8fafc',
+                        'lineWidth': 1
+                    },
+                    'ticks': {
+                        'color': '#718096',
+                        'font': {
+                            'size': 11,
+                            'family': 'Inter'
+                        },
+                        'maxRotation': 0
+                    },
+                    'title': {
+                        'display': True,
+                        'text': chart_data['x_axis'],  # The categories (NAME)
+                        'font': {
+                            'size': 12,
+                            'family': 'Inter',
+                            'weight': '500'
+                        },
+                        'color': '#4a5568'
+                    }
+                }
+            }
+        else:
+            # For vertical bars: X = labels (categories), Y = values (numbers)
+            config['options']['scales'] = {
+                'x': {
+                    'grid': {
+                        'color': '#f8fafc',
+                        'lineWidth': 1
+                    },
+                    'ticks': {
+                        'color': '#718096',
+                        'font': {
+                            'size': 11,
+                            'family': 'Inter'
+                        },
+                        'maxRotation': 45
+                    },
+                    'title': {
+                        'display': True,
+                        'text': chart_data['x_axis'],  # The categories
+                        'font': {
+                            'size': 12,
+                            'family': 'Inter',
+                            'weight': '500'
+                        },
+                        'color': '#4a5568'
+                    }
+                },
+                'y': {
+                    'beginAtZero': True,
+                    'grid': {
+                        'color': '#f1f5f9',
+                        'lineWidth': 1
+                    },
+                    'ticks': {
+                        'color': '#718096',
+                        'font': {
+                            'size': 11,
+                            'family': 'Inter'
+                        }
+                    },
+                    'title': {
+                        'display': True,
+                        'text': chart_data['y_axis'],  # The values
+                        'font': {
+                            'size': 12,
+                            'family': 'Inter',
+                            'weight': '500'
+                        },
+                        'color': '#4a5568'
+                    }
+                }
+            }
+
+        # Convert to JSON string and then fix the callback functions
+        config_json = json.dumps(config, indent=2, ensure_ascii=True)
+
+        # Now we need to add the callback functions as actual JavaScript functions
+        # We'll do string replacement to inject the functions
+
+        # Add tick formatting callback for the value axis
+        if is_horizontal:
+            # For horizontal, X axis has the values
+            config_json = config_json.replace(
+                '"ticks": {\n          "color": "#718096",\n          "font": {\n            "size": 11,\n            "family": "Inter"\n          }\n        }',
+                '''    "ticks": {
+              "color": "#718096",
+              "font": {
+                "size": 11,
+                "family": "Inter"
+              },
+              "callback": function(value) {
+                if (Math.abs(value) >= 1000000) {
+                  return (value / 1000000).toFixed(1) + "M";
+                } else if (Math.abs(value) >= 1000) {
+                  return (value / 1000).toFixed(1) + "K";
+                } else {
+                  return value.toLocaleString();
+                }
+              }
+            }'''
+            )
+        else:
+            # For vertical, Y axis has the values
+            config_json = config_json.replace(
+                '"y": {\n        "beginAtZero": true,\n        "grid": {\n          "color": "#f1f5f9",\n          "lineWidth": 1\n        },\n        "ticks": {\n          "color": "#718096",\n          "font": {\n            "size": 11,\n            "family": "Inter"\n          }\n        }',
+                '''    "y": {
+            "beginAtZero": true,
+            "grid": {
+              "color": "#f1f5f9",
+              "lineWidth": 1
+            },
+            "ticks": {
+              "color": "#718096",
+              "font": {
+                "size": 11,
+                "family": "Inter"
+              },
+              "callback": function(value) {
+                if (Math.abs(value) >= 1000000) {
+                  return (value / 1000000).toFixed(1) + "M";
+                } else if (Math.abs(value) >= 1000) {
+                  return (value / 1000).toFixed(1) + "K";
+                } else {
+                  return value.toLocaleString();
+                }
+              }
+            }'''
+            )
+
+        # Add tooltip configuration
+        tooltip_config = '''"tooltip": {
+            "enabled": true,
+            "backgroundColor": "#ffffff",
+            "titleColor": "#2d3748",
+            "bodyColor": "#4a5568",
+            "borderColor": "#e2e8f0",
+            "borderWidth": 1,
+            "cornerRadius": 6,
+            "displayColors": false,
+            "titleFont": {
+              "size": 13,
+              "family": "Inter",
+              "weight": "500"
+            },
+            "bodyFont": {
+              "size": 12,
+              "family": "Inter",
+              "weight": "400"
+            },
+            "padding": 12,
+            "callbacks": {
+              "label": function(context) {
+                const value = context.parsed.y || context.parsed.x;
+                let formatted;
+                if (Math.abs(value) >= 1000000) {
+                  formatted = (value / 1000000).toFixed(2) + "M";
+                } else if (Math.abs(value) >= 1000) {
+                  formatted = (value / 1000).toFixed(2) + "K";
+                } else {
+                  formatted = value.toLocaleString();
+                }
+                return context.dataset.label + ": " + formatted;
+              }
+            }
+          }'''
+
+        # Insert tooltip after legend
+        config_json = config_json.replace(
+            '"legend": {\n          "display": false\n        }',
+            f'''    "legend": {{
+              "display": false
+            }},
+            {tooltip_config}'''
+        )
+
+        return config_json
 
     def _get_scales_config(self, chart_type: str, chart_data: Dict[str, Any]) -> Dict[str, Any]:
         """Get proper scales configuration based on chart type."""
@@ -887,7 +1017,7 @@ class ModernVisualizationTool(BaseTool):
                             'size': 11,
                             'family': 'Inter'
                         },
-                        'callback': 'function(value) { if (Math.abs(value) >= 1000000) { return (value / 1000000).toFixed(1) + "M"; } else if (Math.abs(value) >= 1000) { return (value / 1000).toFixed(1) + "K"; } else { return value.toLocaleString(); } }'
+                        'callback': 'function(value) { if (Math.abs(value) >= 1000000) { return (value / 1000000).toFixed(1) + "M"; } else if (Math.abs(value) >= 1000) { return (value / 1000).toFixed(1) + "K" else { return value.toLocaleString(); } }'
                     },
                     'title': {
                         'display': True,
@@ -943,4 +1073,12 @@ class ModernVisualizationTool(BaseTool):
             }
         except Exception as e:
             logger.error(f"Failed to get file stats: {e}")
-            return
+            return {'error': str(e)}
+
+    def _format_file_size(self, size_bytes: int) -> str:
+        """Format file size in human readable format."""
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size_bytes < 1024.0:
+                return f"{size_bytes:.1f} {unit}"
+            size_bytes /= 1024.0
+        return f"{size_bytes:.1f} TB"
