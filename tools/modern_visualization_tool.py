@@ -1,5 +1,5 @@
 """
-Modern Visualization Tool - Creates fancy interactive charts and dashboards
+UTF-8 Fixed Professional Visualization Tool - Handles encoding issues
 """
 
 from typing import Dict, Any, List, Optional
@@ -10,16 +10,18 @@ import os
 import logging
 from datetime import datetime
 from llm.custom_gpt import CustomGPT
+import unicodedata
+import re
 
 logger = logging.getLogger(__name__)
 
 class ModernVisualizationTool(BaseTool):
-    """Create modern, interactive visualizations from query results."""
+    """Create professional, minimalistic visualizations with proper UTF-8 handling."""
 
     name: str = "create_visualization"
     description: str = """
-    Generate modern, interactive charts and dashboards from query results.
-    Creates HTML files with Chart.js visualizations that are fancy and lightweight.
+    Generate clean, professional charts and dashboards from query results.
+    Creates HTML files with Chart.js visualizations that are minimalistic and finance-appropriate.
     """
 
     export_dir: str = Field(default="visualizations")
@@ -31,7 +33,7 @@ class ModernVisualizationTool(BaseTool):
         os.makedirs(self.export_dir, exist_ok=True)
 
     def _run(self, query_result: Dict[str, Any], user_question: str = "", csv_result: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Create interactive visualization from query results."""
+        """Create professional visualization from query results."""
         try:
             # Check if we have visualizable data
             if not self._is_visualizable(query_result):
@@ -41,11 +43,26 @@ class ModernVisualizationTool(BaseTool):
                     'reason': 'No numeric data or insufficient rows'
                 }
 
+            # Debug: Log the incoming data structure
+            result_data = query_result.get('result', {})
+            columns = result_data.get('columns', [])
+            data = result_data.get('data', [])
+
+            if self._should_log_debug():
+                logger.info(f"Visualization Input - Columns: {columns}")
+                logger.info(f"Visualization Input - Sample data: {data[:3] if data else 'No data'}")
+
+            # Clean data to handle UTF-8 issues
+            cleaned_data = self._clean_data_utf8(data)
+
             # Analyze data structure and determine best visualization type
-            viz_analysis = self._analyze_data_for_visualization(query_result, user_question)
+            viz_analysis = self._analyze_data_for_visualization_safe(columns, cleaned_data, user_question)
+
+            if self._should_log_debug():
+                logger.info(f"LLM Analysis Result: {viz_analysis}")
 
             # Generate the visualization
-            html_file = self._create_interactive_visualization(query_result, viz_analysis, user_question)
+            html_file = self._create_professional_visualization_safe(columns, cleaned_data, viz_analysis, user_question)
 
             # Get file stats
             file_stats = self._get_file_stats(html_file)
@@ -55,7 +72,7 @@ class ModernVisualizationTool(BaseTool):
                 'html_file': html_file,
                 'visualization_type': viz_analysis.get('chart_type'),
                 'file_stats': file_stats,
-                'message': f"Interactive visualization created: {os.path.basename(html_file)}"
+                'message': f"Professional visualization created: {os.path.basename(html_file)}"
             }
 
         except Exception as e:
@@ -66,6 +83,43 @@ class ModernVisualizationTool(BaseTool):
                 'message': f"Failed to create visualization: {str(e)}"
             }
 
+    def _clean_data_utf8(self, data: List[List]) -> List[List]:
+        """Clean data to handle UTF-8 encoding issues."""
+        cleaned_data = []
+
+        for row in data:
+            cleaned_row = []
+            for value in row:
+                if isinstance(value, str):
+                    # Clean the string to remove problematic characters
+                    cleaned_value = self._clean_string_utf8(value)
+                    cleaned_row.append(cleaned_value)
+                else:
+                    cleaned_row.append(value)
+            cleaned_data.append(cleaned_row)
+
+        return cleaned_data
+
+    def _clean_string_utf8(self, text: str) -> str:
+        """Clean a string to ensure it's UTF-8 compatible."""
+        if not text:
+            return text
+
+        # Remove surrogate characters and other problematic Unicode
+        try:
+            # Normalize the string
+            normalized = unicodedata.normalize('NFKD', text)
+            # Remove non-ASCII characters that might cause issues
+            cleaned = re.sub(r'[^\x00-\x7F]+', '', normalized)
+            # If the cleaned string is empty, try a different approach
+            if not cleaned.strip():
+                # Keep only alphanumeric and common punctuation
+                cleaned = re.sub(r'[^\w\s\-\.\/\(\)&]+', '', text)
+            return cleaned.strip()
+        except:
+            # Last resort: convert to ASCII
+            return text.encode('ascii', 'ignore').decode('ascii')
+
     def _is_visualizable(self, query_result: Dict[str, Any]) -> bool:
         """Check if query results are suitable for visualization."""
         if not query_result.get('success', True):
@@ -75,15 +129,15 @@ class ModernVisualizationTool(BaseTool):
         data = result_data.get('data', [])
         columns = result_data.get('columns', [])
 
-        # Need at least 2 rows and 2 columns for meaningful visualization
-        if len(data) < 2 or len(columns) < 2:
+        # Need at least 1 row and 2 columns for meaningful visualization
+        if len(data) < 1 or len(columns) < 2:
             return False
 
         # Check if we have at least one numeric column
         has_numeric = False
         for row in data[:5]:  # Check first 5 rows
             for value in row:
-                if isinstance(value, (int, float)) and value != 0:
+                if isinstance(value, (int, float)) and not (isinstance(value, float) and (value != value)):  # Check for NaN
                     has_numeric = True
                     break
             if has_numeric:
@@ -91,295 +145,493 @@ class ModernVisualizationTool(BaseTool):
 
         return has_numeric
 
-    def _analyze_data_for_visualization(self, query_result: Dict[str, Any], user_question: str) -> Dict[str, Any]:
-        """Use LLM to analyze data and determine best visualization approach."""
+        def _analyze_data_for_visualization_safe(self, columns: List[str], data: List[List], user_question: str) -> Dict[str, Any]:
+            """Safely analyze data for visualization with CORRECTED axis mapping logic."""
 
-        result_data = query_result.get('result', {})
-        columns = result_data.get('columns', [])
-        data = result_data.get('data', [])
+            # Prepare safe data sample for LLM analysis
+            sample_data = []
+            for i, row in enumerate(data[:3]):  # Show first 3 rows
+                row_dict = {}
+                for j, col in enumerate(columns):
+                    if j < len(row):
+                        value = row[j]
+                        # Clean the value for JSON serialization
+                        if isinstance(value, str):
+                            value = self._clean_string_utf8(value)
+                        row_dict[col] = value
+                sample_data.append(row_dict)
 
-        # Prepare data sample for LLM analysis
-        data_sample = {
-            'columns': columns,
-            'sample_rows': data[:5],  # First 5 rows
-            'total_rows': len(data),
-            'row_count': len(data)
-        }
+            data_structure = {
+                'columns': columns,
+                'sample_data': sample_data,
+                'total_rows': len(data),
+                'data_types': self._analyze_column_types(columns, data)
+            }
 
-        prompt = f"""Analyze this query result data and determine the best modern visualization approach.
+            # IMPROVED prompt with clear axis instructions
+            prompt = f"""Analyze this query result and determine the best visualization approach.
 
-User Question: "{user_question}"
-Data Structure: {json.dumps(data_sample, indent=2, default=str)}
+    User Question: "{user_question}"
+    Data Structure: {json.dumps(data_structure, indent=2, default=str, ensure_ascii=True)}
 
-Determine the best chart type and configuration:
+    **CRITICAL AXIS MAPPING RULES:**
+    1. For horizontal bar charts (which show rankings/top N):
+       - CATEGORIES/NAMES go on the Y-axis (vertical labels)
+       - VALUES/NUMBERS go on the X-axis (horizontal bars)
+       - Example: Company names on Y-axis, ticket counts on X-axis
 
-Available chart types:
-- bar: For categorical comparisons (counts, sums by category)
-- line: For trends over time or sequential data
-- pie: For parts of a whole (percentages, distributions)
-- scatter: For correlations between two numeric variables
-- area: For cumulative trends or stacked data
-- doughnut: Modern alternative to pie charts
-- radar: For multi-dimensional comparisons
+    2. For vertical bar charts:
+       - CATEGORIES/NAMES go on the X-axis (bottom labels)  
+       - VALUES/NUMBERS go on the Y-axis (vertical bars)
 
-Respond with JSON:
-{{
-    "chart_type": "bar|line|pie|scatter|area|doughnut|radar",
-    "title": "Engaging chart title",
-    "x_axis": "column_name_for_x_axis",
-    "y_axis": "column_name_for_y_axis", 
-    "color_scheme": "modern_blue|vibrant|pastel|dark|gradient",
-    "show_legend": true,
-    "interactive_features": ["zoom", "hover", "animation"],
-    "reasoning": "Why this visualization works best"
-}}
+    **COLUMN IDENTIFICATION:**
+    - Text columns (company names, categories) = LABELS/CATEGORIES
+    - Numeric columns (counts, amounts, values) = VALUES/NUMBERS
 
-Focus on making it visually appealing and informative.
+    Choose the chart type and map columns correctly:
 
-JSON Response:"""
+    Respond ONLY with valid JSON:
+    {{
+        "chart_type": "horizontal_bar|bar|line|area|scatter",
+        "title": "Clean title without emojis",
+        "label_column": "column_name_containing_categories_or_names",
+        "value_column": "column_name_containing_numeric_values",
+        "color_scheme": "professional_blue",
+        "show_legend": false,
+        "reasoning": "Brief explanation of column mapping"
+    }}
 
-        try:
-            response = self.llm._call(prompt)
-            clean_response = response.strip()
-            if clean_response.startswith('```json'):
-                clean_response = clean_response[7:-3]
+    **REMEMBER:** 
+    - Label column = text/names (company names, categories)
+    - Value column = numbers (counts, amounts, measurements)
 
-            parsed = json.loads(clean_response)
-            return parsed
+    JSON Response:"""
 
-        except Exception as e:
-            logger.warning(f"LLM visualization analysis failed: {e}")
-            # Intelligent fallback based on data structure
-            return self._create_fallback_analysis(columns, data)
+            try:
+                response = self.llm._call(prompt)
+                clean_response = response.strip()
 
-    def _create_fallback_analysis(self, columns: List[str], data: List[List]) -> Dict[str, Any]:
-        """Create fallback visualization analysis when LLM fails."""
+                # Clean JSON response
+                if clean_response.startswith('```json'):
+                    clean_response = clean_response[7:]
+                if clean_response.endswith('```'):
+                    clean_response = clean_response[:-3]
 
-        # Simple heuristics for chart type selection
-        if len(columns) == 2:
-            # Check if first column could be categories/labels
-            first_col_sample = [row[0] for row in data[:5] if len(row) > 0]
-            if all(isinstance(val, str) for val in first_col_sample):
-                chart_type = "bar"
+                # Remove any trailing text after the JSON
+                json_end = clean_response.rfind('}')
+                if json_end != -1:
+                    clean_response = clean_response[:json_end + 1]
+
+                parsed = json.loads(clean_response.strip())
+
+                # VALIDATION AND CORRECTION: Ensure correct mapping
+                label_col = parsed.get('label_column', '')
+                value_col = parsed.get('value_column', '')
+
+                # Validate that label column is actually text and value column is numeric
+                if label_col in columns and value_col in columns:
+                    # Check if we have the mapping backwards
+                    label_index = columns.index(label_col)
+                    value_index = columns.index(value_col)
+
+                    # Sample values to check types
+                    label_samples = [row[label_index] for row in data[:3] if label_index < len(row)]
+                    value_samples = [row[value_index] for row in data[:3] if value_index < len(row)]
+
+                    label_is_text = all(isinstance(v, str) for v in label_samples if v is not None)
+                    value_is_numeric = all(isinstance(v, (int, float)) for v in value_samples if v is not None)
+
+                    # If mapping is backwards, fix it
+                    if not label_is_text or not value_is_numeric:
+                        if self._should_log_debug():
+                            logger.warning(f"LLM mapping seems backwards - fixing automatically")
+                            logger.warning(f"  Original: label='{label_col}' (text: {label_is_text}), value='{value_col}' (numeric: {value_is_numeric})")
+
+                        # Swap them
+                        parsed['label_column'] = value_col
+                        parsed['value_column'] = label_col
+
+                        if self._should_log_debug():
+                            logger.warning(f"  Corrected: label='{value_col}', value='{label_col}'")
+
+                # Final validation - ensure columns exist
+                if parsed.get('label_column') not in columns:
+                    parsed['label_column'] = columns[0] if columns else 'Category'
+                if parsed.get('value_column') not in columns:
+                    numeric_col = self._find_first_numeric_column(columns, data)
+                    parsed['value_column'] = numeric_col if numeric_col else columns[-1] if columns else 'Value'
+
+                return parsed
+
+            except Exception as e:
+                logger.warning(f"LLM visualization analysis failed: {e}")
+                # Intelligent fallback based on data structure
+                return self._create_smart_fallback_analysis(columns, data, user_question)
+
+        def _create_smart_fallback_analysis(self, columns: List[str], data: List[List], user_question: str) -> Dict[str, Any]:
+            """Create intelligent fallback when LLM fails - with CORRECT mapping."""
+
+            # Analyze column types
+            column_types = self._analyze_column_types(columns, data)
+
+            # Find text and numeric columns CORRECTLY
+            text_columns = [col for col, type_ in column_types.items() if type_ == 'text']
+            numeric_columns = [col for col, type_ in column_types.items() if type_ == 'numeric']
+
+            # CORRECT assignments
+            label_column = text_columns[0] if text_columns else columns[0]      # Text = labels
+            value_column = numeric_columns[0] if numeric_columns else columns[-1]  # Numbers = values
+
+            # Choose chart type based on question context
+            question_lower = user_question.lower()
+            if 'top' in question_lower or 'ranking' in question_lower or 'most' in question_lower:
+                chart_type = "horizontal_bar"
+            elif len(data) <= 15:
+                chart_type = "horizontal_bar"
             else:
-                chart_type = "line"
-        elif len(data) <= 10:  # Small dataset
-            chart_type = "pie"
+                chart_type = "bar"
+
+            return {
+                "chart_type": chart_type,
+                "title": "Data Analysis",
+                "label_column": label_column,  # ✅ CORRECT: text column for labels
+                "value_column": value_column,  # ✅ CORRECT: numeric column for values
+                "color_scheme": "professional_blue",
+                "show_legend": False,
+                "reasoning": f"Fallback: Using {label_column} (text) as labels vs {value_column} (numeric) as values"
+            }
+
+    def _analyze_column_types(self, columns: List[str], data: List[List]) -> Dict[str, str]:
+        """Analyze what type of data each column contains."""
+        column_types = {}
+
+        for i, col in enumerate(columns):
+            sample_values = [row[i] for row in data[:5] if i < len(row) and row[i] is not None]
+
+            if not sample_values:
+                column_types[col] = 'empty'
+            elif all(isinstance(val, (int, float)) for val in sample_values):
+                column_types[col] = 'numeric'
+            elif all(isinstance(val, str) for val in sample_values):
+                column_types[col] = 'text'
+            else:
+                column_types[col] = 'mixed'
+
+        return column_types
+
+    def _find_first_numeric_column(self, columns: List[str], data: List[List]) -> Optional[str]:
+        """Find the first column that contains numeric data."""
+        for i, col in enumerate(columns):
+            sample_values = [row[i] for row in data[:5] if i < len(row) and row[i] is not None]
+            if sample_values and all(isinstance(val, (int, float)) for val in sample_values):
+                return col
+        return None
+
+    def _create_smart_fallback_analysis(self, columns: List[str], data: List[List], user_question: str) -> Dict[str, Any]:
+        """Create intelligent fallback when LLM fails."""
+
+        # Analyze column types
+        column_types = self._analyze_column_types(columns, data)
+
+        # Find text and numeric columns
+        text_columns = [col for col, type_ in column_types.items() if type_ == 'text']
+        numeric_columns = [col for col, type_ in column_types.items() if type_ == 'numeric']
+
+        # Default assignments
+        x_axis = text_columns[0] if text_columns else columns[0]
+        y_axis = numeric_columns[0] if numeric_columns else columns[-1]
+
+        # Choose chart type based on question context
+        question_lower = user_question.lower()
+        if 'top' in question_lower or 'ranking' in question_lower or 'most' in question_lower:
+            chart_type = "horizontal_bar"
+        elif len(data) <= 15:
+            chart_type = "horizontal_bar"
         else:
             chart_type = "bar"
 
         return {
             "chart_type": chart_type,
-            "title": "Query Results Visualization",
-            "x_axis": columns[0] if columns else "Category",
-            "y_axis": columns[1] if len(columns) > 1 else "Value",
-            "color_scheme": "modern_blue",
-            "show_legend": True,
-            "interactive_features": ["hover", "animation"],
-            "reasoning": "Fallback analysis based on data structure"
+            "title": "Data Analysis",
+            "x_axis_column": x_axis,
+            "y_axis_column": y_axis,
+            "color_scheme": "professional_blue",
+            "show_legend": False,
+            "reasoning": f"Fallback: Using {x_axis} vs {y_axis} with {chart_type} chart"
         }
 
-    def _create_interactive_visualization(self, query_result: Dict[str, Any], viz_analysis: Dict[str, Any], user_question: str) -> str:
-        """Create the interactive HTML visualization file."""
-
-        result_data = query_result.get('result', {})
-        columns = result_data.get('columns', [])
-        data = result_data.get('data', [])
+    def _create_professional_visualization_safe(self, columns: List[str], data: List[List], viz_analysis: Dict[str, Any], user_question: str) -> str:
+        """Create the professional HTML visualization file with safe UTF-8 handling."""
 
         # Generate filename
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"visualization_{timestamp}.html"
+        filename = f"chart_{timestamp}.html"
         filepath = os.path.join(self.export_dir, filename)
 
-        # Prepare data for Chart.js
-        chart_data = self._prepare_chart_data(columns, data, viz_analysis)
+        # Prepare data for Chart.js with FIXED mapping
+        chart_data = self._prepare_chart_data_fixed(columns, data, viz_analysis)
 
-        # Generate HTML content
-        html_content = self._generate_html_template(chart_data, viz_analysis, user_question)
+        if self._should_log_debug():
+            logger.info(f"Chart data prepared: {chart_data}")
 
-        # Write to file
-        with open(filepath, 'w', encoding='utf-8') as f:
-            f.write(html_content)
+        # Generate HTML content with safe encoding
+        html_content = self._generate_professional_html_template_safe(chart_data, viz_analysis, user_question)
 
-        logger.info(f"Visualization created: {filepath}")
+        # Write to file with proper encoding
+        try:
+            with open(filepath, 'w', encoding='utf-8', errors='replace') as f:
+                f.write(html_content)
+        except UnicodeEncodeError:
+            # Fallback to ASCII if UTF-8 fails
+            with open(filepath, 'w', encoding='ascii', errors='replace') as f:
+                f.write(html_content)
+
+        logger.info(f"Professional visualization created: {filepath}")
         return filepath
 
-    def _prepare_chart_data(self, columns: List[str], data: List[List], viz_analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """Prepare data in Chart.js format."""
+    def _prepare_chart_data_fixed(self, columns: List[str], data: List[List], viz_analysis: Dict[str, Any]) -> Dict[str, Any]:
+        """Prepare data with CORRECTLY FIXED column mapping."""
 
         chart_type = viz_analysis.get('chart_type', 'bar')
-        x_axis = viz_analysis.get('x_axis', columns[0] if columns else 'Category')
-        y_axis = viz_analysis.get('y_axis', columns[1] if len(columns) > 1 else 'Value')
+        # Use the corrected column names from the analysis
+        label_col = viz_analysis.get('label_column', columns[0] if columns else 'Category')
+        value_col = viz_analysis.get('value_column', columns[1] if len(columns) > 1 else 'Value')
+
+        if self._should_log_debug():
+            logger.info(f"Chart type: {chart_type}")
+            logger.info(f"Columns available: {columns}")
+            logger.info(f"Label column (categories): {label_col}")
+            logger.info(f"Value column (numbers): {value_col}")
 
         # Find column indices
-        x_index = columns.index(x_axis) if x_axis in columns else 0
-        y_index = columns.index(y_axis) if y_axis in columns else 1
+        try:
+            label_index = columns.index(label_col)
+        except ValueError:
+            label_index = 0
+            label_col = columns[0] if columns else 'Category'
+
+        try:
+            value_index = columns.index(value_col)
+        except ValueError:
+            # Find first numeric column
+            value_index = -1
+            for i, col in enumerate(columns):
+                sample_vals = [row[i] for row in data[:3] if i < len(row)]
+                if sample_vals and all(isinstance(v, (int, float)) for v in sample_vals):
+                    value_index = i
+                    value_col = col
+                    break
+            if value_index == -1:
+                value_index = 1 if len(columns) > 1 else 0
+                value_col = columns[value_index] if columns else 'Value'
+
+        if self._should_log_debug():
+            logger.info(f"Final mapping: Label='{label_col}'[{label_index}], Value='{value_col}'[{value_index}]")
 
         labels = []
         values = []
 
-        for row in data:
-            if len(row) > max(x_index, y_index):
-                label = str(row[x_index]) if x_index < len(row) else f"Row {len(labels) + 1}"
-                value = row[y_index] if y_index < len(row) else 0
+        for row_idx, row in enumerate(data):
+            if len(row) > max(label_index, value_index):
+                # Get label (category) with UTF-8 cleaning
+                raw_label = row[label_index] if label_index < len(row) else f"Item {row_idx + 1}"
+                if raw_label is None:
+                    raw_label = f"Item {row_idx + 1}"
+                label = self._clean_string_utf8(str(raw_label))
+
+                # Get value (number)
+                raw_value = row[value_index] if value_index < len(row) else 0
 
                 # Convert value to number if possible
-                if isinstance(value, str):
+                if isinstance(raw_value, str):
                     try:
-                        value = float(value)
+                        value = float(raw_value.replace(',', ''))
                     except:
                         value = 0
+                elif raw_value is None:
+                    value = 0
+                else:
+                    value = float(raw_value)
 
                 labels.append(label)
                 values.append(value)
+
+                # Debug first few mappings
+                if self._should_log_debug() and row_idx < 3:
+                    logger.info(f"Row {row_idx}: '{raw_label}' -> '{label}', {raw_value} -> {value}")
 
         # Limit data points for better visualization
         if len(labels) > 50:
             labels = labels[:50]
             values = values[:50]
 
+        if self._should_log_debug():
+            logger.info(f"Final data - Labels: {labels[:3]}, Values: {values[:3]}")
+
         return {
             'labels': labels,
             'values': values,
-            'x_axis': x_axis,
-            'y_axis': y_axis,
+            'x_axis': label_col,    # For display purposes
+            'y_axis': value_col,    # For display purposes
             'chart_type': chart_type
         }
 
-    def _generate_html_template(self, chart_data: Dict[str, Any], viz_analysis: Dict[str, Any], user_question: str) -> str:
-        """Generate modern HTML template with Chart.js."""
+    def _generate_professional_html_template_safe(self, chart_data: Dict[str, Any], viz_analysis: Dict[str, Any], user_question: str) -> str:
+        """Generate clean, professional HTML template with safe UTF-8 encoding."""
 
         chart_type = viz_analysis.get('chart_type', 'bar')
-        title = viz_analysis.get('title', 'Query Results')
-        color_scheme = viz_analysis.get('color_scheme', 'modern_blue')
+        title = self._clean_string_utf8(viz_analysis.get('title', 'Data Analysis'))
+        clean_user_question = self._clean_string_utf8(user_question)
 
-        # Color schemes
-        color_schemes = {
-            'modern_blue': ['#3B82F6', '#1E40AF', '#2563EB', '#60A5FA', '#93C5FD'],
-            'vibrant': ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6'],
-            'pastel': ['#FCA5A5', '#FDE68A', '#A7F3D0', '#BFDBFE', '#C4B5FD'],
-            'dark': ['#374151', '#4B5563', '#6B7280', '#9CA3AF', '#D1D5DB'],
-            'gradient': ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
-        }
-
-        colors = color_schemes.get(color_scheme, color_schemes['modern_blue'])
+        # Professional color schemes
+        colors = ['#4299e1', '#63b3ed', '#90cdf4', '#bee3f8', '#ebf8ff']
 
         # Generate Chart.js configuration
-        chart_config = self._generate_chart_config(chart_data, viz_analysis, colors)
+        chart_config = self._generate_professional_chart_config_safe(chart_data, viz_analysis, colors)
 
-        html_template = f"""
-<!DOCTYPE html>
+        # Clean data for JSON serialization
+        clean_labels = [self._clean_string_utf8(str(label)) for label in chart_data['labels']]
+        clean_values = chart_data['values']
+
+        html_template = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title}</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }}
-
+        
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #2d3748;
+            line-height: 1.5;
         }}
-
+        
         .container {{
             max-width: 1200px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 24px auto;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }}
-
+        
         .header {{
-            background: linear-gradient(135deg, #3B82F6, #1E40AF);
-            color: white;
-            padding: 30px;
-            text-align: center;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 24px 32px;
         }}
-
+        
         .header h1 {{
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1d29;
+            margin-bottom: 8px;
         }}
-
+        
         .header p {{
-            font-size: 1.1rem;
-            opacity: 0.9;
+            font-size: 14px;
+            color: #718096;
+            font-weight: 400;
         }}
-
+        
         .chart-container {{
-            padding: 40px;
-            position: relative;
-            min-height: 500px;
+            padding: 32px;
+            background: #ffffff;
         }}
-
+        
         .chart-wrapper {{
             position: relative;
             width: 100%;
-            height: 500px;
+            height: 480px;
         }}
-
-        .info-panel {{
-            background: #F8FAFC;
-            padding: 30px;
-            border-top: 1px solid #E2E8F0;
+        
+        .stats-panel {{
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 24px 32px;
         }}
-
-        .stats {{
+        
+        .stats-title {{
+            font-size: 16px;
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 16px;
+        }}
+        
+        .stats-grid {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
         }}
-
+        
         .stat-card {{
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            text-align: center;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 16px;
+            text-align: left;
         }}
-
+        
         .stat-value {{
-            font-size: 2rem;
-            font-weight: 700;
-            color: #3B82F6;
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1d29;
+            margin-bottom: 4px;
         }}
-
+        
         .stat-label {{
-            font-size: 0.9rem;
-            color: #6B7280;
-            margin-top: 5px;
+            font-size: 12px;
+            color: #718096;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }}
-
-        .powered-by {{
+        
+        .footer {{
             text-align: center;
-            padding: 20px;
-            color: #6B7280;
-            font-size: 0.9rem;
+            padding: 16px 32px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            font-size: 12px;
+            color: #a0aec0;
         }}
-
+        
         @media (max-width: 768px) {{
-            .header h1 {{
-                font-size: 2rem;
+            .container {{
+                margin: 16px;
+                border-radius: 6px;
             }}
-
+            
+            .header {{
+                padding: 20px;
+            }}
+            
+            .header h1 {{
+                font-size: 20px;
+            }}
+            
             .chart-container {{
                 padding: 20px;
             }}
-
+            
             .chart-wrapper {{
-                height: 400px;
+                height: 360px;
+            }}
+            
+            .stats-panel {{
+                padding: 20px;
             }}
         }}
     </style>
@@ -387,54 +639,64 @@ JSON Response:"""
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 {title}</h1>
-            <p>Query : {user_question}</p>
+            <h1>{title}</h1>
+            <p>{clean_user_question}</p>
         </div>
-
+        
         <div class="chart-container">
             <div class="chart-wrapper">
                 <canvas id="mainChart"></canvas>
             </div>
         </div>
-
-        <div class="info-panel">
-            <h3>📈 Data Insights</h3>
-            <div class="stats" id="statsContainer">
+        
+        <div class="stats-panel">
+            <div class="stats-title">Analysis Summary</div>
+            <div class="stats-grid" id="statsContainer">
                 <!-- Stats will be populated by JavaScript -->
             </div>
         </div>
-
-        <div class="powered-by">
-            🚀 Powered by Castor • Generated on {datetime.now().strftime("%B %d, %Y at %I:%M %p")}
+        
+        <div class="footer">
+            Powered by Castor • {datetime.now().strftime("%B %d, %Y at %I:%M %p")}
         </div>
     </div>
 
     <script>
         // Chart configuration
         const chartConfig = {chart_config};
-
+        
         // Create the chart
         const ctx = document.getElementById('mainChart').getContext('2d');
         const mainChart = new Chart(ctx, chartConfig);
-
+        
         // Generate statistics
-        const data = {json.dumps(chart_data['values'])};
-        const labels = {json.dumps(chart_data['labels'])};
-
+        const data = {json.dumps(clean_values, ensure_ascii=True)};
+        const labels = {json.dumps(clean_labels, ensure_ascii=True)};
+        
+        function formatNumber(num) {{
+            if (Math.abs(num) >= 1000000) {{
+                return (num / 1000000).toFixed(2) + 'M';
+            }} else if (Math.abs(num) >= 1000) {{
+                return (num / 1000).toFixed(2) + 'K';
+            }} else {{
+                return num.toFixed(2);
+            }}
+        }}
+        
         function generateStats() {{
             const total = data.reduce((sum, val) => sum + val, 0);
             const average = total / data.length;
             const max = Math.max(...data);
             const min = Math.min(...data);
-
+            
             const stats = [
-                {{ label: 'Total Records', value: data.length }},
-                {{ label: 'Sum', value: total.toLocaleString() }},
-                {{ label: 'Average', value: average.toFixed(2) }},
-                {{ label: 'Maximum', value: max.toLocaleString() }},
-                {{ label: 'Minimum', value: min.toLocaleString() }}
+                {{ label: 'Total Records', value: data.length.toString() }},
+                {{ label: 'Sum', value: formatNumber(total) }},
+                {{ label: 'Average', value: formatNumber(average) }},
+                {{ label: 'Maximum', value: formatNumber(max) }},
+                {{ label: 'Minimum', value: formatNumber(min) }}
             ];
-
+            
             const container = document.getElementById('statsContainer');
             container.innerHTML = stats.map(stat => `
                 <div class="stat-card">
@@ -443,106 +705,230 @@ JSON Response:"""
                 </div>
             `).join('');
         }}
-
+        
         // Initialize stats
         generateStats();
-
-        // Add smooth animations
-        mainChart.options.animation = {{
-            duration: 2000,
-            easing: 'easeInOutQuart'
-        }};
     </script>
 </body>
 </html>"""
 
         return html_template
 
-    def _generate_chart_config(self, chart_data: Dict[str, Any], viz_analysis: Dict[str, Any], colors: List[str]) -> str:
-        """Generate Chart.js configuration as JSON string."""
+    def _generate_professional_chart_config_safe(self, chart_data: Dict[str, Any], viz_analysis: Dict[str, Any], colors: List[str]) -> str:
+        """Generate professional Chart.js configuration with PRECISE hover interactions."""
 
         chart_type = viz_analysis.get('chart_type', 'bar')
 
-        # Base configuration
+        # Clean labels for JSON
+        clean_labels = [self._clean_string_utf8(str(label)) for label in chart_data['labels']]
+
+        # Different interaction settings based on chart type
+        if chart_type == 'horizontal_bar':
+            interaction_config = {
+                'intersect': True,  # More precise for horizontal bars
+                'mode': 'nearest'   # Find the nearest element
+            }
+        else:
+            interaction_config = {
+                'intersect': False,
+                'mode': 'index'
+            }
+
+        # Professional Chart.js configuration with precise interactions
         config = {
-            'type': chart_type,
+            'type': 'bar' if chart_type != 'line' else 'line',
             'data': {
-                'labels': chart_data['labels'],
+                'labels': clean_labels,
                 'datasets': [{
                     'label': chart_data['y_axis'],
                     'data': chart_data['values'],
-                    'backgroundColor': colors[0] if chart_type in ['pie', 'doughnut'] else colors,
+                    'backgroundColor': colors[0],
                     'borderColor': colors[0],
                     'borderWidth': 2,
-                    'borderRadius': 8 if chart_type == 'bar' else 0,
-                    'tension': 0.4 if chart_type == 'line' else 0
+                    'borderRadius': 4 if chart_type in ['bar', 'horizontal_bar'] else 0,
+                    'tension': 0.2 if chart_type == 'line' else 0,
+                    'fill': False if chart_type == 'line' else True,
+                    'pointRadius': 4 if chart_type == 'line' else 0,
+                    'pointHoverRadius': 6 if chart_type == 'line' else 0,
+                    'hoverBackgroundColor': '#63b3ed',
+                    'hoverBorderColor': '#4299e1',
+                    'hoverBorderWidth': 3
                 }]
             },
             'options': {
                 'responsive': True,
                 'maintainAspectRatio': False,
+                'interaction': interaction_config,
                 'plugins': {
                     'legend': {
-                        'display': viz_analysis.get('show_legend', True),
+                        'display': viz_analysis.get('show_legend', False),
                         'position': 'top',
                         'labels': {
-                            'usePointStyle': True,
+                            'usePointStyle': False,
                             'padding': 20,
                             'font': {
-                                'size': 14
-                            }
+                                'size': 12,
+                                'family': 'Inter',
+                                'weight': '400'
+                            },
+                            'color': '#718096'
                         }
                     },
                     'tooltip': {
-                        'backgroundColor': 'rgba(0, 0, 0, 0.8)',
-                        'titleColor': 'white',
-                        'bodyColor': 'white',
-                        'borderColor': colors[0],
+                        'enabled': True,
+                        'backgroundColor': '#ffffff',
+                        'titleColor': '#2d3748',
+                        'bodyColor': '#4a5568',
+                        'borderColor': '#e2e8f0',
                         'borderWidth': 1,
-                        'cornerRadius': 8,
-                        'displayColors': True
+                        'cornerRadius': 6,
+                        'displayColors': False,
+                        'titleFont': {
+                            'size': 13,
+                            'family': 'Inter',
+                            'weight': '500'
+                        },
+                        'bodyFont': {
+                            'size': 12,
+                            'family': 'Inter',
+                            'weight': '400'
+                        },
+                        'padding': 12,
+                        'callbacks': {
+                            'label': '(context) => { const value = context.parsed.y || context.parsed.x; const formatted = Math.abs(value) >= 1000000 ? (value / 1000000).toFixed(2) + "M" : Math.abs(value) >= 1000 ? (value / 1000).toFixed(2) + "K" : value.toLocaleString(); return context.dataset.label + ": " + formatted; }'
+                        }
                     }
                 },
-                'scales': {
-                    'y': {
-                        'beginAtZero': True,
-                        'grid': {
-                            'color': 'rgba(0, 0, 0, 0.1)'
-                        },
-                        'title': {
-                            'display': True,
-                            'text': chart_data['y_axis'],
-                            'font': {
-                                'size': 14,
-                                'weight': 'bold'
-                            }
-                        }
-                    },
-                    'x': {
-                        'grid': {
-                            'color': 'rgba(0, 0, 0, 0.1)'
-                        },
-                        'title': {
-                            'display': True,
-                            'text': chart_data['x_axis'],
-                            'font': {
-                                'size': 14,
-                                'weight': 'bold'
-                            }
-                        }
-                    }
-                } if chart_type not in ['pie', 'doughnut'] else {}
+                'scales': self._get_scales_config(chart_type, chart_data),
+                'animation': {
+                    'duration': 600,
+                    'easing': 'easeOutQuart'
+                }
             }
         }
 
-        # Special configurations for different chart types
-        if chart_type == 'pie':
-            config['data']['datasets'][0]['backgroundColor'] = colors[:len(chart_data['labels'])]
-        elif chart_type == 'doughnut':
-            config['data']['datasets'][0]['backgroundColor'] = colors[:len(chart_data['labels'])]
-            config['options']['cutout'] = '60%'
+        # Handle horizontal bar chart
+        if chart_type == 'horizontal_bar':
+            config['options']['indexAxis'] = 'y'
 
-        return json.dumps(config, indent=2)
+        return json.dumps(config, indent=2, ensure_ascii=True)
+
+    def _get_scales_config(self, chart_type: str, chart_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Get proper scales configuration based on chart type."""
+
+        if chart_type in ['pie', 'doughnut']:
+            return {}
+
+        if chart_type == 'horizontal_bar':
+            # For horizontal bars, X is values, Y is labels
+            return {
+                'x': {
+                    'beginAtZero': True,
+                    'grid': {
+                        'color': '#f1f5f9',
+                        'lineWidth': 1
+                    },
+                    'ticks': {
+                        'color': '#718096',
+                        'font': {
+                            'size': 11,
+                            'family': 'Inter'
+                        },
+                        'callback': 'function(value) { if (Math.abs(value) >= 1000000) { return (value / 1000000).toFixed(1) + "M"; } else if (Math.abs(value) >= 1000) { return (value / 1000).toFixed(1) + "K"; } else { return value.toLocaleString(); } }'
+                    },
+                    'title': {
+                        'display': True,
+                        'text': chart_data['y_axis'],
+                        'font': {
+                            'size': 12,
+                            'family': 'Inter',
+                            'weight': '500'
+                        },
+                        'color': '#4a5568'
+                    }
+                },
+                'y': {
+                    'grid': {
+                        'color': '#f8fafc',
+                        'lineWidth': 1
+                    },
+                    'ticks': {
+                        'color': '#718096',
+                        'font': {
+                            'size': 11,
+                            'family': 'Inter'
+                        },
+                        'maxRotation': 0
+                    },
+                    'title': {
+                        'display': True,
+                        'text': chart_data['x_axis'],
+                        'font': {
+                            'size': 12,
+                            'family': 'Inter',
+                            'weight': '500'
+                        },
+                        'color': '#4a5568'
+                    }
+                }
+            }
+        else:
+            # For regular vertical bars/lines
+            return {
+                'y': {
+                    'beginAtZero': True,
+                    'grid': {
+                        'color': '#f1f5f9',
+                        'lineWidth': 1
+                    },
+                    'ticks': {
+                        'color': '#718096',
+                        'font': {
+                            'size': 11,
+                            'family': 'Inter'
+                        },
+                        'callback': 'function(value) { if (Math.abs(value) >= 1000000) { return (value / 1000000).toFixed(1) + "M"; } else if (Math.abs(value) >= 1000) { return (value / 1000).toFixed(1) + "K"; } else { return value.toLocaleString(); } }'
+                    },
+                    'title': {
+                        'display': True,
+                        'text': chart_data['y_axis'],
+                        'font': {
+                            'size': 12,
+                            'family': 'Inter',
+                            'weight': '500'
+                        },
+                        'color': '#4a5568'
+                    }
+                },
+                'x': {
+                    'grid': {
+                        'color': '#f8fafc',
+                        'lineWidth': 1
+                    },
+                    'ticks': {
+                        'color': '#718096',
+                        'font': {
+                            'size': 11,
+                            'family': 'Inter'
+                        },
+                        'maxRotation': 45
+                    },
+                    'title': {
+                        'display': True,
+                        'text': chart_data['x_axis'],
+                        'font': {
+                            'size': 12,
+                            'family': 'Inter',
+                            'weight': '500'
+                        },
+                        'color': '#4a5568'
+                    }
+                }
+            }
+
+    def _should_log_debug(self) -> bool:
+        """Check if debug logging should be enabled."""
+        return logger.isEnabledFor(logging.DEBUG) or True  # Enable for debugging
 
     def _get_file_stats(self, file_path: str) -> Dict[str, Any]:
         """Get file statistics."""
@@ -557,60 +943,4 @@ JSON Response:"""
             }
         except Exception as e:
             logger.error(f"Failed to get file stats: {e}")
-            return {'error': str(e)}
-
-    def _format_file_size(self, size_bytes: int) -> str:
-        """Format file size in human readable format."""
-        for unit in ['B', 'KB', 'MB', 'GB']:
-            if size_bytes < 1024.0:
-                return f"{size_bytes:.1f} {unit}"
-            size_bytes /= 1024.0
-        return f"{size_bytes:.1f} TB"
-
-    def cleanup_old_files(self, max_files: int = 20) -> Dict[str, Any]:
-        """Clean up old visualization files."""
-        try:
-            files = []
-            for filename in os.listdir(self.export_dir):
-                if filename.endswith('.html'):
-                    file_path = os.path.join(self.export_dir, filename)
-                    stats = self._get_file_stats(file_path)
-                    files.append({
-                        'filename': filename,
-                        'path': file_path,
-                        **stats
-                    })
-
-            if len(files) <= max_files:
-                return {
-                    'success': True,
-                    'message': f"No cleanup needed. {len(files)} files present.",
-                    'deleted_count': 0
-                }
-
-            # Sort by creation time and delete oldest
-            files.sort(key=lambda x: x.get('created', ''), reverse=False)
-            files_to_delete = files[:-max_files]
-            deleted_count = 0
-
-            for file_info in files_to_delete:
-                try:
-                    os.remove(file_info['path'])
-                    deleted_count += 1
-                except Exception as e:
-                    logger.error(f"Failed to delete {file_info['filename']}: {e}")
-
-            return {
-                'success': True,
-                'message': f"Cleanup completed. Deleted {deleted_count} old files.",
-                'deleted_count': deleted_count,
-                'remaining_files': len(files) - deleted_count
-            }
-
-        except Exception as e:
-            logger.error(f"Cleanup failed: {e}")
-            return {
-                'success': False,
-                'error': str(e),
-                'message': f"Cleanup failed: {str(e)}"
-            }
+            return
