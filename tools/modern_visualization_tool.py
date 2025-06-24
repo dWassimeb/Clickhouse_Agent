@@ -100,6 +100,32 @@ class ModernVisualizationTool(BaseTool):
 
         return cleaned_data
 
+    def _get_file_stats(self, file_path: str) -> Dict[str, Any]:
+        """Get file statistics."""
+        try:
+            stat = os.stat(file_path)
+            return {
+                'size_bytes': stat.st_size,
+                'size_human': self._format_file_size(stat.st_size),
+                'created': datetime.fromtimestamp(stat.st_ctime).isoformat(),
+                'absolute_path': os.path.abspath(file_path),
+                'filename': os.path.basename(file_path)
+            }
+        except Exception as e:
+            logger.error(f"Failed to get file stats: {e}")
+            return {
+                'filename': os.path.basename(file_path) if file_path else 'unknown',
+                'error': str(e)
+            }
+
+    def _format_file_size(self, size_bytes: int) -> str:
+        """Format file size in human readable format."""
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size_bytes < 1024.0:
+                return f"{size_bytes:.1f} {unit}"
+            size_bytes /= 1024.0
+        return f"{size_bytes:.1f} TB"
+
     def _clean_string_utf8(self, text: str) -> str:
         """Clean a string to ensure it's UTF-8 compatible."""
         if not text:
