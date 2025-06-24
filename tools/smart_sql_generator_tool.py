@@ -99,28 +99,89 @@ class SmartSqlGeneratorTool(BaseTool):
         return context
 
     def _generate_sql(self, user_question: str, sql_context: str, intent_analysis: Dict[str, Any]) -> str:
-        """Generate SQL with focused prompting."""
+        """Generate SQL with focused prompting and enhanced business rules."""
 
         # Build execution instructions
         instructions = self._build_instructions(intent_analysis)
 
         prompt = f"""Generate ClickHouse SQL query based on analyzed intent.
 
-{sql_context}
+    {sql_context}
 
-## Analyzed Requirements:
-{instructions}
+    ## Analyzed Requirements:
+    {instructions}
 
-## User Question: "{user_question}"
+    ## User Question: "{user_question}"
 
-Generate ONLY the SQL query - no explanations or markdown.
-Requirements:
-- Use SELECT statements only
-- Follow ClickHouse syntax (toDate, now(), INTERVAL)
-- Include appropriate LIMIT
-- For geographic analysis: ALWAYS use PLMN.COUNTRY_ISO3
+    ## SPECIAL BUSINESS RULES:
 
-SQL Query:"""
+    ### 🚚 DEVICE MOVEMENT DETECTION:
+    When the user question involves **detecting movement of devices from country A to country B**, infer that a movement means the **same device (identified by IMEI or AP_ID) had communication records in both countries, at different times**, with the earlier one in country A and the later one in country B.
+
+    **Required SQL Pattern:**
+    ```sql
+    SELECT COUNT(DISTINCT a.IMEI) as device_count
+    FROM RM_AGGREGATED_DATA a
+    JOIN RM_AGGREGATED_DATA b ON a.IMEI = b.IMEI  -- Same device
+    JOIN PLMN pa ON a.PLMN = pa.PLMN
+    JOIN PLMN pb ON b.PLMN = pb.PLMN
+    WHERE pa.COUNTRY_ISO3 = 'COUNTRY_A'
+      AND pb.COUNTRY_ISO3 = 'COUNTRY_B'
+      AND a.RECORD_OPENING_TIME < b.RECORD_OPENING_TIME  -- Temporal order
+      [AND time_range_filters]
+    ```
+
+    **Key Rules:**
+    - Use **self-join** on RM_AGGREGATED_DATA table (aliases a and b)
+    - Table alias a: record in **country A** (earlier)
+    - Table alias b: record in **country B** (later)  
+    - Ensure: a.RECORD_OPENING_TIME < b.RECORD_OPENING_TIME
+    - Join both a and b to PLMN table to check COUNTRY_ISO3
+    - Count **DISTINCT devices** (DISTINCT a.IMEI or DISTINCT a.AP_ID)
+    - ❗ Never detect movement from a single record's PLMN
+
+    ### ⏰ TIME INTERVAL WITH RELATIVE DATES:
+    When the user question involves a **time interval** (e.g. "between 14h00 and 14h30") and a **relative date reference** (e.g. "yesterday"), use this exact pattern:
+
+    **Required SQL Pattern:**
+    ```sql
+    AND RECORD_OPENING_TIME >= toDateTime(toDate(now() - INTERVAL N DAY)) + INTERVAL X HOUR
+    AND RECORD_OPENING_TIME < toDateTime(toDate(now() - INTERVAL N DAY)) + INTERVAL X HOUR + INTERVAL Y MINUTE
+    ```
+
+    **Parameters:**
+    - N = number of days ago (1 for "yesterday", 2 for "day before yesterday")
+    - X = starting hour (14 for "14h00")
+    - Y = duration in minutes (30 for "30 minutes")
+
+    **Key Rules:**
+    - Always treat RECORD_OPENING_TIME as DateTime
+    - Never use toHour() or substring extraction for hour filtering
+    - Use interval arithmetic only
+    - Never compare DateTime to strings directly
+
+    ### 📊 STANDARD BUSINESS PATTERNS:
+
+    **Geographic Analysis:**
+    - Always use PLMN.COUNTRY_ISO3 for country identification
+    - Join RM_AGGREGATED_DATA with PLMN table via PLMN column
+
+    **Customer Analysis:**
+    - Join RM_AGGREGATED_DATA with CUSTOMER table via PARTY_ID
+    - Use CUSTOMER.NAME for customer identification
+
+    **Time-based Analysis:**
+    - Use RECORD_OPENING_TIME for all temporal filtering
+    - Format: toDate(), toDateTime(), INTERVAL syntax
+
+    Generate ONLY the SQL query - no explanations or markdown.
+    Requirements:
+    - Use SELECT statements only
+    - Follow ClickHouse syntax exactly
+    - Include appropriate LIMIT
+    - Apply the special business rules above when relevant
+
+    SQL Query:"""
 
         try:
             response = self.llm._call(prompt)

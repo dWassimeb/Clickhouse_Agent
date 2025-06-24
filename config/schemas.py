@@ -300,5 +300,41 @@ BUSINESS_SCENARIOS = {
         LIMIT {limit}
         """,
         "required_tables": ["RM_AGGREGATED_DATA", "PLMN"]
+    },
+
+    "device_movement_detection": {
+        "description": "Detecting device movement between countries",
+        "keywords": ["movement", "move", "travel", "from", "to", "migration", "roaming"],
+        "sql_pattern": """
+    SELECT COUNT(DISTINCT a.IMEI) as device_count
+    FROM RM_AGGREGATED_DATA a
+    JOIN RM_AGGREGATED_DATA b ON a.IMEI = b.IMEI
+    JOIN PLMN pa ON a.PLMN = pa.PLMN  
+    JOIN PLMN pb ON b.PLMN = pb.PLMN
+    WHERE pa.COUNTRY_ISO3 = '{source_country}'
+      AND pb.COUNTRY_ISO3 = '{destination_country}'
+      AND a.RECORD_OPENING_TIME < b.RECORD_OPENING_TIME
+    """,
+        "requirements": [
+            "Use self-join on RM_AGGREGATED_DATA",
+            "Temporal ordering: a.RECORD_OPENING_TIME < b.RECORD_OPENING_TIME",
+            "Count DISTINCT devices (IMEI or AP_ID)",
+            "Never use single record for movement detection"
+        ]
+    },
+
+    "time_interval_with_relative_dates": {
+        "description": "Time intervals with relative date references",
+        "keywords": ["yesterday", "between", "from", "to", "during", "hour", "minute"],
+        "sql_pattern": """
+    AND RECORD_OPENING_TIME >= toDateTime(toDate(now() - INTERVAL {days} DAY)) + INTERVAL {start_hour} HOUR
+    AND RECORD_OPENING_TIME < toDateTime(toDate(now() - INTERVAL {days} DAY)) + INTERVAL {start_hour} HOUR + INTERVAL {duration} MINUTE
+    """,
+        "requirements": [
+            "Use toDateTime and toDate for date calculations",
+            "Use INTERVAL arithmetic for time ranges",
+            "Never use toHour() or string extraction",
+            "Always treat RECORD_OPENING_TIME as DateTime"
+        ]
     }
 }

@@ -2,7 +2,7 @@
 UTF-8 Fixed Professional Visualization Tool - FIXED INDENTATION ISSUE
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, ClassVar
 from langchain.tools import BaseTool
 from pydantic import Field
 import json
@@ -144,17 +144,6 @@ class ModernVisualizationTool(BaseTool):
                 break
 
         return has_numeric
-
-    """
-    Complete Enhanced Visualization Analysis - All Chart Types Support
-    """
-
-    from typing import Dict, Any, List, Optional
-    import json
-    import re
-    import logging
-
-    logger = logging.getLogger(__name__)
 
     def _analyze_data_for_visualization_safe(self, columns: List[str], data: List[List], user_question: str) -> Dict[str, Any]:
         """Enhanced analysis with better time series detection and column mapping."""
@@ -1569,3 +1558,7 @@ class ModernVisualizationTool(BaseTool):
                 return f"{size_bytes:.1f} {unit}"
             size_bytes /= 1024.0
         return f"{size_bytes:.1f} TB"
+
+    def _should_log_debug(self) -> bool:
+        """Check if debug logging should be enabled."""
+        return logger.isEnabledFor(logging.DEBUG) or True  # Enable for debugging
