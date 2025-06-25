@@ -129,9 +129,7 @@ def export_csv_node(state: ClickHouseAgentState) -> ClickHouseAgentState:
 def create_visualization_node(state: ClickHouseAgentState) -> ClickHouseAgentState:
     """
     Tool Node: Create modern interactive visualizations from query results.
-
-    This node generates fancy, lightweight HTML visualizations with Chart.js
-    that can be easily integrated into future web interfaces.
+    Now supports user chart type preferences from intent analysis.
     """
     if state.get("verbose", False):
         print(f"\n📈 TOOL NODE: Modern Visualization Creator")
@@ -145,6 +143,7 @@ def create_visualization_node(state: ClickHouseAgentState) -> ClickHouseAgentSta
         query_result = state["query_execution"]
         user_question = state["user_question"]
         csv_result = state.get("csv_export", {})
+        intent_analysis = state.get("intent_analysis", {})  # ✅ Pass intent analysis
 
         # Only create visualization if we have successful query results
         if (query_result.get("success") and
@@ -153,7 +152,14 @@ def create_visualization_node(state: ClickHouseAgentState) -> ClickHouseAgentSta
             if state.get("verbose", False):
                 print(f"   🧠 ANALYZING: Determining best visualization type with LLM")
 
-            result = tool._run(query_result, user_question, csv_result)
+                # Log user chart preference if detected
+                viz_prefs = intent_analysis.get('visualization_preferences', {})
+                user_requested = viz_prefs.get('user_requested_chart_type')
+                if user_requested and user_requested != 'auto':
+                    print(f"   🎯 USER PREFERENCE: {user_requested} chart requested")
+
+            # ✅ Pass intent_analysis to the tool
+            result = tool._run(query_result, user_question, csv_result, intent_analysis)
 
             if result.get("success"):
                 if state.get("verbose", False):

@@ -79,59 +79,76 @@ class SmartIntentAnalyzerTool(BaseTool):
         return context
 
     def _get_semantic_analysis(self, user_question: str, schema_context: str) -> str:
-        """Get focused LLM analysis."""
+        """Get focused LLM analysis with chart type detection."""
 
         prompt = f"""Analyze this database query and provide a structured JSON response.
 
-{schema_context}
+    {schema_context}
 
-User Question: "{user_question}"
+    User Question: "{user_question}"
 
-Provide analysis as JSON:
-{{
-    "language": "french|english",
-    "intent_analysis": {{
-        "primary_intent": "geographic_distribution|customer_analysis|data_usage|temporal_analysis|general",
-        "intent_confidence": 0.9,
-        "business_scenario": "geographic_distribution|customer_ranking|data_analysis"
-    }},
-    "table_analysis": {{
-        "required_tables": ["table1", "table2"],
-        "primary_table": "main_table"
-    }},
-    "join_analysis": {{
-        "required_joins": [
-            {{
-                "from_table": "table1",
-                "to_table": "table2",
-                "join_condition": "table1.col = table2.col",
-                "purpose": "why needed"
-            }}
-        ]
-    }},
-    "column_analysis": {{
-        "select_columns": [
-            {{"column": "table.column", "purpose": "grouping|aggregation", "alias": "name"}}
-        ],
-        "aggregation_needed": true,
-        "grouping_columns": ["table.column"]
-    }},
-    "temporal_analysis": {{
-        "needs_time_filter": true,
-        "time_column": "RECORD_OPENING_TIME",
-        "time_period": "7 days",
-        "time_filter_sql": "WHERE RECORD_OPENING_TIME >= now() - INTERVAL 7 DAY"
-    }},
-    "output_requirements": {{
-        "needs_percentage": false,
-        "suggested_limit": 10,
-        "sort_order": "DESC"
+    ## CHART TYPE DETECTION:
+    Detect if the user explicitly requested a specific chart/graph type:
+
+    **Keywords to detect:**
+    - "graphique en courbes", "line chart", "courbe", "évolution" → line
+    - "graphique en barres", "bar chart", "barres", "histogram" → bar  
+    - "barres horizontales", "horizontal bar", "ranking" → horizontal_bar
+    - "camembert", "pie chart", "secteurs", "répartition" → pie
+    - "donut", "doughnut", "anneau" → doughnut
+    - "nuage de points", "scatter plot", "corrélation" → scatter
+    - "radar", "toile d'araignée", "spider chart" → radar
+
+    Provide analysis as JSON:
+    {{
+        "language": "french|english",
+        "intent_analysis": {{
+            "primary_intent": "geographic_distribution|customer_analysis|data_usage|temporal_analysis|general",
+            "intent_confidence": 0.9,
+            "business_scenario": "geographic_distribution|customer_ranking|data_analysis"
+        }},
+        "visualization_preferences": {{
+            "user_requested_chart_type": "line|bar|horizontal_bar|pie|doughnut|scatter|radar|auto",
+            "chart_type_confidence": 0.8,
+            "chart_keywords_detected": ["courbe", "évolution"]
+        }},
+        "table_analysis": {{
+            "required_tables": ["table1", "table2"],
+            "primary_table": "main_table"
+        }},
+        "join_analysis": {{
+            "required_joins": [
+                {{
+                    "from_table": "table1",
+                    "to_table": "table2",
+                    "join_condition": "table1.col = table2.col",
+                    "purpose": "why needed"
+                }}
+            ]
+        }},
+        "column_analysis": {{
+            "select_columns": [
+                {{"column": "table.column", "purpose": "grouping|aggregation", "alias": "name"}}
+            ],
+            "aggregation_needed": true,
+            "grouping_columns": ["table.column"]
+        }},
+        "temporal_analysis": {{
+            "needs_time_filter": true,
+            "time_column": "RECORD_OPENING_TIME",
+            "time_period": "7 days",
+            "time_filter_sql": "WHERE RECORD_OPENING_TIME >= now() - INTERVAL 7 DAY"
+        }},
+        "output_requirements": {{
+            "needs_percentage": false,
+            "suggested_limit": 10,
+            "sort_order": "DESC"
+        }}
     }}
-}}
 
-Critical: For geographic queries, ALWAYS use PLMN table for country data (COUNTRY_ISO3), never CELL table.
+    **CRITICAL:** If user explicitly mentions a chart type, set user_requested_chart_type to that type and confidence to 0.9+. If no chart type mentioned, set to "auto".
 
-JSON Response:"""
+    JSON Response:"""
 
         try:
             response = self.llm._call(prompt)

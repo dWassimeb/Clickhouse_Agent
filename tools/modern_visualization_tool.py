@@ -32,8 +32,9 @@ class ModernVisualizationTool(BaseTool):
         # Create visualizations directory if it doesn't exist
         os.makedirs(self.export_dir, exist_ok=True)
 
-    def _run(self, query_result: Dict[str, Any], user_question: str = "", csv_result: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Create professional visualization from query results."""
+    def _run(self, query_result: Dict[str, Any], user_question: str = "", csv_result: Dict[str, Any] = None,
+             intent_analysis: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Create professional visualization from query results with user preferences."""
         try:
             # Check if we have visualizable data
             if not self._is_visualizable(query_result):
@@ -43,7 +44,7 @@ class ModernVisualizationTool(BaseTool):
                     'reason': 'No numeric data or insufficient rows'
                 }
 
-            # Debug: Log the incoming data structure
+            # Get data
             result_data = query_result.get('result', {})
             columns = result_data.get('columns', [])
             data = result_data.get('data', [])
@@ -52,11 +53,14 @@ class ModernVisualizationTool(BaseTool):
                 logger.info(f"Visualization Input - Columns: {columns}")
                 logger.info(f"Visualization Input - Sample data: {data[:3] if data else 'No data'}")
 
-            # Clean data to handle UTF-8 issues
+            # Clean data
             cleaned_data = self._clean_data_utf8(data)
 
+            # Extract user chart preference from intent analysis
+            user_chart_preference = self._extract_user_chart_preference(intent_analysis)
+
             # Analyze data structure and determine best visualization type
-            viz_analysis = self._analyze_data_for_visualization_safe(columns, cleaned_data, user_question)
+            viz_analysis = self._analyze_data_for_visualization_safe(columns, cleaned_data, user_question, user_chart_preference)
 
             if self._should_log_debug():
                 logger.info(f"LLM Analysis Result: {viz_analysis}")
@@ -82,6 +86,23 @@ class ModernVisualizationTool(BaseTool):
                 'error': str(e),
                 'message': f"Failed to create visualization: {str(e)}"
             }
+
+    def _extract_user_chart_preference(self, intent_analysis: Dict[str, Any]) -> Optional[str]:
+        """Extract user's chart type preference from intent analysis."""
+        if not intent_analysis:
+            return None
+
+        viz_prefs = intent_analysis.get('visualization_preferences', {})
+        user_requested = viz_prefs.get('user_requested_chart_type')
+        confidence = viz_prefs.get('chart_type_confidence', 0.0)
+
+        # Only use user preference if confidence is high enough
+        if user_requested and user_requested != 'auto' and confidence >= 0.7:
+            if self._should_log_debug():
+                logger.info(f"User requested chart type: {user_requested} (confidence: {confidence})")
+            return user_requested
+
+        return None
 
     def _clean_data_utf8(self, data: List[List]) -> List[List]:
         """Clean data to handle UTF-8 encoding issues."""
@@ -171,8 +192,9 @@ class ModernVisualizationTool(BaseTool):
 
         return has_numeric
 
-    def _analyze_data_for_visualization_safe(self, columns: List[str], data: List[List], user_question: str) -> Dict[str, Any]:
-        """Enhanced analysis with better time series detection and column mapping."""
+    def _analyze_data_for_visualization_safe(self, columns: List[str], data: List[List], user_question: str,
+                                             user_chart_preference: Optional[str] = None) -> Dict[str, Any]:
+        """Enhanced analysis with user chart preference support."""
 
         # Detect time series first
         time_info = self._detect_time_series_columns(columns, data)
@@ -199,55 +221,59 @@ class ModernVisualizationTool(BaseTool):
             'total_rows': len(data),
             'data_analysis': data_analysis,
             'question_context': question_context,
-            'time_series_info': time_info
+            'time_series_info': time_info,
+            'user_chart_preference': user_chart_preference
         }
 
-        # Enhanced prompt with time series awareness
+        # Enhanced prompt with user preference support
+        user_preference_instruction = ""
+        if user_chart_preference:
+            user_preference_instruction = f"""
+    **🎯 USER EXPLICITLY REQUESTED: {user_chart_preference.upper()} CHART**
+    - PRIORITY: Honor the user's explicit request unless technically impossible
+    - Only override if the requested chart type is completely incompatible with the data
+    - Provide reasoning if you need to suggest an alternative
+    """
+
         prompt = f"""Analyze this query result and determine the BEST visualization approach.
 
     User Question: "{user_question}"
     Data Structure: {json.dumps(data_structure, indent=2, default=str, ensure_ascii=True)}
 
+    {user_preference_instruction}
+
     **TIME SERIES DETECTION:**
     Is Time Series: {time_info['is_time_series']}
     Time Columns: {[col['name'] for col in [time_info.get('year_column'), time_info.get('month_column'), time_info.get('date_column')] if col]}
 
-    **CRITICAL RULES FOR TIME SERIES:**
-    - If data has YEAR/MONTH/DATE columns → ALWAYS use "line" or "area" chart
-    - For time series: X-axis = Time (months/dates), Y-axis = Values (counts/amounts)  
-    - Time should ALWAYS be on X-axis, values on Y-axis
-    - For evolution/trend questions → "line" chart is mandatory
-
     **AVAILABLE CHART TYPES:**
-    - **line** - Time series, trends, evolution over time (BEST for temporal data)
+    - **line** - Time series, trends, evolution over time
     - **area** - Time series with filled area
-    - **bar** - Categorical comparisons (NOT for time series)
-    - **horizontal_bar** - Rankings/top N lists
-    - **pie/doughnut** - Distributions (≤8 categories)
+    - **bar** - Categorical comparisons (vertical bars)
+    - **horizontal_bar** - Rankings/top N lists (horizontal bars)
+    - **pie** - Distributions (≤8 categories)
+    - **doughnut** - Modern pie charts with center hole
     - **scatter** - Correlations between variables
+    - **radar** - Multi-dimensional comparisons
 
-    **COLUMN MAPPING FOR TIME SERIES:**
-    - **label_column** = Time column (YEAR, MONTH, DATE) → X-axis
-    - **value_column** = Metric column (COUNT, AMOUNT, VOLUME) → Y-axis
-
-    **QUESTION ANALYSIS:**
-    - "évolution" = evolution → line chart mandatory
-    - "par mois" = by month → line chart with months on X-axis
-    - "trend/tendance" → line chart
-    - "over time/au fil du temps" → line chart
+    **SELECTION PRIORITY:**
+    1. **User's explicit request** (if technically feasible)
+    2. **Data compatibility** (time series → line, rankings → horizontal_bar)
+    3. **Question context** (evolution → line, top N → horizontal_bar)
 
     Respond ONLY with valid JSON:
     {{
-        "chart_type": "line|area|bar|horizontal_bar|pie|doughnut|scatter",
+        "chart_type": "line|area|bar|horizontal_bar|pie|doughnut|scatter|radar",
         "title": "Clean descriptive title",
-        "label_column": "time_column_for_x_axis",
-        "value_column": "metric_column_for_y_axis",
+        "label_column": "column_for_x_axis_or_categories",
+        "value_column": "column_for_y_axis_or_values",
         "color_scheme": "professional_blue",
         "show_legend": false,
-        "reasoning": "Why this chart type and column mapping was chosen"
+        "user_preference_honored": true,
+        "reasoning": "Why this chart type was chosen, mentioning user preference if applicable"
     }}
 
-    **REMEMBER:** For time/date data, ALWAYS use line charts with time on X-axis!
+    **REMEMBER:** Honor user's chart preference when possible!
 
     JSON Response:"""
 
@@ -267,23 +293,13 @@ class ModernVisualizationTool(BaseTool):
 
             parsed = json.loads(clean_response.strip())
 
-            # OVERRIDE: Force correct mapping for time series
-            if time_info['is_time_series']:
-                # Force line chart for time series
-                if parsed.get('chart_type') not in ['line', 'area']:
-                    parsed['chart_type'] = 'line'
-                    parsed['reasoning'] = "Forced to line chart for time series data"
-
-                # Force correct column mapping
-                if time_info['month_column']:
-                    parsed['label_column'] = time_info['month_column']['name']
-                elif time_info['year_column']:
-                    parsed['label_column'] = time_info['year_column']['name']
-                elif time_info['date_column']:
-                    parsed['label_column'] = time_info['date_column']['name']
-
-                if time_info['value_column']:
-                    parsed['value_column'] = time_info['value_column']['name']
+            # Override: Force user preference if specified and reasonable
+            if user_chart_preference and not parsed.get('user_preference_honored'):
+                # Check if user preference is reasonable for the data
+                if self._is_chart_type_compatible(user_chart_preference, time_info, len(data)):
+                    parsed['chart_type'] = user_chart_preference
+                    parsed['user_preference_honored'] = True
+                    parsed['reasoning'] = f"Using user-requested {user_chart_preference} chart type"
 
             # Enhanced validation
             validated_analysis = self._validate_and_enhance_chart_analysis(parsed, columns, data, user_question)
@@ -291,8 +307,21 @@ class ModernVisualizationTool(BaseTool):
 
         except Exception as e:
             logger.warning(f"LLM visualization analysis failed: {e}")
-            # Enhanced intelligent fallback with time series support
-            return self._create_time_series_aware_fallback(columns, data, user_question, time_info)
+            return self._create_intelligent_fallback_analysis(columns, data, user_question)
+
+    def _is_chart_type_compatible(self, chart_type: str, time_info: Dict[str, Any], data_count: int) -> bool:
+        """Check if user-requested chart type is compatible with the data."""
+
+        # Time series data should use line/area charts
+        if time_info.get('is_time_series') and chart_type not in ['line', 'area']:
+            return False
+
+        # Pie charts only work with small datasets
+        if chart_type in ['pie', 'doughnut'] and data_count > 8:
+            return False
+
+        # Otherwise, most chart types are flexible
+        return True
 
     def _create_time_series_aware_fallback(self, columns: List[str], data: List[List], user_question: str, time_info: Dict[str, Any]) -> Dict[str, Any]:
         """Create intelligent fallback with time series awareness."""
