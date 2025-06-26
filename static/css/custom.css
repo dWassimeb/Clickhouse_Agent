@@ -1,0 +1,611 @@
+/* Telmi - Professional Streamlit Interface Styling */
+
+/* Root variables for consistent theming */
+:root {
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --accent-color: #4f46e5;
+    --background-color: #f8fafc;
+    --surface-color: #ffffff;
+    --text-color: #1e293b;
+    --text-secondary: #64748b;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --border-color: #e2e8f0;
+    --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-heavy: 0 10px 30px rgba(0, 0, 0, 0.15);
+    --border-radius: 12px;
+    --border-radius-large: 20px;
+    --transition: all 0.3s ease;
+}
+
+/* Global styles */
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background: var(--background-color);
+}
+
+/* Hide Streamlit branding and default elements */
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }
+header { visibility: hidden; }
+.stDeployButton { display: none; }
+
+/* Main app container */
+.stApp {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    min-height: 100vh;
+}
+
+/* Sidebar styling */
+.css-1d391kg {
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border-right: 1px solid var(--border-color);
+}
+
+.css-1d391kg .css-1v0mbdj {
+    padding: 1rem;
+}
+
+/* Main content area */
+.block-container {
+    padding: 2rem 1rem;
+    max-width: 1200px;
+}
+
+/* Modern button styling */
+.stButton > button {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: var(--transition);
+    box-shadow: var(--shadow-medium);
+    cursor: pointer;
+    width: 100%;
+}
+
+.stButton > button:hover {
+   transform: translateY(-2px);
+   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+   background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+}
+
+.stButton > button:active {
+   transform: translateY(0);
+   box-shadow: var(--shadow-medium);
+}
+
+/* Input field styling */
+.stTextInput > div > div > input,
+.stTextArea > div > div > textarea,
+.stSelectbox > div > div > div,
+.stNumberInput > div > div > input {
+   border: 2px solid var(--border-color);
+   border-radius: var(--border-radius);
+   padding: 0.75rem 1rem;
+   font-size: 1rem;
+   transition: var(--transition);
+   background: var(--surface-color);
+   color: var(--text-color);
+}
+
+.stTextInput > div > div > input:focus,
+.stTextArea > div > div > textarea:focus,
+.stSelectbox > div > div > div:focus,
+.stNumberInput > div > div > input:focus {
+   border-color: var(--primary-color);
+   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+   outline: none;
+}
+
+/* Checkbox and radio styling */
+.stCheckbox > label {
+   display: flex;
+   align-items: center;
+   gap: 0.5rem;
+   font-weight: 500;
+   color: var(--text-color);
+}
+
+/* Tab styling */
+.stTabs [data-baseweb="tab-list"] {
+   gap: 1rem;
+   background: transparent;
+   border-bottom: 2px solid var(--border-color);
+   padding: 0 0.5rem;
+}
+
+.stTabs [data-baseweb="tab"] {
+   background: transparent;
+   border: none;
+   padding: 1rem 1.5rem;
+   color: var(--text-secondary);
+   font-weight: 500;
+   border-radius: var(--border-radius) var(--border-radius) 0 0;
+   transition: var(--transition);
+}
+
+.stTabs [aria-selected="true"] {
+   background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+   color: white;
+   box-shadow: var(--shadow-medium);
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+   background: rgba(102, 126, 234, 0.1);
+   color: var(--primary-color);
+}
+
+/* Form styling */
+.stForm {
+   background: var(--surface-color);
+   border: 1px solid var(--border-color);
+   border-radius: var(--border-radius-large);
+   padding: 2rem;
+   box-shadow: var(--shadow-light);
+   margin: 1rem 0;
+}
+
+/* Alert and message styling */
+.stAlert {
+   border-radius: var(--border-radius);
+   border: none;
+   padding: 1rem 1.25rem;
+   margin: 1rem 0;
+   font-weight: 500;
+}
+
+.stSuccess {
+   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+   color: #166534;
+   border-left: 4px solid var(--success-color);
+}
+
+.stError {
+   background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+   color: #dc2626;
+   border-left: 4px solid var(--error-color);
+}
+
+.stWarning {
+   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+   color: #92400e;
+   border-left: 4px solid var(--warning-color);
+}
+
+.stInfo {
+   background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+   color: #1e40af;
+   border-left: 4px solid var(--primary-color);
+}
+
+/* Metric styling */
+.metric-container {
+   background: var(--surface-color);
+   border: 1px solid var(--border-color);
+   border-radius: var(--border-radius);
+   padding: 1.5rem;
+   text-align: center;
+   box-shadow: var(--shadow-light);
+   transition: var(--transition);
+}
+
+.metric-container:hover {
+   box-shadow: var(--shadow-medium);
+   transform: translateY(-2px);
+}
+
+/* Expander styling */
+.streamlit-expanderHeader {
+   background: var(--surface-color);
+   border: 1px solid var(--border-color);
+   border-radius: var(--border-radius);
+   padding: 1rem;
+   font-weight: 600;
+   color: var(--text-color);
+   transition: var(--transition);
+}
+
+.streamlit-expanderHeader:hover {
+   background: rgba(102, 126, 234, 0.05);
+   border-color: var(--primary-color);
+}
+
+/* DataFrame styling */
+.stDataFrame {
+   border-radius: var(--border-radius);
+   overflow: hidden;
+   box-shadow: var(--shadow-light);
+}
+
+.stDataFrame table {
+   font-size: 0.9rem;
+}
+
+.stDataFrame th {
+   background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+   color: white;
+   font-weight: 600;
+   padding: 0.75rem;
+}
+
+.stDataFrame td {
+   padding: 0.5rem 0.75rem;
+   border-bottom: 1px solid var(--border-color);
+}
+
+.stDataFrame tr:hover {
+   background: rgba(102, 126, 234, 0.05);
+}
+
+/* Chat interface specific styling */
+.chat-container {
+   max-height: 70vh;
+   overflow-y: auto;
+   padding: 1rem;
+   background: var(--surface-color);
+   border-radius: var(--border-radius-large);
+   border: 1px solid var(--border-color);
+   box-shadow: var(--shadow-light);
+   margin: 1rem 0;
+}
+
+.chat-message {
+   padding: 1rem 1.25rem;
+   margin: 0.75rem 0;
+   border-radius: 18px;
+   max-width: 80%;
+   animation: slideInMessage 0.3s ease-out;
+   box-shadow: var(--shadow-light);
+   position: relative;
+}
+
+.user-message {
+   background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+   color: white;
+   margin-left: auto;
+   text-align: right;
+   border-bottom-right-radius: 6px;
+}
+
+.assistant-message {
+   background: var(--surface-color);
+   color: var(--text-color);
+   border: 1px solid var(--border-color);
+   border-bottom-left-radius: 6px;
+}
+
+.user-message::after {
+   content: '';
+   position: absolute;
+   bottom: 0;
+   right: -8px;
+   width: 0;
+   height: 0;
+   border: 8px solid transparent;
+   border-left-color: var(--secondary-color);
+   border-bottom: none;
+}
+
+.assistant-message::after {
+   content: '';
+   position: absolute;
+   bottom: 0;
+   left: -8px;
+   width: 0;
+   height: 0;
+   border: 8px solid transparent;
+   border-right-color: var(--surface-color);
+   border-bottom: none;
+}
+
+@keyframes slideInMessage {
+   from {
+       opacity: 0;
+       transform: translateY(20px);
+   }
+   to {
+       opacity: 1;
+       transform: translateY(0);
+   }
+}
+
+/* Chat input styling */
+.chat-input-container {
+   background: var(--surface-color);
+   border: 2px solid var(--border-color);
+   border-radius: var(--border-radius-large);
+   padding: 1rem;
+   margin: 1rem 0;
+   box-shadow: var(--shadow-medium);
+}
+
+.chat-input-container:focus-within {
+   border-color: var(--primary-color);
+   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* File upload styling */
+.stFileUploader {
+   border: 2px dashed var(--border-color);
+   border-radius: var(--border-radius);
+   padding: 2rem;
+   text-align: center;
+   transition: var(--transition);
+   background: var(--surface-color);
+}
+
+.stFileUploader:hover {
+   border-color: var(--primary-color);
+   background: rgba(102, 126, 234, 0.05);
+}
+
+/* Download button styling */
+.stDownloadButton > button {
+   background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+   color: white;
+   border: none;
+   border-radius: var(--border-radius);
+   padding: 0.75rem 1.5rem;
+   font-weight: 600;
+   transition: var(--transition);
+   box-shadow: var(--shadow-medium);
+}
+
+.stDownloadButton > button:hover {
+   transform: translateY(-2px);
+   box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+/* Progress bar styling */
+.stProgress > div > div > div {
+   background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+   border-radius: 10px;
+}
+
+/* Spinner styling */
+.stSpinner {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   padding: 2rem;
+}
+
+/* Custom components */
+.feature-card {
+   background: var(--surface-color);
+   border: 1px solid var(--border-color);
+   border-radius: var(--border-radius-large);
+   padding: 2rem;
+   text-align: center;
+   transition: var(--transition);
+   box-shadow: var(--shadow-light);
+   height: 100%;
+}
+
+.feature-card:hover {
+   transform: translateY(-5px);
+   box-shadow: var(--shadow-heavy);
+   border-color: var(--primary-color);
+}
+
+.feature-icon {
+   font-size: 3rem;
+   margin-bottom: 1rem;
+   display: block;
+}
+
+.feature-title {
+   font-size: 1.25rem;
+   font-weight: 600;
+   color: var(--text-color);
+   margin-bottom: 0.5rem;
+}
+
+.feature-description {
+   color: var(--text-secondary);
+   line-height: 1.6;
+}
+
+/* Statistics card */
+.stat-card {
+   background: var(--surface-color);
+   border: 1px solid var(--border-color);
+   border-radius: var(--border-radius);
+   padding: 1.5rem;
+   text-align: center;
+   box-shadow: var(--shadow-light);
+   transition: var(--transition);
+}
+
+.stat-card:hover {
+   box-shadow: var(--shadow-medium);
+   transform: translateY(-2px);
+}
+
+.stat-value {
+   font-size: 2rem;
+   font-weight: 700;
+   color: var(--primary-color);
+   margin-bottom: 0.5rem;
+   display: block;
+}
+
+.stat-label {
+   color: var(--text-secondary);
+   font-size: 0.9rem;
+   font-weight: 500;
+   text-transform: uppercase;
+   letter-spacing: 0.5px;
+}
+
+/* Loading states */
+.loading-container {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   padding: 3rem;
+   background: var(--surface-color);
+   border-radius: var(--border-radius-large);
+   border: 1px solid var(--border-color);
+   box-shadow: var(--shadow-light);
+}
+
+.loading-spinner {
+   width: 40px;
+   height: 40px;
+   border: 4px solid var(--border-color);
+   border-top: 4px solid var(--primary-color);
+   border-radius: 50%;
+   animation: spin 1s linear infinite;
+   margin-bottom: 1rem;
+}
+
+@keyframes spin {
+   0% { transform: rotate(0deg); }
+   100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+   color: var(--text-secondary);
+   font-weight: 500;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+   .block-container {
+       padding: 1rem 0.5rem;
+   }
+
+   .chat-message {
+       max-width: 95%;
+       padding: 0.75rem 1rem;
+   }
+
+   .feature-card {
+       padding: 1.5rem;
+   }
+
+   .stat-value {
+       font-size: 1.5rem;
+   }
+
+   .stButton > button {
+       padding: 0.75rem 1rem;
+       font-size: 0.9rem;
+   }
+}
+
+@media (max-width: 480px) {
+   .chat-message {
+       max-width: 100%;
+       margin: 0.5rem 0;
+   }
+
+   .feature-icon {
+       font-size: 2rem;
+   }
+
+   .feature-title {
+       font-size: 1.1rem;
+   }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+   :root {
+       --background-color: #0f172a;
+       --surface-color: #1e293b;
+       --text-color: #f1f5f9;
+       --text-secondary: #94a3b8;
+       --border-color: #334155;
+   }
+
+   .stApp {
+       background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+   }
+
+   .assistant-message {
+       background: var(--surface-color);
+       color: var(--text-color);
+       border-color: var(--border-color);
+   }
+}
+
+/* Accessibility improvements */
+.stButton > button:focus,
+.stTextInput > div > div > input:focus,
+.stTextArea > div > div > textarea:focus {
+   outline: 2px solid var(--primary-color);
+   outline-offset: 2px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+   width: 8px;
+}
+
+::-webkit-scrollbar-track {
+   background: var(--background-color);
+}
+
+::-webkit-scrollbar-thumb {
+   background: var(--primary-color);
+   border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+   background: var(--secondary-color);
+}
+
+/* Animation utilities */
+.fade-in {
+   animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+   from { opacity: 0; }
+   to { opacity: 1; }
+}
+
+.slide-up {
+   animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+   from {
+       opacity: 0;
+       transform: translateY(20px);
+   }
+   to {
+       opacity: 1;
+       transform: translateY(0);
+   }
+}
+
+/* Print styles */
+@media print {
+   .stButton,
+   .stFileUploader,
+   .stDownloadButton {
+       display: none;
+   }
+
+   .chat-message {
+       box-shadow: none;
+       border: 1px solid var(--border-color);
+   }
+}
