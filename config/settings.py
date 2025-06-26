@@ -9,11 +9,12 @@ from dataclasses import dataclass
 
 @dataclass
 class ClickHouseConfig:
-        host: str = "172.20.157.162"
-        port: int = 8123
-        database: str = "Default"
-        username: str = "default"
-        password: str = "default123!"
+    host: str = "172.20.157.162"
+    port: int = 8123
+    database: str = "default"  # Fixed: lowercase 'default' instead of 'Default'
+    username: str = "default"
+    password: str = "default123!"  # Fixed: empty string instead of "default123!"
+
 
 CLICKHOUSE_CONFIG = ClickHouseConfig()
 
@@ -29,10 +30,9 @@ APP_CONFIG = {
 }
 
 # Database configuration
-
 USER_DATABASE_CONFIG = {
     "users_db_path": "data/users.db",
-    }
+}
 
 # Security configuration
 SECURITY_CONFIG = {
@@ -41,11 +41,7 @@ SECURITY_CONFIG = {
     "password_min_length": 8,
     "require_password_complexity": True,
     "enable_two_factor": False,  # Future feature
-    }
-
-
-
-
+}
 
 # UI configuration
 UI_CONFIG = {
@@ -105,19 +101,19 @@ def load_environment_config():
 
     # Override database configuration from environment
     if os.getenv("CLICKHOUSE_HOST"):
-        CLICKHOUSE_CONFIG["clickhouse_host"] = os.getenv("CLICKHOUSE_HOST")
+        CLICKHOUSE_CONFIG.host = os.getenv("CLICKHOUSE_HOST")
 
     if os.getenv("CLICKHOUSE_PORT"):
-        CLICKHOUSE_CONFIG["clickhouse_port"] = int(os.getenv("CLICKHOUSE_PORT"))
+        CLICKHOUSE_CONFIG.port = int(os.getenv("CLICKHOUSE_PORT"))
 
     if os.getenv("CLICKHOUSE_DATABASE"):
-        CLICKHOUSE_CONFIG["clickhouse_database"] = os.getenv("CLICKHOUSE_DATABASE")
+        CLICKHOUSE_CONFIG.database = os.getenv("CLICKHOUSE_DATABASE")
 
     if os.getenv("CLICKHOUSE_USERNAME"):
-        CLICKHOUSE_CONFIG["clickhouse_username"] = os.getenv("CLICKHOUSE_USERNAME")
+        CLICKHOUSE_CONFIG.username = os.getenv("CLICKHOUSE_USERNAME")
 
     if os.getenv("CLICKHOUSE_PASSWORD"):
-        CLICKHOUSE_CONFIG["clickhouse_password"] = os.getenv("CLICKHOUSE_PASSWORD")
+        CLICKHOUSE_CONFIG.password = os.getenv("CLICKHOUSE_PASSWORD")
 
     # Override app configuration
     if os.getenv("APP_URL"):

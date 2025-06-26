@@ -13,4 +13,4 @@ config/config_test.py
 exports/
 visualizations/
 __pycache__/
-
+.env

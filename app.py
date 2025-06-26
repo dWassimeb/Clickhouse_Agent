@@ -7,37 +7,37 @@ import os
 import sys
 from pathlib import Path
 
-project_root = Path(file).parent
+# Fix the __file__ reference
+project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 from components.auth_components import render_auth_page
 from components.chat_interface import render_chat_interface
-from components.sidebar import render_sidebar
+from components.siderbar import render_sidebar  # Note: typo in original filename
 from utils.auth_utils import check_authentication, get_current_user
 from utils.chat_utils import initialize_chat_session
 from config.settings import APP_CONFIG
 
 # Page Configuration
-
-st.set_page_config( page_title="Telmi - Telecom Analytics AI",
-                    page_icon="🤖",
-                    layout="wide",
-                    initial_sidebar_state="expanded",
-                    menu_items={'Get Help': None,
-                                'Report a bug': None,
-                                'About': "Telmi - Your AI-powered Telecom Analytics Assistant"
-                                }
-                    )
+st.set_page_config(
+    page_title="Telmi - Telecom Analytics AI",
+    page_icon="🤖",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': "Telmi - Your AI-powered Telecom Analytics Assistant"
+    }
+)
 
 # Custom CSS
-
 def load_custom_css():
     """Load custom CSS for modern design"""
     css_file = project_root / "static" / "css" / "custom.css"
     if css_file.exists():
         with open(css_file, "r") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
 
 # Additional inline CSS for ultra-modern design
 st.markdown("""
@@ -251,5 +251,5 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
 
-if name == "main":
+if __name__ == "__main__":
     main()
