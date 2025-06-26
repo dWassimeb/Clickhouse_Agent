@@ -1,25 +1,18 @@
 [global]
 developmentMode = false
-showWarningOnDirectExecution = false
 
 [server]
 runOnSave = true
-allowRunOnSave = true
 port = 8501
-enableCORS = false
+enableCORS = true
 enableXsrfProtection = true
 maxUploadSize = 200
 maxMessageSize = 200
-enableWebsocketCompression = false
 
 [browser]
 serverAddress = "localhost"
 gatherUsageStats = false
 serverPort = 8501
-
-[ui]
-hideTopBar = true
-hideSidebarNav = false
 
 [theme]
 primaryColor = "#667eea"
@@ -30,18 +23,9 @@ font = "sans serif"
 
 [runner]
 magicEnabled = true
-installTracer = false
-fixMatplotlib = true
 postScriptGC = true
 fastReruns = true
-enforceSerializableSessionState = false
 
 [logger]
 level = "info"
 messageFormat = "%(asctime)s %(name)s: %(levelname)s: %(message)s"
-
-[client]
-caching = true
-displayEnabled = true
-showErrorDetails = true
-toolbarMode = "auto"

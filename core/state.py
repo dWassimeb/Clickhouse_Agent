@@ -2,7 +2,7 @@
 LangGraph State Definition - Central state management for the ClickHouse Agent
 """
 
-from typing import Dict, Any, List, Literal, TypedDict
+from typing import Dict, Any, List, Literal, TypedDict, Union
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langgraph.graph.message import add_messages
 from typing_extensions import Annotated
@@ -17,7 +17,7 @@ class ClickHouseAgentState(TypedDict):
     """
 
     # Core workflow data
-    messages: Annotated[List[HumanMessage | AIMessage | SystemMessage], add_messages]
+    messages: Annotated[List[Union[HumanMessage, AIMessage, SystemMessage]], add_messages]
     user_question: str
     query_type: Literal["data_query", "schema_request", "help_request"]
 

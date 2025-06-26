@@ -67,7 +67,8 @@ def render_login_form():
             remember_me = st.checkbox("Remember me", key="remember_me")
 
         with col2:
-            forgot_password = st.button("Forgot password?", key="forgot_password")
+            # Display forgot password as text since we can't use button in form
+            st.markdown('<p style="text-align: right; color: #667eea; font-size: 0.9rem; margin-top: 1rem;">Forgot password?</p>', unsafe_allow_html=True)
 
         submit_button = st.form_submit_button(
             "🚀 Sign In",
@@ -77,8 +78,11 @@ def render_login_form():
         if submit_button:
             handle_login(email, password, remember_me)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Forgot password button outside the form
+    if st.button("🔑 Reset Password", help="Reset your password", key="forgot_password_outside"):
+        st.info("Password reset functionality will be implemented soon. Please contact support.")
 
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 def render_register_form():
@@ -173,7 +177,7 @@ def handle_login(email: str, password: str, remember_me: bool):
         st.error("Invalid email or password. Please try again.")
 
 
-def handle_registration(first_name: str, last_name: str, email: str,password: str, confirm_password: str, terms_agreed: bool):
+def handle_registration(first_name: str, last_name: str, email: str, password: str, confirm_password: str, terms_agreed: bool):
     """Handle user registration"""
 
     # Validation
@@ -212,7 +216,6 @@ def handle_registration(first_name: str, last_name: str, email: str,password: st
         st.balloons()
     else:
         st.error(f"Registration failed: {message}")
-
 
 
 def add_auth_styling():
@@ -317,10 +320,40 @@ def add_auth_styling():
         padding: 0;
     }
 
-    /* Button hover effects */
+    /* Form submit button styling */
+    .stForm button[kind="formSubmit"] {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 12px 24px !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+        width: 100% !important;
+    }
+
+    .stForm button[kind="formSubmit"]:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
+    }
+
+    /* Regular button styling for buttons outside forms */
+    .stButton > button {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 8px 16px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        font-size: 0.9rem;
+    }
+
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
     }
 
     /* Error and success message styling */
@@ -358,7 +391,3 @@ def add_auth_styling():
     }
     </style>
     """, unsafe_allow_html=True)
-
-
-
-
