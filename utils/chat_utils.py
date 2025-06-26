@@ -1,19 +1,22 @@
 """
 Chat management utilities for handling chat sessions and message formatting
+Enhanced with file attachment support - NO Streamlit calls during import
 """
 
-import streamlit as st
 import json
 import re
-from typing import Dict, Any, List
-from database.users.user_db import UserDatabase
+from typing import Dict, Any, List, Optional
 import html
 
-# Initialize database
-user_db = UserDatabase()
+# Don't import streamlit at module level to avoid early execution
+# Import it only when needed inside functions
 
 def initialize_chat_session(username: str):
     """Initialize chat session for user"""
+    import streamlit as st
+    from database.users.user_db import UserDatabase
+
+    user_db = UserDatabase()
 
     if 'current_chat_session' not in st.session_state:
         # Get user
@@ -34,6 +37,10 @@ def initialize_chat_session(username: str):
 
 def create_new_chat_session(username: str) -> bool:
     """Create a new chat session for user"""
+    import streamlit as st
+    from database.users.user_db import UserDatabase
+
+    user_db = UserDatabase()
 
     try:
         user = user_db.get_user_by_username(username)
@@ -52,7 +59,11 @@ def create_new_chat_session(username: str) -> bool:
         return False
 
 def add_message_to_history(username: str, role: str, content: str, attachments: Dict[str, Any] = None):
-    """Add message to chat history"""
+    """Add message to chat history with attachment support"""
+    import streamlit as st
+    from database.users.user_db import UserDatabase
+
+    user_db = UserDatabase()
 
     try:
         # Get current session
@@ -82,7 +93,11 @@ def add_message_to_history(username: str, role: str, content: str, attachments: 
         st.error(f"Error adding message to history: {e}")
 
 def get_chat_history(username: str) -> List[Dict[str, Any]]:
-    """Get chat history for current session"""
+    """Get chat history for current session with attachment processing"""
+    import streamlit as st
+    from database.users.user_db import UserDatabase
+
+    user_db = UserDatabase()
 
     try:
         session_id = st.session_state.get('current_chat_session')
@@ -112,11 +127,16 @@ def get_chat_history(username: str) -> List[Dict[str, Any]]:
         return processed_messages
 
     except Exception as e:
-        st.error(f"Error getting chat history: {e}")
+        # Don't call st.error here during import - just print
+        print(f"Error getting chat history: {e}")
         return []
 
 def get_user_chat_sessions(username: str) -> List[Dict[str, Any]]:
     """Get all chat sessions for user"""
+    import streamlit as st
+    from database.users.user_db import UserDatabase
+
+    user_db = UserDatabase()
 
     try:
         user = user_db.get_user_by_username(username)
@@ -131,6 +151,10 @@ def get_user_chat_sessions(username: str) -> List[Dict[str, Any]]:
 
 def delete_chat_session(session_id: str, username: str) -> bool:
     """Delete a chat session"""
+    import streamlit as st
+    from database.users.user_db import UserDatabase
+
+    user_db = UserDatabase()
 
     try:
         user = user_db.get_user_by_username(username)
@@ -151,6 +175,9 @@ def delete_chat_session(session_id: str, username: str) -> bool:
 
 def update_session_title_from_message(session_id: str, message: str, username: str):
     """Update session title based on first user message"""
+    from database.users.user_db import UserDatabase
+
+    user_db = UserDatabase()
 
     try:
         user = user_db.get_user_by_username(username)
@@ -191,7 +218,7 @@ def generate_session_title(message: str) -> str:
     return clean_message[:47] + "..."
 
 def format_message_content(content: str) -> str:
-    """Format message content for display with enhanced styling"""
+    """Format message content for display with enhanced chat-friendly styling"""
 
     # Escape HTML first
     content = html.escape(content)
@@ -208,11 +235,30 @@ def format_message_content(content: str) -> str:
     # Format lists
     content = format_lists(content)
 
-    # Format links
-    content = format_links(content)
+    # Format download links (ChatGPT style)
+    content = format_download_links(content)
 
     # Add line breaks
     content = content.replace('\n', '<br>')
+
+    return content
+
+def format_download_links(content: str) -> str:
+    """Format download links in ChatGPT style"""
+
+    # CSV download links
+    content = re.sub(
+        r'📊 \*\*\[Download CSV file\]\(([^)]+)\)\*\* \(([^)]+)\)',
+        r'<div class="download-link-container"><a href="#" class="download-link csv-download" data-filename="\1">📊 Download CSV file</a> <span class="file-size">(\2)</span></div>',
+        content
+    )
+
+    # Chart download links
+    content = re.sub(
+        r'📁 \*\*\[Download Chart\]\(([^)]+)\)\*\* \(([^)]+)\)',
+        r'<div class="download-link-container"><a href="#" class="download-link chart-download" data-filename="\1">📈 Download Chart</a> <span class="file-size">(\2)</span></div>',
+        content
+    )
 
     return content
 
@@ -340,7 +386,7 @@ def format_lists(content: str) -> str:
         stripped = line.strip()
 
         # Unordered list
-        if stripped.startswith('- ') or stripped.startswith('• '):
+        if stripped.startswith('• ') or stripped.startswith('- '):
             if not in_ul:
                 formatted_lines.append('<ul class="msg-list">')
                 in_ul = True
@@ -383,18 +429,6 @@ def format_lists(content: str) -> str:
         formatted_lines.append('</ol>')
 
     return '\n'.join(formatted_lines)
-
-def format_links(content: str) -> str:
-    """Format URLs and markdown links"""
-
-    # Markdown links [text](url)
-    content = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2" target="_blank" class="msg-link">\1</a>', content)
-
-    # Plain URLs
-    url_pattern = r'(https?://[^\s<>"]+)'
-    content = re.sub(url_pattern, r'<a href="\1" target="_blank" class="msg-link">\1</a>', content)
-
-    return content
 
 def handle_file_downloads(attachments: Dict[str, Any]) -> Dict[str, Any]:
     """Handle file downloads for chat messages"""
@@ -444,148 +478,165 @@ def process_chart_attachment(chart_info: Dict[str, Any]) -> Dict[str, Any]:
         except Exception as e:
             return {'error': f"Failed to read chart file: {e}"}
 
-            return {'error': 'Chart file not available'}
+    return {'error': 'Chart file not available'}
 
-# Additional CSS for message formatting
+# Additional CSS for enhanced message formatting
 def get_message_styling_css() -> str:
-    """Get CSS for message content formatting"""
+    """Get CSS for enhanced message content formatting"""
 
     return """
-       <style>
-       /* Message content styling */
-       .msg-h1, .msg-h2, .msg-h3 {
-           color: #1e293b;
-           font-weight: 600;
-           margin: 15px 0 10px 0;
-           line-height: 1.3;
-       }
+    <style>
+    /* Enhanced message content styling */
+    .msg-h1, .msg-h2, .msg-h3 {
+        color: #1e293b;
+        font-weight: 600;
+        margin: 15px 0 10px 0;
+        line-height: 1.3;
+    }
 
-       .msg-h1 { font-size: 1.5rem; }
-       .msg-h2 { font-size: 1.3rem; }
-       .msg-h3 { font-size: 1.1rem; }
+    .msg-h1 { font-size: 1.4rem; }
+    .msg-h2 { font-size: 1.2rem; }
+    .msg-h3 { font-size: 1.1rem; }
 
-       .msg-list {
-           margin: 10px 0;
-           padding-left: 20px;
-       }
+    .msg-list {
+        margin: 10px 0;
+        padding-left: 20px;
+    }
 
-       .msg-list li {
-           margin: 5px 0;
-           line-height: 1.4;
-       }
+    .msg-list li {
+        margin: 5px 0;
+        line-height: 1.4;
+    }
 
-       .inline-code {
-           background: #f1f5f9;
-           color: #e11d48;
-           padding: 2px 6px;
-           border-radius: 4px;
-           font-family: 'Monaco', 'Consolas', monospace;
-           font-size: 0.9em;
-       }
+    .inline-code {
+        background: #f1f5f9;
+        color: #e11d48;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Monaco', 'Consolas', monospace;
+        font-size: 0.9em;
+    }
 
-       .code-block {
-           background: #1e293b;
-           border-radius: 8px;
-           margin: 15px 0;
-           overflow: hidden;
-           box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-       }
+    .code-block {
+        background: #1e293b;
+        border-radius: 8px;
+        margin: 15px 0;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
 
-       .code-header {
-           background: #334155;
-           padding: 8px 15px;
-           display: flex;
-           justify-content: space-between;
-           align-items: center;
-           font-size: 0.85rem;
-       }
+    .code-header {
+        background: #334155;
+        padding: 8px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+    }
 
-       .code-language {
-           color: #94a3b8;
-           font-weight: 500;
-       }
+    .code-language {
+        color: #94a3b8;
+        font-weight: 500;
+    }
 
-       .copy-btn {
-           background: #667eea;
-           color: white;
-           border: none;
-           padding: 4px 8px;
-           border-radius: 4px;
-           cursor: pointer;
-           font-size: 0.8rem;
-           transition: background 0.2s;
-       }
+    .copy-btn {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: background 0.2s;
+    }
 
-       .copy-btn:hover {
-           background: #5a67d8;
-       }
+    .copy-btn:hover {
+        background: #5a67d8;
+    }
 
-       .code-content {
-           margin: 0;
-           padding: 15px;
-           color: #e2e8f0;
-           font-family: 'Monaco', 'Consolas', monospace;
-           font-size: 0.9rem;
-           line-height: 1.4;
-           overflow-x: auto;
-       }
+    .code-content {
+        margin: 0;
+        padding: 15px;
+        color: #e2e8f0;
+        font-family: 'Monaco', 'Consolas', monospace;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        overflow-x: auto;
+    }
 
-       .table-container {
-           overflow-x: auto;
-           margin: 15px 0;
-       }
+    .table-container {
+        overflow-x: auto;
+        margin: 15px 0;
+    }
 
-       .data-table {
-           width: 100%;
-           border-collapse: collapse;
-           background: white;
-           border-radius: 8px;
-           overflow: hidden;
-           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-       }
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        font-family: 'Monaco', 'Consolas', monospace;
+        font-size: 0.85rem;
+    }
 
-       .data-table th {
-           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-           color: white;
-           padding: 12px 15px;
-           text-align: left;
-           font-weight: 600;
-           font-size: 0.9rem;
-       }
+    .data-table th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 12px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
 
-       .data-table td {
-           padding: 10px 15px;
-           border-bottom: 1px solid #e2e8f0;
-           font-size: 0.9rem;
-       }
+    .data-table td {
+        padding: 6px 12px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 0.8rem;
+    }
 
-       .data-table tr:hover {
-           background: #f8fafc;
-       }
+    .data-table tr:hover {
+        background: #f8fafc;
+    }
 
-       .msg-link {
-           color: #667eea;
-           text-decoration: none;
-           border-bottom: 1px solid transparent;
-           transition: border-color 0.2s;
-       }
+    /* Download link styling */
+    .download-link-container {
+        margin: 10px 0;
+        padding: 10px;
+        background: #f0f9f4;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        display: inline-block;
+    }
 
-       .msg-link:hover {
-           border-bottom-color: #667eea;
-       }
-       </style>
+    .download-link {
+        color: #059669;
+        text-decoration: none;
+        font-weight: 500;
+        margin-right: 8px;
+    }
 
-       <script>
-       function copyCode(button) {
-           const codeBlock = button.closest('.code-block');
-           const code = codeBlock.querySelector('.code-content code').textContent;
+    .download-link:hover {
+        text-decoration: underline;
+    }
 
-           navigator.clipboard.writeText(code).then(function() {
-               button.textContent = '✅ Copied!';
-               setTimeout(() => {
-                   button.textContent = '📋 Copy';
-               }, 2000);
-           });
-       }
-       </script>
-       """
+    .file-size {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+    </style>
+
+    <script>
+    function copyCode(button) {
+        const codeBlock = button.closest('.code-block');
+        const code = codeBlock.querySelector('.code-content code').textContent;
+
+        navigator.clipboard.writeText(code).then(function() {
+            button.textContent = '✅ Copied!';
+            setTimeout(() => {
+                button.textContent = '📋 Copy';
+            }, 2000);
+        }, 2000);
+    }
+    </script>
+    """

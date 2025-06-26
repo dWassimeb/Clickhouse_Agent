@@ -3,6 +3,21 @@ Telmi - Modern ClickHouse Agent Streamlit Interface
 Ultra-professional, modern design with authentication and chat interface
 """
 import streamlit as st
+
+# Page Configuration MUST be first
+st.set_page_config(
+    page_title="Telmi - Telecom Analytics AI",
+    page_icon="🤖",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': "Telmi - Your AI-powered Telecom Analytics Assistant"
+    }
+)
+
+# Now import everything else
 import os
 import sys
 from pathlib import Path
@@ -17,19 +32,6 @@ from components.siderbar import render_sidebar  # Note: typo in original filenam
 from utils.auth_utils import check_authentication, get_current_user
 from utils.chat_utils import initialize_chat_session
 from config.settings import APP_CONFIG
-
-# Page Configuration
-st.set_page_config(
-    page_title="Telmi - Telecom Analytics AI",
-    page_icon="🤖",
-    layout="wide",
-    initial_sidebar_state="expanded",
-    menu_items={
-        'Get Help': None,
-        'Report a bug': None,
-        'About': "Telmi - Your AI-powered Telecom Analytics Assistant"
-    }
-)
 
 # Custom CSS
 def load_custom_css():

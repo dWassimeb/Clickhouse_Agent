@@ -1,21 +1,22 @@
 """
-Professional response formatter - clean, minimalistic, finance-grade formatting
+Chat-friendly response formatter - Clean, ChatGPT-like formatting
 """
 
 from typing import Dict, Any, List
 from langchain.tools import BaseTool
 import logging
 from datetime import datetime
+import os
 
 logger = logging.getLogger(__name__)
 
 class ResponseFormatterTool(BaseTool):
-    """Tool for formatting query results into professional, clean responses."""
+    """Tool for formatting query results into chat-friendly responses."""
 
     name: str = "format_response"
     description: str = """
-    Format query results into clean, professional responses for users.
-    Creates readable tables, insights, summaries, and visualization links without excessive styling.
+    Format query results into clean, chat-friendly responses for users.
+    Creates ChatGPT-like responses with embedded downloads and visualizations.
     """
 
     def _run(self, query_result: Dict[str, Any], user_question: str = "", response_type: str = "query",
@@ -27,11 +28,14 @@ class ResponseFormatterTool(BaseTool):
             elif response_type == "error":
                 formatted_response = self._format_error_response(query_result)
             else:
-                formatted_response = self._format_query_response(query_result, user_question, csv_result, visualization_result)
+                formatted_response = self._format_chat_query_response(
+                    query_result, user_question, csv_result, visualization_result
+                )
 
             return {
                 'success': True,
                 'formatted_response': formatted_response,
+                'attachments': self._prepare_attachments(csv_result, visualization_result),
                 'message': "Response formatted successfully"
             }
 
@@ -43,9 +47,10 @@ class ResponseFormatterTool(BaseTool):
                 'formatted_response': f"Error formatting response: {str(e)}"
             }
 
-    def _format_query_response(self, result: Dict[str, Any], user_question: str,
-                              csv_result: Dict[str, Any] = None, visualization_result: Dict[str, Any] = None) -> str:
-        """Format query results into a clean, professional response."""
+    def _format_chat_query_response(self, result: Dict[str, Any], user_question: str,
+                                  csv_result: Dict[str, Any] = None,
+                                  visualization_result: Dict[str, Any] = None) -> str:
+        """Format query results into a clean, chat-friendly response."""
         if not result.get('success', True):
             return self._format_error_response(result)
 
@@ -54,67 +59,58 @@ class ResponseFormatterTool(BaseTool):
         if not query_result.get('data'):
             return "**No Data Found**\n\nThe query executed successfully but returned no results."
 
-        # Build formatted response
+        # Build chat-friendly response
         response_parts = []
 
-        # Add clean summary
-        summary = query_result.get('summary', '')
-        response_parts.append(f"**Query Results**\n{summary}")
-
-        # Add visualization information first (most prominent)
-        if visualization_result and visualization_result.get('success', False):
-            viz_info = self._format_visualization_info(visualization_result)
-            response_parts.append(viz_info)
-
-        # Add data table
-        formatted_table = self._format_data_table(query_result)
-        if formatted_table:
-            response_parts.append(f"**Data Overview**\n{formatted_table}")
-
-        # Add professional insights
-        insights = self._generate_professional_insights(query_result)
-        if insights:
-            response_parts.append(f"**Analysis**\n{insights}")
-
-        # Add CSV download information
-        if csv_result and csv_result.get('success', False):
-            csv_info = self._format_csv_download_info(csv_result)
-            response_parts.append(csv_info)
-
-        # Add query information
+        # 1. Executed Query (with copy functionality)
         if result.get('executed_query'):
-            response_parts.append(f"**Executed Query**\n```sql\n{result['executed_query']}\n```")
+            clean_query = self._clean_sql_for_display(result['executed_query'])
+            response_parts.append(f"**Executed Query:**\n```sql\n{clean_query}\n```")
+
+        # 2. Data Results Table
+        formatted_table = self._format_data_table_clean(query_result)
+        if formatted_table:
+            response_parts.append(f"**Results:**\n{formatted_table}")
+
+        # 3. CSV Download (ChatGPT-style)
+        if csv_result and csv_result.get('success', False):
+            csv_download = self._format_csv_download_chat_style(csv_result)
+            response_parts.append(csv_download)
+
+        # 4. Analysis Summary
+        insights = self._generate_analysis_summary(query_result)
+        if insights:
+            response_parts.append(f"**Analysis:**\n{insights}")
+
+        # 5. Interactive Visualization (embedded)
+        if visualization_result and visualization_result.get('success', False):
+            viz_section = self._format_visualization_chat_style(visualization_result)
+            response_parts.append(viz_section)
 
         return "\n\n".join(response_parts)
 
-    def _format_visualization_info(self, visualization_result: Dict[str, Any]) -> str:
-        """Format visualization information in a clean, professional manner."""
-        viz_type = visualization_result.get('visualization_type', 'chart')
-        file_stats = visualization_result.get('file_stats', {})
-        filename = file_stats.get('filename', 'chart.html')
-        file_path = file_stats.get('absolute_path', '')
-        file_size = file_stats.get('size_human', 'Unknown')
+    def _clean_sql_for_display(self, sql_query: str) -> str:
+        """Clean SQL query for better display"""
+        # Remove [object Object] artifacts
+        clean_query = sql_query.replace('[object Object]', '')
+        clean_query = clean_query.replace(',  ,', ',')
+        clean_query = clean_query.replace('  ', ' ')
 
-        viz_info_parts = [
-            "**Data Visualization**",
-            f"• Type: {viz_type.replace('_', ' ').title()} Chart",
-            f"• File: {filename}",
-            f"• Size: {file_size}",
-            f"• Location: {file_path}",
-            "",
-            "**Chart Details:**",
-            "• Professional design optimized for business use",
-            "• Interactive features with clean tooltips",
-            "• Responsive layout for all screen sizes",
-            "• Finance-grade color scheme and typography",
-            "",
-            "**Instructions:** Open the HTML file in any web browser to view the interactive chart.",
-        ]
+        # Format for better readability
+        lines = clean_query.split(',')
+        formatted_lines = []
+        for line in lines:
+            line = line.strip()
+            if line:
+                if any(keyword in line.upper() for keyword in ['SELECT', 'FROM', 'JOIN', 'WHERE', 'GROUP BY', 'ORDER BY', 'LIMIT']):
+                    formatted_lines.append(line)
+                else:
+                    formatted_lines.append(f"    {line}")
 
-        return "\n".join(viz_info_parts)
+        return '\n'.join(formatted_lines)
 
-    def _format_data_table(self, query_result: Dict[str, Any]) -> str:
-        """Format data into a clean, readable table."""
+    def _format_data_table_clean(self, query_result: Dict[str, Any]) -> str:
+        """Format data into a clean, chat-friendly table."""
         try:
             columns = query_result.get('columns', [])
             data = query_result.get('data', [])
@@ -124,19 +120,20 @@ class ResponseFormatterTool(BaseTool):
 
             # Limit display to first 20 rows for readability
             display_data = data[:20]
+            row_count = len(data)
 
-            # Calculate column widths
+            # Calculate column widths for better formatting
             col_widths = {}
             for i, col in enumerate(columns):
-                col_widths[i] = max(len(str(col)), 10)  # Minimum width of 10
+                col_widths[i] = max(len(str(col)), 8)  # Minimum width of 8
 
                 for row in display_data:
                     if i < len(row):
-                        formatted_value = self._format_professional_cell_value(row[i])
+                        formatted_value = self._format_cell_value_clean(row[i])
                         col_widths[i] = max(col_widths[i], len(str(formatted_value)))
 
-                # Cap maximum width at 25 characters for cleaner display
-                col_widths[i] = min(col_widths[i], 25)
+                # Cap maximum width at 20 characters for better display
+                col_widths[i] = min(col_widths[i], 20)
 
             # Build table
             table_lines = []
@@ -154,11 +151,11 @@ class ResponseFormatterTool(BaseTool):
                 formatted_row = []
                 for i, col in enumerate(columns):
                     value = row[i] if i < len(row) else ""
-                    formatted_value = self._format_professional_cell_value(value)
+                    formatted_value = self._format_cell_value_clean(value)
 
                     # Truncate if too long
-                    if len(str(formatted_value)) > 25:
-                        formatted_value = str(formatted_value)[:22] + "..."
+                    if len(str(formatted_value)) > 20:
+                        formatted_value = str(formatted_value)[:17] + "..."
 
                     formatted_row.append(f"{formatted_value:<{col_widths[i]}}")
 
@@ -166,9 +163,11 @@ class ResponseFormatterTool(BaseTool):
 
             table_str = "```\n" + "\n".join(table_lines) + "\n```"
 
-            # Add note if data was truncated
-            if len(data) > 20:
-                table_str += f"\n*Showing first 20 of {len(data):,} rows*"
+            # Add summary info
+            if row_count > 20:
+                table_str += f"\n*Showing first 20 of {row_count:,} total rows*"
+            else:
+                table_str += f"\n*{row_count:,} rows total*"
 
             return table_str
 
@@ -176,33 +175,49 @@ class ResponseFormatterTool(BaseTool):
             logger.error(f"Table formatting error: {e}")
             return "Error formatting table data"
 
-    def _format_professional_cell_value(self, value: Any) -> str:
-        """Format individual cell values for professional display."""
+    def _format_cell_value_clean(self, value: Any) -> str:
+        """Format individual cell values for clean display."""
         if value is None:
             return "—"
         elif isinstance(value, (int, float)):
-            if isinstance(value, float) and value.is_integer():
-                return self._format_number(int(value))
+            # Don't format years (4-digit numbers between 1900-2100)
+            if isinstance(value, (int, float)) and 1900 <= value <= 2100:
+                return str(int(value))
+            elif isinstance(value, float) and value.is_integer():
+                return self._format_number_clean(int(value))
             elif isinstance(value, float):
-                return self._format_number(value)
+                return self._format_number_clean(value)
             else:
-                return self._format_number(value)
+                return self._format_number_clean(value)
         elif isinstance(value, datetime):
             return value.strftime("%Y-%m-%d %H:%M")
         else:
             return str(value)
 
-    def _format_number(self, value: float) -> str:
+    def _format_number_clean(self, value: float) -> str:
         """Format numbers with K/M suffixes for better readability."""
-        if abs(value) >= 1_000_000:
-            return f"{value/1_000_000:.2f}M"
-        elif abs(value) >= 1_000:
-            return f"{value/1_000:.2f}K"
-        else:
-            return f"{value:.2f}"
+        if isinstance(value, (int, float)) and 1900 <= value <= 2100:
+            return str(int(value))
 
-    def _generate_professional_insights(self, query_result: Dict[str, Any]) -> str:
-        """Generate clean, professional insights from query results."""
+        if abs(value) >= 1_000_000:
+            return f"{value/1_000_000:.1f}M"
+        elif abs(value) >= 1_000:
+            return f"{value/1_000:.1f}K"
+        else:
+            return f"{value:,.0f}" if isinstance(value, (int, float)) else str(value)
+
+    def _format_csv_download_chat_style(self, csv_result: Dict[str, Any]) -> str:
+        """Format CSV download in ChatGPT style."""
+        if not csv_result.get('success', False):
+            return ""
+
+        filename = csv_result.get('filename', 'data.csv')
+        file_size = csv_result.get('file_stats', {}).get('size_human', 'Unknown')
+
+        return f"📊 **[Download CSV file]({filename})** ({file_size})\n*Click to download the complete dataset as CSV*"
+
+    def _generate_analysis_summary(self, query_result: Dict[str, Any]) -> str:
+        """Generate clean analysis summary."""
         try:
             data = query_result.get('data', [])
             columns = query_result.get('columns', [])
@@ -212,9 +227,9 @@ class ResponseFormatterTool(BaseTool):
 
             insights = []
 
-            # Row count insight
+            # Row count
             record_count = len(data)
-            insights.append(f"• Records: {self._format_number(record_count)}")
+            insights.append(f"• **Records:** {record_count:,}")
 
             # Analyze numeric columns
             for i, col in enumerate(columns):
@@ -228,26 +243,46 @@ class ResponseFormatterTool(BaseTool):
                     max_val = max(numeric_values)
                     min_val = min(numeric_values)
 
-                    insights.append(f"• {col}: Avg {self._format_number(avg_val)}, Range {self._format_number(min_val)} - {self._format_number(max_val)}")
+                    insights.append(f"• **{col}:** Avg {self._format_number_clean(avg_val)}, Range {self._format_number_clean(min_val)} - {self._format_number_clean(max_val)}")
 
-            # Unique values for categorical columns (limit to relevant ones)
-            for i, col in enumerate(columns):
-                unique_values = set()
-                total_values = 0
-                for row in data:
-                    if i < len(row) and row[i] is not None:
-                        unique_values.add(row[i])
-                        total_values += 1
-
-                if len(unique_values) <= 20 and len(unique_values) > 1 and total_values > 0:
-                    percentage = (len(unique_values) / total_values) * 100
-                    insights.append(f"• {col}: {len(unique_values)} unique values ({percentage:.1f}% distinct)")
-
-            return "\n".join(insights[:4])  # Limit to 4 insights for cleanliness
+            return "\n".join(insights[:3])  # Limit to 3 insights
 
         except Exception as e:
-            logger.error(f"Insight generation error: {e}")
+            logger.error(f"Analysis generation error: {e}")
             return ""
+
+    def _format_visualization_chat_style(self, visualization_result: Dict[str, Any]) -> str:
+        """Format visualization in chat style with embedded chart."""
+        viz_type = visualization_result.get('visualization_type', 'chart')
+        file_stats = visualization_result.get('file_stats', {})
+        filename = file_stats.get('filename', 'chart.html')
+        file_size = file_stats.get('size_human', 'Unknown')
+
+        # Return placeholder for chart embedding (handled by chat interface)
+        return f"📈 **Interactive {viz_type.replace('_', ' ').title()} Chart**\n\n[CHART_PLACEHOLDER]\n\n📁 **[Download Chart]({filename})** ({file_size})\n*Download as interactive HTML file*"
+
+    def _prepare_attachments(self, csv_result: Dict[str, Any] = None,
+                           visualization_result: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Prepare file attachments for the chat interface."""
+        attachments = {}
+
+        if csv_result and csv_result.get('success', False):
+            attachments['csv'] = {
+                'type': 'csv',
+                'filename': csv_result.get('filename'),
+                'path': csv_result.get('file_path'),
+                'size': csv_result.get('file_stats', {}).get('size_human')
+            }
+
+        if visualization_result and visualization_result.get('success', False):
+            attachments['chart'] = {
+                'type': 'html_chart',
+                'filename': visualization_result.get('file_stats', {}).get('filename'),
+                'path': visualization_result.get('html_file'),
+                'size': visualization_result.get('file_stats', {}).get('size_human')
+            }
+
+        return attachments
 
     def _format_schema_response(self, schema_result: Dict[str, Any]) -> str:
         """Format schema information for display."""
@@ -255,7 +290,6 @@ class ResponseFormatterTool(BaseTool):
             return f"**Schema Error:** {schema_result.get('error', 'Unknown error')}"
 
         if 'tables' in schema_result:
-            # List of tables
             response_parts = ["**Available Tables**\n"]
 
             for table_name, table_description in schema_result['tables'].items():
@@ -266,7 +300,6 @@ class ResponseFormatterTool(BaseTool):
             return "\n".join(response_parts)
 
         elif 'schema' in schema_result:
-            # Single table schema
             table_name = schema_result.get('table_name', 'Unknown')
             schema = schema_result['schema']
 
@@ -298,59 +331,30 @@ class ResponseFormatterTool(BaseTool):
 
         return response
 
-    def _format_csv_download_info(self, csv_result: Dict[str, Any]) -> str:
-        """Format CSV download information."""
-        if not csv_result.get('success', False):
-            return ""
-
-        filename = csv_result.get('filename', 'Unknown')
-        file_path = csv_result.get('file_path', '')
-        file_stats = csv_result.get('file_stats', {})
-
-        info_parts = [
-            "**CSV Export**",
-            f"• File: {filename}",
-            f"• Location: {file_path}"
-        ]
-
-        if file_stats.get('size_human'):
-            info_parts.append(f"• Size: {file_stats['size_human']}")
-
-        if file_stats.get('absolute_path'):
-            info_parts.append(f"• Full Path: {file_stats['absolute_path']}")
-
-        info_parts.append("• Compatible with Excel, Google Sheets, and CSV viewers")
-
-        return "\n".join(info_parts)
-
     def format_help_response(self) -> str:
         """Format help information."""
         return """
-**ClickHouse Analytics Agent - User Guide**
+**Telmi - Your ClickHouse Analytics Assistant**
 
-**Basic Commands:**
-- "list tables" or "show tables" - Show all available tables
-- "schema TABLE_NAME" - Show schema for a specific table
-- "schema" - Show all table schemas
+**What can I help you with?**
 
-**Example Questions:**
-- "How many customers do we have?"
-- "Show top 10 customers by data usage"
-- "What's the average session duration?"
-- "Show data usage by operator"
-- "Which devices use the most data?"
-- "Show session data for customer ID 12345"
+• **Data Analysis:** Ask questions about your telecom data in natural language
+• **Top Rankings:** "Show me the top 10 customers by data usage"
+• **Geographic Analysis:** "What's the distribution of users by country?"
+• **Time-based Queries:** "How much data was used last month?"
+• **Custom Reports:** "Generate a summary of device activity"
 
 **Features:**
-- **Interactive Visualizations** - Automatic chart generation for your data
-- **Professional Dashboards** - Clean, responsive charts optimized for business use
-- **Mobile Support** - Visualizations work on all devices
-- **Multiple Chart Types** - Bar, line, area, scatter, and more
+• 📊 **Automatic CSV exports** for all query results
+• 📈 **Interactive visualizations** with professional charts
+• 🔍 **Smart SQL generation** from your questions
+• 📱 **Mobile-friendly** charts and data tables
 
-**Tips:**
-- Be specific about what data you want to see
-- Mention time periods if relevant
-- Ask for limits (e.g., "top 10", "last 100 records")
-- Use natural language - the agent will convert it to SQL
-- Results include interactive visualizations and CSV exports automatically
+**Example Questions:**
+• "Who are our top 20 customers by ticket count?"
+• "Show data usage by country this week"
+• "What devices are most active?"
+• "List all available tables"
+
+Just ask your question in natural language, and I'll analyze your data!
         """

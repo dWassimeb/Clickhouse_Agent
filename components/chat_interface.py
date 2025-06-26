@@ -1,6 +1,5 @@
 """
-Professional Chat Interface Component
-Modern, clean chat UI with advanced features
+Professional Chat Interface Component with File Downloads and Chart Embedding
 """
 import streamlit as st
 import time
@@ -11,13 +10,15 @@ import base64
 from pathlib import Path
 from core.agent import ClickHouseGraphAgent
 from utils.chat_utils import (
-add_message_to_history,
-get_chat_history,
-format_message_content,
-handle_file_downloads
+    add_message_to_history,
+    get_chat_history,
+    format_message_content,
+    handle_file_downloads
 )
+
 def render_chat_interface(current_user: Dict[str, Any]):
-    """Render the main chat interface with modern design"""# Initialize agent
+    """Render the main chat interface with modern design"""
+    # Initialize agent
     if 'agent' not in st.session_state:
         st.session_state.agent = ClickHouseGraphAgent(verbose=False)
 
@@ -32,8 +33,7 @@ def render_chat_interface(current_user: Dict[str, Any]):
         render_chat_input(current_user)
 
 def render_chat_history(username: str):
-    """Render chat history with modern message bubbles"""
-
+    """Render chat history with modern message bubbles and embedded content"""
     chat_history = get_chat_history(username)
 
     if not chat_history:
@@ -44,14 +44,124 @@ def render_chat_history(username: str):
     st.markdown('<div class="chat-history">', unsafe_allow_html=True)
 
     for message in chat_history:
-        render_message_bubble(message)
+        render_message_bubble_enhanced(message)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
+def render_message_bubble_enhanced(message: Dict[str, Any]):
+    """Render individual message bubble with enhanced features"""
+    is_user = message['role'] == 'user'
+    timestamp = datetime.fromisoformat(message['timestamp']).strftime("%H:%M")
+
+    if is_user:
+        # User message (right aligned)
+        st.markdown(f"""
+        <div class="message-row user-row">
+            <div class="message-info">
+                <span class="message-time">{timestamp}</span>
+            </div>
+            <div class="chat-message user-message">
+                {html.escape(message['content'])}
+            </div>
+            <div class="message-avatar user-avatar">👤</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        # Assistant message (left aligned) with special content handling
+        content = format_message_content(message['content'])
+
+        # Check for chart placeholder and replace with embedded chart
+        if '[CHART_PLACEHOLDER]' in content:
+            content = process_chart_placeholder(content, message.get('attachments', {}))
+
+        st.markdown(f"""
+        <div class="message-row assistant-row">
+            <div class="message-avatar assistant-avatar">🤖</div>
+            <div class="chat-message assistant-message">
+                {content}
+            </div>
+            <div class="message-info">
+                <span class="message-time">{timestamp}</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Handle file downloads
+        if 'attachments' in message:
+            render_message_downloads(message['attachments'])
+
+def process_chart_placeholder(content: str, attachments: Dict[str, Any]) -> str:
+    """Replace chart placeholder with embedded chart or download link"""
+    if not attachments or 'chart' not in attachments:
+        return content.replace('[CHART_PLACEHOLDER]', '*Chart not available*')
+
+    chart_info = attachments['chart']
+    chart_path = chart_info.get('path', '')
+
+    if chart_path and Path(chart_path).exists():
+        # Create unique ID for this chart
+        chart_id = f"chart_{hash(chart_path) % 10000}"
+
+        # Replace placeholder with embedded chart
+        chart_embed = f"""
+        <div class="embedded-chart" id="{chart_id}">
+            <iframe src="data:text/html;charset=utf-8;base64,{get_chart_base64(chart_path)}" 
+                    width="100%" height="400" frameborder="0">
+            </iframe>
+        </div>
+        """
+        return content.replace('[CHART_PLACEHOLDER]', chart_embed)
+    else:
+        return content.replace('[CHART_PLACEHOLDER]', '*Chart file not found*')
+
+def get_chart_base64(chart_path: str) -> str:
+    """Get base64 encoded chart content for embedding"""
+    try:
+        with open(chart_path, 'r', encoding='utf-8') as f:
+            chart_content = f.read()
+        return base64.b64encode(chart_content.encode('utf-8')).decode('utf-8')
+    except Exception as e:
+        return base64.b64encode(f"<html><body><h3>Chart Error: {str(e)}</h3></body></html>".encode('utf-8')).decode('utf-8')
+
+def render_message_downloads(attachments: Dict[str, Any]):
+    """Render download buttons for message attachments"""
+    if not attachments:
+        return
+
+    # CSV Download
+    if 'csv' in attachments:
+        csv_info = attachments['csv']
+        if csv_info.get('path') and Path(csv_info['path']).exists():
+            with open(csv_info['path'], 'rb') as f:
+                csv_data = f.read()
+
+            st.download_button(
+                label=f"📊 Download CSV ({csv_info.get('size', 'Unknown')})",
+                data=csv_data,
+                file_name=csv_info.get('filename', 'data.csv'),
+                mime="text/csv",
+                key=f"csv_download_{hash(csv_info['path']) % 10000}",
+                help="Download the complete dataset as CSV file"
+            )
+
+    # Chart HTML Download
+    if 'chart' in attachments:
+        chart_info = attachments['chart']
+        if chart_info.get('path') and Path(chart_info['path']).exists():
+            with open(chart_info['path'], 'rb') as f:
+                chart_data = f.read()
+
+            st.download_button(
+                label=f"📈 Download Chart ({chart_info.get('size', 'Unknown')})",
+                data=chart_data,
+                file_name=chart_info.get('filename', 'chart.html'),
+                mime="text/html",
+                key=f"chart_download_{hash(chart_info['path']) % 10000}",
+                help="Download interactive chart as HTML file"
+            )
 
 def render_welcome_message():
     """Render welcome message for new users"""
-
     st.markdown("""
     <div class="welcome-container">
         <div class="welcome-message">
@@ -62,16 +172,16 @@ def render_welcome_message():
                 with natural language queries. Here are some things you can ask me:
             </p>
             <div class="example-queries">
-                <div class="example-query" onclick="document.querySelector('input[type=text]').value = this.innerText;">
+                <div class="example-query" onclick="setQueryInput(this.innerText);">
                     📊 Show me the top 10 customers by data usage
                 </div>
-                <div class="example-query" onclick="document.querySelector('input[type=text]').value = this.innerText;">
+                <div class="example-query" onclick="setQueryInput(this.innerText);">
                     🌍 What's the geographic distribution of our users?
                 </div>
-                <div class="example-query" onclick="document.querySelector('input[type=text]').value = this.innerText;">
+                <div class="example-query" onclick="setQueryInput(this.innerText);">
                     📈 Show the evolution of data usage over the last 6 months
                 </div>
-                <div class="example-query" onclick="document.querySelector('input[type=text]').value = this.innerText;">
+                <div class="example-query" onclick="setQueryInput(this.innerText);">
                     🔍 List all available tables and their schemas
                 </div>
             </div>
@@ -140,114 +250,21 @@ def render_welcome_message():
         box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
     }
     </style>
+
+    <script>
+    function setQueryInput(text) {
+        // Find the text input and set its value
+        const inputs = parent.document.querySelectorAll('input[type="text"]');
+        if (inputs.length > 0) {
+            inputs[inputs.length - 1].value = text;
+            inputs[inputs.length - 1].focus();
+        }
+    }
+    </script>
     """, unsafe_allow_html=True)
-
-
-
-def render_message_bubble(message: Dict[str, Any]):
-    """Render individual message bubble with modern styling"""
-
-    is_user = message['role'] == 'user'
-    timestamp = datetime.fromisoformat(message['timestamp']).strftime("%H:%M")
-
-    # Message container
-    bubble_class = "user-message" if is_user else "assistant-message"
-
-    if is_user:
-        # User message (right aligned)
-        st.markdown(f"""
-        <div class="message-row user-row">
-            <div class="message-info">
-                <span class="message-time">{timestamp}</span>
-            </div>
-            <div class="chat-message user-message">
-                {html.escape(message['content'])}
-            </div>
-            <div class="message-avatar user-avatar">👤</div>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        # Assistant message (left aligned) with special content handling
-        st.markdown(f"""
-        <div class="message-row assistant-row">
-            <div class="message-avatar assistant-avatar">🤖</div>
-            <div class="chat-message assistant-message">
-                {format_message_content(message['content'])}
-            </div>
-            <div class="message-info">
-                <span class="message-time">{timestamp}</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Handle file attachments (CSV, HTML charts)
-        if 'attachments' in message:
-            render_message_attachments(message['attachments'])
-
-
-def render_csv_download(csv_info: Dict[str, Any]):
-    """Render CSV download button with modern styling"""
-
-    if csv_info.get('success'):
-        file_path = csv_info.get('file_path', '')
-        filename = csv_info.get('filename', 'data.csv')
-        file_size = csv_info.get('file_stats', {}).get('size_human', 'Unknown')
-
-        if Path(file_path).exists():
-            with open(file_path, 'rb') as file:
-                file_data = file.read()
-
-            st.markdown("""
-            <div class="download-card">
-                <div class="download-icon">📄</div>
-                <div class="download-info">
-                    <div class="download-title">CSV Export Ready</div>
-                    <div class="download-meta">""" + f"{filename} • {file_size}" + """</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            st.download_button(
-                label="📥 Download CSV",
-                data=file_data,
-                file_name=filename,
-                mime="text/csv",
-                key=f"download_{filename}",
-                help="Download the query results as CSV file"
-            )
-
-
-def render_html_chart(chart_info: Dict[str, Any]):
-    """Render HTML chart inline with modern styling"""
-
-    if chart_info.get('success'):
-        file_path = chart_info.get('html_file', '')
-        chart_type = chart_info.get('visualization_type', 'chart')
-
-        if Path(file_path).exists():
-            with open(file_path, 'r', encoding='utf-8') as file:
-                html_content = file.read()
-
-            st.markdown(f"""
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div class="chart-icon">📊</div>
-                    <div class="chart-info">
-                        <div class="chart-title">Interactive {chart_type.replace('_', ' ').title()} Chart</div>
-                        <div class="chart-meta">Professional visualization • Responsive design</div>
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Display chart in expandable container
-            with st.expander("📈 View Interactive Chart", expanded=True):
-                st.components.v1.html(html_content, height=600, scrolling=True)
-
 
 def render_chat_input(current_user: Dict[str, Any]):
     """Render chat input area with modern styling"""
-
     # Chat input form
     with st.form(key="chat_form", clear_on_submit=True):
         col1, col2 = st.columns([9, 1])
@@ -270,11 +287,8 @@ def render_chat_input(current_user: Dict[str, Any]):
         if submit_button and user_input.strip():
             handle_user_message(user_input.strip(), current_user)
 
-
-
 def handle_user_message(user_input: str, current_user: Dict[str, Any]):
-    """Handle user message and generate AI response"""
-
+    """Handle user message and generate AI response with attachments"""
     username = current_user['username']
 
     # Add user message to history
@@ -292,8 +306,11 @@ def handle_user_message(user_input: str, current_user: Dict[str, Any]):
         # Clear thinking indicator
         thinking_placeholder.empty()
 
-        # Add assistant response to history
-        add_message_to_history(username, "assistant", agent_response)
+        # Extract attachments from agent response if available
+        attachments = extract_attachments_from_response(agent_response)
+
+        # Add assistant response to history with attachments
+        add_message_to_history(username, "assistant", agent_response, attachments)
 
         # Force refresh to show new messages
         st.rerun()
@@ -304,9 +321,83 @@ def handle_user_message(user_input: str, current_user: Dict[str, Any]):
         add_message_to_history(username, "assistant", error_message)
         st.rerun()
 
+def extract_attachments_from_response(response: str) -> Dict[str, Any]:
+    """Extract file attachment information from agent response"""
+    attachments = {}
+
+    # Look for download links in the response
+    import re
+
+    # CSV download pattern
+    csv_match = re.search(r'\[Download CSV file\]\(([^)]+)\)', response)
+    if csv_match:
+        filename = csv_match.group(1)
+        # Find the actual file path in exports directory
+        csv_path = find_file_in_exports(filename, 'csv')
+        if csv_path:
+            attachments['csv'] = {
+                'type': 'csv',
+                'filename': filename,
+                'path': csv_path,
+                'size': get_file_size(csv_path)
+            }
+
+    # Chart download pattern
+    chart_match = re.search(r'\[Download Chart\]\(([^)]+)\)', response)
+    if chart_match:
+        filename = chart_match.group(1)
+        # Find the actual file path in visualizations directory
+        chart_path = find_file_in_visualizations(filename)
+        if chart_path:
+            attachments['chart'] = {
+                'type': 'html_chart',
+                'filename': filename,
+                'path': chart_path,
+                'size': get_file_size(chart_path)
+            }
+
+    return attachments
+
+def find_file_in_exports(filename: str, file_type: str) -> Optional[str]:
+    """Find file in exports directory"""
+    exports_dir = Path("exports")
+    if exports_dir.exists():
+        for file_path in exports_dir.glob(f"*{filename}*"):
+            if file_path.suffix.lower() == f'.{file_type}':
+                return str(file_path)
+        # Also try exact filename
+        exact_path = exports_dir / filename
+        if exact_path.exists():
+            return str(exact_path)
+    return None
+
+def find_file_in_visualizations(filename: str) -> Optional[str]:
+    """Find file in visualizations directory"""
+    viz_dir = Path("visualizations")
+    if viz_dir.exists():
+        for file_path in viz_dir.glob(f"*{filename}*"):
+            if file_path.suffix.lower() == '.html':
+                return str(file_path)
+        # Also try exact filename
+        exact_path = viz_dir / filename
+        if exact_path.exists():
+            return str(exact_path)
+    return None
+
+def get_file_size(file_path: str) -> str:
+    """Get human-readable file size"""
+    try:
+        size_bytes = Path(file_path).stat().st_size
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size_bytes < 1024.0:
+                return f"{size_bytes:.1f} {unit}"
+            size_bytes /= 1024.0
+        return f"{size_bytes:.1f} TB"
+    except:
+        return "Unknown"
+
 def render_thinking_indicator():
     """Render modern thinking/loading indicator"""
-
     st.markdown("""
     <div class="thinking-container">
         <div class="thinking-avatar">🤖</div>
@@ -375,6 +466,18 @@ def render_thinking_indicator():
             opacity: 1;
         }
     }
+
+    .embedded-chart {
+        margin: 15px 0;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .embedded-chart iframe {
+        border-radius: 12px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -382,6 +485,7 @@ def render_thinking_indicator():
     time.sleep(0.5)
 
 
+# Enhanced CSS for chat interface
 st.markdown("""
 <style>
 .message-row {
@@ -419,36 +523,79 @@ st.markdown("""
     font-weight: 400;
 }
 
-.download-card, .chart-card {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 15px;
+/* Enhanced chat message styling */
+.chat-message {
+    padding: 15px 20px;
     margin: 10px 0;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    border-radius: 18px;
+    max-width: 80%;
+    animation: slideIn 0.3s ease-out;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
-.download-icon, .chart-icon {
-    font-size: 1.5rem;
+.user-message {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin-left: auto;
+    text-align: right;
+    border-bottom-right-radius: 6px;
 }
 
-.download-info, .chart-info {
-    flex: 1;
-}
-
-.download-title, .chart-title {
-    font-weight: 600;
+.assistant-message {
+    background: #f8fafc;
     color: #1e293b;
-    margin-bottom: 2px;
+    border: 1px solid #e2e8f0;
+    border-bottom-left-radius: 6px;
 }
 
-.download-meta, .chart-meta {
-    font-size: 0.875rem;
-    color: #64748b;
+/* Code block styling within messages */
+.assistant-message pre {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 10px 0;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.9rem;
+}
+
+/* Table styling within messages */
+.assistant-message table {
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.85rem;
+    margin: 10px 0;
+}
+
+/* Download button styling */
+.stDownloadButton > button {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 8px 16px !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+    margin: 5px !important;
+    font-size: 0.9rem !important;
+}
+
+.stDownloadButton > button:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 </style>
 """, unsafe_allow_html=True)
-
-
