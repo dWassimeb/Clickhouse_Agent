@@ -32,10 +32,10 @@ st.set_page_config( page_title="Telmi - Telecom Analytics AI",
 # Custom CSS
 
 def load_custom_css():
-            """Load custom CSS for modern design"""
-            css_file = project_root / "static" / "css" / "custom.css"
-            if css_file.exists():
-            with open(css_file, "r") as f:
+    """Load custom CSS for modern design"""
+    css_file = project_root / "static" / "css" / "custom.css"
+    if css_file.exists():
+        with open(css_file, "r") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 
@@ -204,6 +204,51 @@ header {visibility: hidden;}
 }
 </style>
 """, unsafe_allow_html=True)
+
+
+def main():
+    """Main application function"""
+
+    # Load custom styling
+    load_custom_css()
+
+    # Initialize session state
+    if 'authentication_status' not in st.session_state:
+        st.session_state.authentication_status = False
+    if 'current_user' not in st.session_state:
+        st.session_state.current_user = None
+
+    # Check authentication
+    is_authenticated = check_authentication()
+
+    if not is_authenticated:
+        # Show authentication page
+        render_auth_page()
+    else:
+        # Show main application
+        current_user = get_current_user()
+
+        # Initialize chat session for user
+        initialize_chat_session(current_user['username'])
+
+        # Render sidebar
+        render_sidebar(current_user)
+
+        # Main content area
+        st.markdown('<div class="main-content">', unsafe_allow_html=True)
+
+        # App header
+        st.markdown("""
+        <div class="app-header">
+            <h1 class="app-title">Telmi</h1>
+            <p class="app-subtitle">Your AI-powered Telecom Analytics Assistant</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Render chat interface
+        render_chat_interface(current_user)
+
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
 if name == "main":

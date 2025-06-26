@@ -4,6 +4,19 @@ Application configuration settings for Telmi Streamlit interface
 
 import os
 from typing import Dict, Any
+from dataclasses import dataclass
+
+
+@dataclass
+class ClickHouseConfig:
+        host: str = "172.20.157.162"
+        port: int = 8123
+        database: str = "Default"
+        username: str = "default"
+        password: str = "default123!"
+
+CLICKHOUSE_CONFIG = ClickHouseConfig()
+
 
 # Application configuration
 APP_CONFIG = {
@@ -16,14 +29,10 @@ APP_CONFIG = {
 }
 
 # Database configuration
-DATABASE_CONFIG = {
+
+USER_DATABASE_CONFIG = {
     "users_db_path": "data/users.db",
-    "clickhouse_host": "172.20.157.162",
-    "clickhouse_port": 8123,
-    "clickhouse_database": "Default",
-    "clickhouse_username": "default",
-    "clickhouse_password": "default123!",
-}
+    }
 
 # Security configuration
 SECURITY_CONFIG = {
@@ -32,7 +41,11 @@ SECURITY_CONFIG = {
     "password_min_length": 8,
     "require_password_complexity": True,
     "enable_two_factor": False,  # Future feature
-}
+    }
+
+
+
+
 
 # UI configuration
 UI_CONFIG = {
@@ -92,19 +105,19 @@ def load_environment_config():
 
     # Override database configuration from environment
     if os.getenv("CLICKHOUSE_HOST"):
-        DATABASE_CONFIG["clickhouse_host"] = os.getenv("CLICKHOUSE_HOST")
+        CLICKHOUSE_CONFIG["clickhouse_host"] = os.getenv("CLICKHOUSE_HOST")
 
     if os.getenv("CLICKHOUSE_PORT"):
-        DATABASE_CONFIG["clickhouse_port"] = int(os.getenv("CLICKHOUSE_PORT"))
+        CLICKHOUSE_CONFIG["clickhouse_port"] = int(os.getenv("CLICKHOUSE_PORT"))
 
     if os.getenv("CLICKHOUSE_DATABASE"):
-        DATABASE_CONFIG["clickhouse_database"] = os.getenv("CLICKHOUSE_DATABASE")
+        CLICKHOUSE_CONFIG["clickhouse_database"] = os.getenv("CLICKHOUSE_DATABASE")
 
     if os.getenv("CLICKHOUSE_USERNAME"):
-        DATABASE_CONFIG["clickhouse_username"] = os.getenv("CLICKHOUSE_USERNAME")
+        CLICKHOUSE_CONFIG["clickhouse_username"] = os.getenv("CLICKHOUSE_USERNAME")
 
     if os.getenv("CLICKHOUSE_PASSWORD"):
-        DATABASE_CONFIG["clickhouse_password"] = os.getenv("CLICKHOUSE_PASSWORD")
+        CLICKHOUSE_CONFIG["clickhouse_password"] = os.getenv("CLICKHOUSE_PASSWORD")
 
     # Override app configuration
     if os.getenv("APP_URL"):
@@ -207,7 +220,7 @@ def get_config(section: str) -> Dict[str, Any]:
 
     config_sections = {
         "app": APP_CONFIG,
-        "database": DATABASE_CONFIG,
+        "database": CLICKHOUSE_CONFIG,
         "security": SECURITY_CONFIG,
         "ui": UI_CONFIG,
         "query": QUERY_CONFIG,
@@ -227,7 +240,7 @@ def update_config(section: str, key: str, value: Any) -> bool:
 
     config_sections = {
         "app": APP_CONFIG,
-        "database": DATABASE_CONFIG,
+        "database": CLICKHOUSE_CONFIG,
         "security": SECURITY_CONFIG,
         "ui": UI_CONFIG,
         "query": QUERY_CONFIG,

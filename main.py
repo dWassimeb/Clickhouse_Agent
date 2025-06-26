@@ -6,7 +6,7 @@ Clean, efficient LangGraph implementation
 import sys
 import logging
 from core.agent import ClickHouseGraphAgent
-from database.connection import clickhouse_connection
+from database.clickhouse.connection import clickhouse_connection
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

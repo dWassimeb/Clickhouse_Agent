@@ -42,66 +42,75 @@ def render_user_profile_section(current_user: Dict[str, Any]):
             </div>
         </div>
     </div>
-        <style>
-       .profile-section {
-           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-           border-radius: 16px;
-           padding: 20px;
-           margin-bottom: 20px;
-           color: white;
-           box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-       }
-       
-       .profile-header {
-           display: flex;
-           align-items: center;
-           gap: 15px;
-       }
-       
-       .profile-avatar {
-           width: 50px;
-           height: 50px;
-           background: rgba(255, 255, 255, 0.2);
-           border-radius: 50%;
-           display: flex;
-           align-items: center;
-           justify-content: center;
-           font-size: 1.5rem;
-           backdrop-filter: blur(10px);
-       }
-       
-       .profile-info {
-           flex: 1;
-       }
-       
-       .profile-name {
-           font-weight: 600;
-           font-size: 1.1rem;
-           margin-bottom: 2px;
-       }
-       
-       .profile-email {
-           font-size: 0.85rem;
-           opacity: 0.9;
-       }
-       </style>
-       """, unsafe_allow_html=True)
 
-   # Profile actions
-   col1, col2 = st.columns(2)
+    <style>
+    .profile-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+        color: white;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+    }
 
-   with col1:
-       if st.button("⚙️ Profile", use_container_width=True, key="profile_btn"):
-           st.session_state.show_profile_modal = True
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
 
-   with col2:
-       if st.button("🚪 Logout", use_container_width=True, key="logout_btn"):
-           logout_user()
-           st.rerun()
+    .profile-avatar {
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        backdrop-filter: blur(10px);
+    }
 
-   # Profile modal
-   if st.session_state.get('show_profile_modal', False):
-       render_profile_modal(current_user)
+    .profile-info {
+        flex: 1;
+    }
+
+    .profile-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 2px;
+    }
+
+    .profile-email {
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Profile actions
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("⚙️ Profile", use_container_width=True, key="profile_btn"):
+            st.session_state.show_profile_modal = True
+
+    with col2:
+        if st.button("🚪 Logout", use_container_width=True, key="logout_btn"):
+            logout_user()
+            st.rerun()
+
+    # Simple profile modal (inline to avoid circular import)
+    if st.session_state.get('show_profile_modal', False):
+        with st.expander("👤 User Profile", expanded=True):
+            st.write(f"**Name:** {current_user['full_name']}")
+            st.write(f"**Email:** {current_user['email']}")
+            st.write(f"**Username:** {current_user['username']}")
+            st.write(f"**Member Since:** {current_user.get('created_at', 'Unknown')[:10]}")
+
+            if st.button("Close Profile"):
+                st.session_state.show_profile_modal = False
+                st.rerun()
 
 def render_chat_management():
    """Render chat management controls"""
@@ -143,21 +152,26 @@ def render_chat_history_section(username: str):
        """, unsafe_allow_html=True)
        return
 
-   # Group sessions by date
-   sessions_by_date = group_sessions_by_date(chat_sessions)
-
-   # Current session ID
+   # Show recent sessions
    current_session = st.session_state.get('current_chat_session', '')
 
-   for date_label, sessions in sessions_by_date.items():
-       st.markdown(f"""
-       <div class="date-group">
-           <div class="date-label">{date_label}</div>
-       </div>
-       """, unsafe_allow_html=True)
+   for session in chat_sessions[:10]:  # Show only 10 most recent
+       session_id = session['session_id']
+       title = session.get('title', 'Untitled Chat')
+       message_count = session.get('message_count', 0)
 
-       for session in sessions:
-           render_chat_session_item(session, current_session)
+       # Truncate title
+       display_title = title[:25] + "..." if len(title) > 25 else title
+
+       # Check if this is the current session
+       is_current = session_id == current_session
+
+       if is_current:
+           st.success(f"🟢 {display_title} ({message_count} msgs)")
+       else:
+           if st.button(f"{display_title} ({message_count} msgs)", key=f"session_{session_id}"):
+               st.session_state.current_chat_session = session_id
+               st.rerun()
 
 def render_chat_session_item(session: Dict[str, Any], current_session: str):
    """Render individual chat session item"""

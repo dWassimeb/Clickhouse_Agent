@@ -9,13 +9,16 @@ import os
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 import uuid
+from config.settings import USER_DATABASE_CONFIG
 
 
 class UserDatabase:
     """User database management class"""
 
-    def __init__(self, db_path: str = "users.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: str = None):
+        self.db_path = db_path or USER_DATABASE_CONFIG["users_db_path"]
+        # Ensure the data directory exists
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         self.init_database()
 
     def init_database(self):
@@ -35,53 +38,53 @@ class UserDatabase:
                     last_name TEXT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     last_login TIMESTAMP,
-                   is_active BOOLEAN DEFAULT 1,
-                   profile_picture TEXT,
-                   preferences TEXT
-               )
-           """)
+                    is_active BOOLEAN DEFAULT 1,
+                    profile_picture TEXT,
+                    preferences TEXT
+                )
+            """)
 
-           # Chat sessions table
-           cursor.execute("""
-               CREATE TABLE IF NOT EXISTS chat_sessions (
-                   id INTEGER PRIMARY KEY AUTOINCREMENT,
-                   session_id TEXT UNIQUE NOT NULL,
-                   user_id INTEGER NOT NULL,
-                   title TEXT,
-                   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                   is_active BOOLEAN DEFAULT 1,
-                   FOREIGN KEY (user_id) REFERENCES users (id)
-               )
-           """)
+            # Chat sessions table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS chat_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    session_id TEXT UNIQUE NOT NULL,
+                    user_id INTEGER NOT NULL,
+                    title TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    is_active BOOLEAN DEFAULT 1,
+                    FOREIGN KEY (user_id) REFERENCES users (id)
+                )
+            """)
 
-           # Chat messages table
-           cursor.execute("""
-               CREATE TABLE IF NOT EXISTS chat_messages (
-                   id INTEGER PRIMARY KEY AUTOINCREMENT,
-                   session_id TEXT NOT NULL,
-                   role TEXT NOT NULL,
-                   content TEXT NOT NULL,
-                   timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                   attachments TEXT,
-                   FOREIGN KEY (session_id) REFERENCES chat_sessions (session_id)
-               )
-           """)
+            # Chat messages table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS chat_messages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    session_id TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    attachments TEXT,
+                    FOREIGN KEY (session_id) REFERENCES chat_sessions (session_id)
+                )
+            """)
 
-           # User activity log
-           cursor.execute("""
-               CREATE TABLE IF NOT EXISTS user_activity (
-                   id INTEGER PRIMARY KEY AUTOINCREMENT,
-                   user_id INTEGER NOT NULL,
-                   activity_type TEXT NOT NULL,
-                   description TEXT,
-                   timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                   metadata TEXT,
-                   FOREIGN KEY (user_id) REFERENCES users (id)
-               )
-           """)
+            # User activity log
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS user_activity (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    activity_type TEXT NOT NULL,
+                    description TEXT,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    metadata TEXT,
+                    FOREIGN KEY (user_id) REFERENCES users (id)
+                )
+            """)
 
-           conn.commit()
+            conn.commit()
 
    def create_user(self, username: str, email: str, password_hash: str,
                   first_name: str, last_name: str) -> Optional[int]:

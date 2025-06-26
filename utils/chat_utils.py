@@ -5,10 +5,8 @@ Chat management utilities for handling chat sessions and message formatting
 import streamlit as st
 import json
 import re
-from datetime import datetime
-from typing import Dict, Any, List, Optional
-from database.user_db import UserDatabase
-import markdown
+from typing import Dict, Any, List
+from database.users.user_db import UserDatabase
 import html
 
 # Initialize database

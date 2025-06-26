@@ -6,7 +6,7 @@ import hashlib
 import re
 import uuid
 from typing import Optional, Dict, Any, Tuple
-from database.user_db import UserDatabase
+from database.users.user_db import UserDatabase
 
 
 ## Initialize user database
