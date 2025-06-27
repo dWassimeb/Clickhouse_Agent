@@ -66,6 +66,16 @@ Example Questions
 "What is the distribution of connection types across different regions?"
 "Show me the top 10 cell towers with the most traffic"
 
+Web Interface (Streamlit)
+------------------------
+A modern web interface is available. To launch it:
+
+```bash
+streamlit run web_app.py
+```
+
+This will open a professional chatbot UI in your browser, allowing you to ask questions and view chat history in the sidebar.
+
 Project Structure
 clickhouse-agent/
 ├── .env                    # Environment variables
