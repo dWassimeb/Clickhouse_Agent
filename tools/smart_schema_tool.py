@@ -2,13 +2,13 @@
 Simplified Smart Schema Tool - Adaptive and user-friendly with LLM intelligence
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, List
 from langchain.tools import BaseTool
 from pydantic import Field
 import json
 import logging
 from llm.custom_gpt import CustomGPT
-from database.clickhouse.connection import clickhouse_connection
+from database.connection import clickhouse_connection
 from config.schemas import TABLE_SCHEMAS
 
 logger = logging.getLogger(__name__)

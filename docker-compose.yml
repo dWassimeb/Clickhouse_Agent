@@ -1,0 +1,93 @@
+                 version: '3.8'
+
+services:
+  telmi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: telmi-app
+    ports:
+      - "3001:3001"
+    environment:
+      # ClickHouse Configuration
+      - CLICKHOUSE_HOST=172.20.157.162
+      - CLICKHOUSE_PORT=8123
+      - CLICKHOUSE_DATABASE=default
+      - CLICKHOUSE_USERNAME=default
+      - CLICKHOUSE_PASSWORD=default123!
+
+      # Application Configuration
+      - APP_URL=/clickhouseagent
+      - DEBUG=false
+
+      # Security
+      - SESSION_SECRET_KEY=your-production-secret-key-here
+
+      # Streamlit Configuration
+      - STREAMLIT_SERVER_PORT=3001
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_SERVER_BASE_URL_PATH=/clickhouseagent
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+      - STREAMLIT_GLOBAL_DEVELOPMENT_MODE=false
+
+    volumes:
+      # Persistent data storage
+      - telmi_data:/app/data
+      - telmi_exports:/app/exports
+      - telmi_visualizations:/app/visualizations
+      - telmi_logs:/app/logs
+
+    restart: unless-stopped
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/clickhouseagent/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+    # Network configuration
+    networks:
+      - telmi-network
+
+  # Optional: Nginx reverse proxy (if not using external proxy)
+  nginx:
+    image: nginx:alpine
+    container_name: telmi-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/ssl/certs:ro  # Mount SSL certificates if using HTTPS
+    depends_on:
+      - telmi
+    networks:
+      - telmi-network
+    profiles:
+      - nginx  # Only start with: docker-compose --profile nginx up
+
+volumes:
+  telmi_data:
+    driver: local
+  telmi_exports:
+    driver: local
+  telmi_visualizations:
+    driver: local
+  telmi_logs:
+    driver: local
+
+networks:
+  telmi-network:
+    driver: bridge

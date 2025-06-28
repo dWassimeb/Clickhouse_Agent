@@ -2,11 +2,11 @@
 Query execution tool with embedded helper functions.
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, List
 from langchain.tools import BaseTool
 import re
 import logging
-from database.clickhouse.connection import clickhouse_connection
+from database.connection import clickhouse_connection
 
 logger = logging.getLogger(__name__)
 
