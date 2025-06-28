@@ -1,6 +1,6 @@
 """
 Telmi - Modern ClickHouse Analytics Chat Interface
-Final Production Version with Full Backend Integration
+Final Production Version with Full Backend Integration - FIXED VERSION
 """
 
 import streamlit as st
@@ -9,6 +9,7 @@ import time
 import json
 import os
 import sys
+import logging
 from datetime import datetime
 from typing import Dict, Any, List
 
@@ -16,6 +17,10 @@ from typing import Dict, Any, List
 project_root = os.path.dirname(os.path.abspath(__file__))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Import integration bridge
 try:
@@ -25,7 +30,7 @@ except ImportError:
     # Fallback: try direct import
     try:
         from core.agent import ClickHouseGraphAgent
-        from database.clickhouse.connection import clickhouse_connection
+        from database.connection import clickhouse_connection
         INTEGRATION_AVAILABLE = "direct"
         print("⚠️  Using direct import fallback")
     except ImportError:
@@ -69,6 +74,7 @@ class TelmiApp:
             'typing_response': "",
             'show_account_settings': False,
             'agent_status_checked': False,
+            'sessions_loaded': False,  # Add this flag
             'agent_status': {
                 'agent_initialized': False,
                 'database_connected': False,
@@ -80,6 +86,61 @@ class TelmiApp:
         for key, default_value in default_states.items():
             if key not in st.session_state:
                 st.session_state[key] = default_value
+
+    def _load_sessions_from_file(self):
+        """Load chat sessions from file for the current user."""
+        if not st.session_state.user_info:
+            return
+
+        username = st.session_state.user_info['username']
+        sessions_file = "data/chat_sessions.json"
+
+        try:
+            if os.path.exists(sessions_file):
+                with open(sessions_file, 'r') as f:
+                    all_sessions = json.load(f)
+
+                # Filter sessions for current user
+                user_sessions = {
+                    session_id: session_data
+                    for session_id, session_data in all_sessions.items()
+                    if session_data.get('user') == username
+                }
+
+                st.session_state.chat_sessions = user_sessions
+            else:
+                st.session_state.chat_sessions = {}
+
+        except (json.JSONDecodeError, FileNotFoundError, Exception) as e:
+            logger.error(f"Error loading sessions: {e}")
+            st.session_state.chat_sessions = {}
+
+    def _save_sessions_to_file(self):
+        """Save current chat sessions to file."""
+        if not st.session_state.user_info or not hasattr(st.session_state, 'chat_sessions'):
+            return
+
+        sessions_file = "data/chat_sessions.json"
+
+        try:
+            # Load existing sessions
+            all_sessions = {}
+            if os.path.exists(sessions_file):
+                with open(sessions_file, 'r') as f:
+                    all_sessions = json.load(f)
+
+            # Update with current user's sessions
+            username = st.session_state.user_info['username']
+            for session_id, session_data in st.session_state.chat_sessions.items():
+                session_data['user'] = username
+                all_sessions[session_id] = session_data
+
+            # Save back to file
+            with open(sessions_file, 'w') as f:
+                json.dump(all_sessions, f, indent=2)
+
+        except Exception as e:
+            logger.error(f"Error saving sessions: {e}")
 
     def run(self):
         """Main application entry point."""
@@ -103,16 +164,14 @@ class TelmiApp:
         st.markdown("""
         The Telmi backend integration is not properly configured.
         
-        **Please run the setup script:**
-        ```bash
-        chmod +x setup_telmi.sh
-        ./setup_telmi.sh
-        ```
-        
-        **Or create the integration module manually:**
-        1. Create `integration/` directory
-        2. Add `agent_bridge.py` file
-        3. Restart the application
+        **Please check the following:**
+        1. Make sure you're running from the project root directory
+        2. Verify all modules exist:
+           - `core/agent.py`
+           - `database/connection.py`
+           - `tools/` directory
+        3. Check if the CLI agent works: `python3 main.py`
+        4. Restart the Streamlit application
         """)
 
     def _show_login_screen(self):
@@ -166,7 +225,7 @@ class TelmiApp:
     def _show_main_interface(self):
         """Display the main chat interface."""
         # Load chat sessions from file on first access
-        if 'sessions_loaded' not in st.session_state:
+        if not st.session_state.sessions_loaded:
             self._load_sessions_from_file()
             st.session_state.sessions_loaded = True
 
@@ -344,13 +403,6 @@ class TelmiApp:
                 df,
                 use_container_width=True,
                 hide_index=True,
-                column_config={
-                    col: st.column_config.NumberColumn(
-                        format="%.1f"
-                    ) if any(isinstance(row[i], (int, float)) for row in data if i < len(row))
-                    else st.column_config.TextColumn()
-                    for i, col in enumerate(columns)
-                }
             )
 
             # Add summary
@@ -555,6 +607,9 @@ class TelmiApp:
             'user': st.session_state.user_info['username']
         }
 
+        # Also save to file
+        self._save_sessions_to_file()
+
     def _generate_session_title(self) -> str:
         """Generate a title for the chat session."""
         if st.session_state.current_messages:
@@ -563,6 +618,8 @@ class TelmiApp:
                 "New Chat"
             )
             return first_user_message[:50] + "..." if len(first_user_message) > 50 else first_user_message
+        return "New Chat"
+
     def _parse_query_result_from_response(self, response: str) -> Dict[str, Any]:
         """Try to extract query result data from the agent response."""
         # This is a temporary solution - ideally we'd modify the bridge to return structured data
@@ -591,13 +648,15 @@ class TelmiApp:
             return None
 
         except Exception as e:
-            print(f"Error parsing query result: {e}")
+            logger.error(f"Error parsing query result: {e}")
             return None
+
 
 def main():
     """Main entry point."""
     app = TelmiApp()
     app.run()
+
 
 if __name__ == "__main__":
     main()
