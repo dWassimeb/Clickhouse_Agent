@@ -405,22 +405,52 @@ def apply_custom_styling():
         background: var(--background-color);
     }
     
-    /* Download button styling */
+    /* Download button styling - Modern design */
     .stDownloadButton > button {
         background: var(--success-color);
         color: white;
         border: none;
         border-radius: var(--radius-md);
-        padding: 0.5rem 1rem;
+        padding: 0.75rem 1.5rem;
         font-weight: 500;
+        font-size: 0.9rem;
         transition: all 0.2s ease;
         box-shadow: var(--shadow-sm);
+        margin: 0.25rem 0;
     }
     
     .stDownloadButton > button:hover {
         background: #38a169;
         transform: translateY(-1px);
         box-shadow: var(--shadow-md);
+    }
+    
+    /* Secondary download button styling */
+    .stDownloadButton > button[kind="secondary"] {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .stDownloadButton > button[kind="secondary"]:hover {
+        background: var(--primary-hover);
+    }
+    
+    /* Chart container styling */
+    .chart-container {
+        margin: 1rem 0;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-color);
+    }
+    
+    /* Download buttons container */
+    .download-buttons-container {
+        margin: 1rem 0;
+        padding: 1rem;
+        background: var(--surface-color);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
     }
     
     /* Code block styling */

@@ -1,6 +1,6 @@
 """
 Telmi - Modern ClickHouse Analytics Chat Interface
-Main Streamlit Application
+Final Production Version with Full Backend Integration
 """
 
 import streamlit as st
@@ -8,11 +8,29 @@ import uuid
 import time
 import json
 import os
+import sys
 from datetime import datetime
 from typing import Dict, Any, List
 
+# Add project root to path for imports
+project_root = os.path.dirname(os.path.abspath(__file__))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 # Import integration bridge
-from integration.agent_bridge import telmi_bridge
+try:
+    from integration.agent_bridge import telmi_bridge
+    INTEGRATION_AVAILABLE = True
+except ImportError:
+    # Fallback: try direct import
+    try:
+        from core.agent import ClickHouseGraphAgent
+        from database.clickhouse.connection import clickhouse_connection
+        INTEGRATION_AVAILABLE = "direct"
+        print("⚠️  Using direct import fallback")
+    except ImportError:
+        INTEGRATION_AVAILABLE = False
+        print("❌ Neither integration nor direct import available")
 
 # Import core components
 from components.auth import AuthManager
@@ -29,7 +47,7 @@ st.set_page_config(
 )
 
 class TelmiApp:
-    """Main Telmi application class."""
+    """Main Telmi application class with full backend integration."""
 
     def __init__(self):
         self.auth_manager = AuthManager()
@@ -49,7 +67,14 @@ class TelmiApp:
             'current_messages': [],
             'agent_thinking': False,
             'typing_response': "",
-            'show_account_settings': False
+            'show_account_settings': False,
+            'agent_status_checked': False,
+            'agent_status': {
+                'agent_initialized': False,
+                'database_connected': False,
+                'ready': False,
+                'message': 'System not tested yet'
+            }
         }
 
         for key, default_value in default_states.items():
@@ -61,11 +86,34 @@ class TelmiApp:
         # Apply custom styling
         apply_custom_styling()
 
+        # Check if integration is available
+        if not INTEGRATION_AVAILABLE:
+            self._show_integration_error()
+            return
+
         # Check authentication
         if not st.session_state.authenticated:
             self._show_login_screen()
         else:
             self._show_main_interface()
+
+    def _show_integration_error(self):
+        """Show integration error screen."""
+        st.error("🔧 **Setup Required**")
+        st.markdown("""
+        The Telmi backend integration is not properly configured.
+        
+        **Please run the setup script:**
+        ```bash
+        chmod +x setup_telmi.sh
+        ./setup_telmi.sh
+        ```
+        
+        **Or create the integration module manually:**
+        1. Create `integration/` directory
+        2. Add `agent_bridge.py` file
+        3. Restart the application
+        """)
 
     def _show_login_screen(self):
         """Display the login screen."""
@@ -117,15 +165,30 @@ class TelmiApp:
 
     def _show_main_interface(self):
         """Display the main chat interface."""
-        # Test agent status on first load
-        if 'agent_status_checked' not in st.session_state:
-            with st.spinner("🔧 Initializing Telmi agent..."):
-                status = telmi_bridge.get_agent_status()
-                st.session_state.agent_status = status
-                st.session_state.agent_status_checked = True
+        # Load chat sessions from file on first access
+        if 'sessions_loaded' not in st.session_state:
+            self._load_sessions_from_file()
+            st.session_state.sessions_loaded = True
 
-                if not status['ready']:
-                    st.error("⚠️ Agent initialization issue. Check the status panel in the sidebar.")
+        # Test agent status on first load
+        if not st.session_state.agent_status_checked:
+            with st.spinner("🔧 Initializing Telmi agent..."):
+                try:
+                    status = telmi_bridge.get_agent_status()
+                    st.session_state.agent_status = status
+                    st.session_state.agent_status_checked = True
+
+                    if not status['ready']:
+                        st.warning("⚠️ Agent initialization issue. Check the status panel in the sidebar.")
+                except Exception as e:
+                    st.session_state.agent_status = {
+                        'agent_initialized': False,
+                        'database_connected': False,
+                        'ready': False,
+                        'message': f'Initialization error: {str(e)}'
+                    }
+                    st.session_state.agent_status_checked = True
+                    st.error(f"❌ Agent initialization failed: {e}")
 
         # Sidebar
         self.sidebar_manager.render_sidebar()
@@ -159,7 +222,7 @@ class TelmiApp:
                             <span></span>
                             <span></span>
                         </div>
-                        <span class="typing-text">Telmi is thinking...</span>
+                        <span class="typing-text">Telmi is analyzing your question...</span>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -169,10 +232,18 @@ class TelmiApp:
     def _display_chat_messages(self):
         """Display all chat messages."""
         if not st.session_state.current_messages:
-            # Welcome message
-            st.markdown("""
+            # Welcome message with system status
+            system_ready = st.session_state.agent_status.get('ready', False)
+
+            if system_ready:
+                status_message = "🟢 **System Ready** - I'm connected to your ClickHouse database and ready to help!"
+            else:
+                status_message = "🟡 **System Checking** - Connecting to backend systems..."
+
+            st.markdown(f"""
                 <div class="welcome-message">
                     <h3>👋 Welcome to Telmi!</h3>
+                    <p>{status_message}</p>
                     <p>I'm your intelligent telecom analytics assistant. Ask me questions about:</p>
                     <ul>
                         <li>📊 Data usage and traffic analysis</li>
@@ -203,57 +274,136 @@ class TelmiApp:
         """, unsafe_allow_html=True)
 
     def _render_agent_message(self, message: Dict[str, Any]):
-        """Render an agent message with attachments."""
+        """Render an agent message with attachments and inline charts."""
         content = message['content']
         attachments = message.get('attachments', {})
+
+        # Check if this message contains table data
+        has_table_data = '[TABLE_DATA_PLACEHOLDER]' in content
+
+        # Process content for placeholders
+        processed_content = self._process_content_placeholders(content, attachments)
 
         # Agent message bubble
         st.markdown(f"""
             <div class="message-container agent-message">
                 <div class="message-avatar agent-avatar">🔮</div>
                 <div class="message-bubble agent-bubble">
-                    {content}
+                    {processed_content}
                 </div>
             </div>
         """, unsafe_allow_html=True)
 
-        # Handle attachments
-        if attachments:
-            col1, col2 = st.columns(2)
+        # Display table data if placeholder was found
+        if has_table_data and 'table_data' in attachments:
+            self._render_data_table(attachments['table_data'])
 
-            with col1:
-                if 'csv' in attachments:
-                    csv_info = attachments['csv']
-                    if os.path.exists(csv_info['path']):
-                        with open(csv_info['path'], 'rb') as file:
-                            st.download_button(
-                                label=f"📊 Download CSV ({csv_info['size']})",
-                                data=file.read(),
-                                file_name=csv_info['filename'],
-                                mime='text/csv',
-                                use_container_width=True
-                            )
+        # Display inline chart if placeholder was found
+        if '[CHART_DISPLAY_PLACEHOLDER]' in content and attachments.get('chart'):
+            self._render_inline_chart(attachments['chart'])
 
-            with col2:
-                if 'chart' in attachments:
-                    chart_info = attachments['chart']
-                    if os.path.exists(chart_info['path']):
-                        with open(chart_info['path'], 'rb') as file:
-                            st.download_button(
-                                label=f"📈 Download Chart ({chart_info['size']})",
-                                data=file.read(),
-                                file_name=chart_info['filename'],
-                                mime='text/html',
-                                use_container_width=True
-                            )
+        # Display download buttons if placeholder was found
+        if '[DOWNLOAD_BUTTONS_PLACEHOLDER]' in content and attachments:
+            self._render_download_buttons(attachments)
 
-            # Display chart inline
+    def _process_content_placeholders(self, content: str, attachments: Dict[str, Any]) -> str:
+        """Process content placeholders for better display."""
+        processed_content = content
+
+        # Replace table placeholder
+        if '[TABLE_DATA_PLACEHOLDER]' in content:
+            processed_content = processed_content.replace('[TABLE_DATA_PLACEHOLDER]', '')
+
+        # Replace chart placeholder
+        if '[CHART_DISPLAY_PLACEHOLDER]' in content:
+            processed_content = processed_content.replace('[CHART_DISPLAY_PLACEHOLDER]', '')
+
+        # Replace download buttons placeholder
+        if '[DOWNLOAD_BUTTONS_PLACEHOLDER]' in content:
+            processed_content = processed_content.replace('[DOWNLOAD_BUTTONS_PLACEHOLDER]', '')
+
+        return processed_content
+
+    def _render_data_table(self, table_data: Dict[str, Any]):
+        """Render data table using Streamlit's dataframe component."""
+        try:
+            import pandas as pd
+
+            columns = table_data.get('columns', [])
+            data = table_data.get('data', [])
+
+            if not columns or not data:
+                return
+
+            # Create DataFrame
+            df = pd.DataFrame(data, columns=columns)
+
+            # Display with Streamlit's dataframe
+            st.markdown("**📊 Data Results:**")
+            st.dataframe(
+                df,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    col: st.column_config.NumberColumn(
+                        format="%.1f"
+                    ) if any(isinstance(row[i], (int, float)) for row in data if i < len(row))
+                    else st.column_config.TextColumn()
+                    for i, col in enumerate(columns)
+                }
+            )
+
+            # Add summary
+            st.caption(f"*{len(data):,} rows total • {len(columns)} columns*")
+
+        except Exception as e:
+            st.error(f"Error displaying table: {e}")
+
+    def _render_inline_chart(self, chart_info: Dict[str, str]):
+        """Render chart inline in the chat."""
+        if os.path.exists(chart_info['path']):
+            try:
+                with open(chart_info['path'], 'r', encoding='utf-8') as file:
+                    html_content = file.read()
+
+                st.markdown("**📈 Chart Generated:**")
+                st.components.v1.html(html_content, height=600, scrolling=True)
+            except Exception as e:
+                st.error(f"Error displaying chart: {e}")
+
+    def _render_download_buttons(self, attachments: Dict[str, Any]):
+        """Render modern download buttons that match the interface style."""
+        st.markdown("---")  # Add separator
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if 'csv' in attachments:
+                csv_info = attachments['csv']
+                if os.path.exists(csv_info['path']):
+                    with open(csv_info['path'], 'rb') as file:
+                        st.download_button(
+                            label="📊 Download CSV Data",
+                            data=file.read(),
+                            file_name=csv_info['filename'],
+                            mime='text/csv',
+                            use_container_width=True,
+                            type="secondary"
+                        )
+
+        with col2:
             if 'chart' in attachments:
                 chart_info = attachments['chart']
                 if os.path.exists(chart_info['path']):
-                    with open(chart_info['path'], 'r', encoding='utf-8') as file:
-                        html_content = file.read()
-                        st.components.v1.html(html_content, height=600, scrolling=True)
+                    with open(chart_info['path'], 'rb') as file:
+                        st.download_button(
+                            label="📈 Download Chart",
+                            data=file.read(),
+                            file_name=chart_info['filename'],
+                            mime='text/html',
+                            use_container_width=True,
+                            type="secondary"
+                        )
 
     def _render_input_area(self):
         """Render the input area at the bottom."""
@@ -279,33 +429,26 @@ class TelmiApp:
         # Add user message
         self._add_message('user', user_input)
 
-        # Show thinking indicator
+        # Show thinking indicator immediately
         st.session_state.agent_thinking = True
-
-        # Create a placeholder for the response
-        response_placeholder = st.empty()
-
-        with response_placeholder.container():
-            st.markdown("""
-                <div class="typing-indicator">
-                    <div class="typing-dots">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
-                    <span class="typing-text">Telmi is analyzing your question...</span>
-                </div>
-            """, unsafe_allow_html=True)
+        st.rerun()  # Rerun to show the thinking indicator
 
         try:
             # Process question through the bridge
-            with response_placeholder.container():
-                st.markdown("🧠 **Analyzing your question with AI...**")
-
             result = telmi_bridge.process_question(user_input)
 
-            # Clear the thinking indicator
-            response_placeholder.empty()
+            # Store the result for table extraction
+            if result.get('success'):
+                # Extract the actual query result from the agent response
+                # This is a bit hacky but necessary to get the data
+                if hasattr(telmi_bridge, 'agent') and telmi_bridge.agent:
+                    # Get the last query execution result
+                    try:
+                        # We need to parse the agent's internal state or modify the bridge
+                        # For now, let's try to extract from the response
+                        st.session_state.last_query_result = self._parse_query_result_from_response(result['response'])
+                    except:
+                        st.session_state.last_query_result = None
 
             if result['success']:
                 response = result['response']
@@ -318,9 +461,6 @@ class TelmiApp:
                 self._add_message('agent', result['response'])
 
         except Exception as e:
-            # Clear the thinking indicator
-            response_placeholder.empty()
-
             # Add detailed error response
             error_response = f"""❌ **Unexpected Error**
 
@@ -330,9 +470,9 @@ class TelmiApp:
 • Restart the Streamlit application
 • Check if the backend agent is properly configured
 • Verify all dependencies are installed
-• Contact your system administrator
+• Make sure you're running from the project root directory
 
-**Debug Info:** Make sure you're running from the project root directory with all core modules available."""
+**Debug Info:** {type(e).__name__}: {str(e)}"""
 
             self._add_message('agent', error_response)
 
@@ -357,7 +497,7 @@ class TelmiApp:
             self._save_session_to_history()
 
     def _extract_attachments(self, response: str) -> Dict[str, Any]:
-        """Extract file attachments from agent response."""
+        """Extract file attachments and data from agent response."""
         attachments = {}
 
         # Look for CSV and chart file patterns
@@ -391,6 +531,16 @@ class TelmiApp:
                     'size': f"{stat.st_size/1024:.1f} KB"
                 }
 
+        # Extract table data from the last query execution for display
+        if hasattr(st.session_state, 'last_query_result') and st.session_state.last_query_result:
+            result = st.session_state.last_query_result
+            if result.get('success') and result.get('result', {}).get('data'):
+                query_result = result['result']
+                attachments['table_data'] = {
+                    'columns': query_result.get('columns', []),
+                    'data': query_result.get('data', [])
+                }
+
         return attachments
 
     def _save_session_to_history(self):
@@ -413,7 +563,36 @@ class TelmiApp:
                 "New Chat"
             )
             return first_user_message[:50] + "..." if len(first_user_message) > 50 else first_user_message
-        return "New Chat"
+    def _parse_query_result_from_response(self, response: str) -> Dict[str, Any]:
+        """Try to extract query result data from the agent response."""
+        # This is a temporary solution - ideally we'd modify the bridge to return structured data
+        try:
+            # Look for CSV files that were generated
+            import re
+            csv_pattern = r'\[Download CSV file\]\(([^)]+)\)'
+            csv_match = re.search(csv_pattern, response)
+
+            if csv_match:
+                csv_filename = csv_match.group(1)
+                csv_path = os.path.join('exports', csv_filename)
+
+                if os.path.exists(csv_path):
+                    import pandas as pd
+                    df = pd.read_csv(csv_path)
+
+                    return {
+                        'success': True,
+                        'result': {
+                            'columns': df.columns.tolist(),
+                            'data': df.values.tolist()
+                        }
+                    }
+
+            return None
+
+        except Exception as e:
+            print(f"Error parsing query result: {e}")
+            return None
 
 def main():
     """Main entry point."""

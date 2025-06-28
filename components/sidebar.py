@@ -87,6 +87,49 @@ class SidebarManager:
 
         st.markdown("---")
 
+    def _render_system_status(self):
+        """Render system status information."""
+        st.markdown("### 🔧 System Status")
+
+        # Get agent status
+        if 'agent_status' in st.session_state:
+            status = st.session_state.agent_status
+
+            if status.get('ready', False):
+                st.success("🟢 **System Ready**")
+                st.markdown("✅ Agent initialized  \n✅ Database connected")
+            else:
+                st.warning("🟡 **System Issues**")
+
+                if not status.get('agent_initialized', False):
+                    st.markdown("❌ Agent not initialized")
+                else:
+                    st.markdown("✅ Agent initialized")
+
+                if not status.get('database_connected', False):
+                    st.markdown("❌ Database disconnected")
+                    if 'database_message' in status:
+                        st.caption(f"Details: {status['database_message']}")
+                else:
+                    st.markdown("✅ Database connected")
+        else:
+            st.info("⏳ **Checking system status...**")
+
+        # Refresh status button
+        if st.button("🔄 Refresh Status", key="refresh_status"):
+            try:
+                from integration.agent_bridge import telmi_bridge
+                with st.spinner("Checking system status..."):
+                    status = telmi_bridge.get_agent_status()
+                    st.session_state.agent_status = status
+                    st.rerun()
+            except ImportError:
+                st.error("❌ Integration module not found. Please ensure integration/agent_bridge.py exists.")
+            except Exception as e:
+                st.error(f"❌ Status check failed: {e}")
+
+        st.markdown("---")
+
     def _render_chat_sessions(self):
         """Render the chat sessions history."""
         st.markdown("### 💬 Chat History")
@@ -129,17 +172,143 @@ class SidebarManager:
 
         with col1:
             if st.button(
-                f"📝 {title[:30]}{'...' if len(title) > 30 else ''}",
-                key=f"session_{session_id}",
-                help=f"{message_count} messages • {time_str}",
-                use_container_width=True,
-                disabled=is_current
+                    f"📝 {title[:30]}{'...' if len(title) > 30 else ''}",
+                    key=f"session_{session_id}",
+                    help=f"{message_count} messages • {time_str}",
+                    use_container_width=True,
+                    disabled=is_current
             ):
                 self._load_chat_session(session_id)
 
         with col2:
             if st.button("🗑️", key=f"delete_{session_id}", help="Delete chat"):
                 self._delete_chat_session(session_id)
+
+    def _start_new_chat(self):
+        """Start a new chat session properly."""
+        # Save current session first if it has messages
+        if st.session_state.current_messages:
+            # Make sure we have a session ID
+            if not st.session_state.current_session_id:
+                st.session_state.current_session_id = str(uuid.uuid4())
+
+            # Save current session
+            session_title = st.session_state.current_messages[0]['content'][:50] if st.session_state.current_messages else "New Chat"
+            st.session_state.chat_sessions[st.session_state.current_session_id] = {
+                'title': session_title + "..." if len(session_title) == 50 else session_title,
+                'messages': st.session_state.current_messages.copy(),
+                'timestamp': datetime.now().isoformat(),
+                'user': st.session_state.user_info['username'] if st.session_state.user_info else 'anonymous'
+            }
+
+        # Reset for new chat
+        st.session_state.current_session_id = None
+        st.session_state.current_messages = []
+        st.rerun()
+
+    def _render_chat_sessions(self):
+        """Render the chat sessions history."""
+        st.markdown("### 💬 Chat History")
+
+        # Load and display sessions
+        sessions = st.session_state.chat_sessions
+
+        if not sessions:
+            st.markdown("*No chat history yet*")
+            st.markdown("Start a conversation to see your chat history here!")
+        else:
+            # Sort sessions by timestamp (newest first)
+            sorted_sessions = sorted(
+                sessions.items(),
+                key=lambda x: x[1].get('timestamp', ''),
+                reverse=True
+            )
+
+            for session_id, session_data in sorted_sessions:
+                self._render_session_item(session_id, session_data)
+
+    def _render_session_item(self, session_id: str, session_data: Dict[str, Any]):
+        """Render a single chat session item."""
+        title = session_data.get('title', 'Untitled Chat')
+        timestamp = session_data.get('timestamp', '')
+        message_count = len(session_data.get('messages', []))
+
+        # Format timestamp
+        try:
+            dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+            time_str = dt.strftime("%m/%d %H:%M")
+        except:
+            time_str = "Unknown"
+
+        # Session container
+        is_current = session_id == st.session_state.current_session_id
+
+        col1, col2 = st.columns([4, 1])
+
+        with col1:
+            if st.button(
+                    f"📝 {title[:30]}{'...' if len(title) > 30 else ''}",
+                    key=f"session_{session_id}",
+                    help=f"{message_count} messages • {time_str}",
+                    use_container_width=True,
+                    disabled=is_current
+            ):
+                self._load_chat_session(session_id)
+
+        with col2:
+            if st.button("🗑️", key=f"delete_{session_id}", help="Delete chat"):
+                self._delete_chat_session(session_id)
+
+    def _load_chat_session(self, session_id: str):
+        """Load a specific chat session."""
+        # Save current session first if it has messages
+        if st.session_state.current_messages and st.session_state.current_session_id:
+            self._save_current_session()
+
+        # Load the selected session
+        if session_id in st.session_state.chat_sessions:
+            session_data = st.session_state.chat_sessions[session_id]
+            st.session_state.current_session_id = session_id
+            st.session_state.current_messages = session_data.get('messages', [])
+            st.rerun()
+
+    def _delete_chat_session(self, session_id: str):
+        """Delete a chat session."""
+        if session_id in st.session_state.chat_sessions:
+            del st.session_state.chat_sessions[session_id]
+
+            # If deleting current session, start new chat
+            if session_id == st.session_state.current_session_id:
+                self._start_new_chat()
+            else:
+                st.rerun()
+
+    def _save_current_session(self):
+        """Save the current chat session."""
+        if not st.session_state.current_messages or not st.session_state.user_info:
+            return
+
+        if not st.session_state.current_session_id:
+            st.session_state.current_session_id = str(uuid.uuid4())
+
+        session_data = {
+            'title': self._generate_session_title(),
+            'messages': st.session_state.current_messages,
+            'timestamp': datetime.now().isoformat(),
+            'user': st.session_state.user_info['username']
+        }
+
+        st.session_state.chat_sessions[st.session_state.current_session_id] = session_data
+
+    def _generate_session_title(self) -> str:
+        """Generate a title for the chat session."""
+        if st.session_state.current_messages:
+            first_user_message = next(
+                (msg['content'] for msg in st.session_state.current_messages if msg['role'] == 'user'),
+                "New Chat"
+            )
+            return first_user_message[:50] + "..." if len(first_user_message) > 50 else first_user_message
+        return "New Chat"
 
     def _render_sidebar_footer(self):
         """Render the sidebar footer."""

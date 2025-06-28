@@ -64,30 +64,26 @@ class ResponseFormatterTool(BaseTool):
         # Build modern chat response
         response_parts = []
 
-        # 1. Quick Summary First
-        summary = self._generate_quick_summary(query_result, user_question)
-        if summary:
-            response_parts.append(f"**✨ Quick Answer:**\n{summary}")
+        # 1. Data Results Table (using placeholder for Streamlit dataframe)
+        response_parts.append("[TABLE_DATA_PLACEHOLDER]")
 
-        # 2. Data Preview Table (limited rows)
-        data_preview = self._format_data_preview_table(query_result)
-        if data_preview:
-            response_parts.append(f"**📊 Data Preview:**\n{data_preview}")
-
-        # 3. Key Insights
-        insights = self._generate_key_insights(query_result)
+        # 2. Key Insights (with proper line breaks)
+        insights = self._generate_key_insights_formatted(query_result)
         if insights:
             response_parts.append(f"**🔍 Key Insights:**\n{insights}")
 
-        # 4. Files Section
-        files_section = self._format_files_section(csv_result, visualization_result)
-        if files_section:
-            response_parts.append(files_section)
-
-        # 5. SQL Query (collapsible)
+        # 3. SQL Query
         if result.get('executed_query'):
             clean_query = self._clean_sql_for_streamlit(result['executed_query'])
             response_parts.append(f"**⚡ Executed Query:**\n```sql\n{clean_query}\n```")
+
+        # 4. Chart Generated Section
+        if visualization_result and visualization_result.get('success', False):
+            response_parts.append("[CHART_DISPLAY_PLACEHOLDER]")
+
+        # 5. Download Buttons Section
+        if csv_result or visualization_result:
+            response_parts.append("[DOWNLOAD_BUTTONS_PLACEHOLDER]")
 
         return "\n\n".join(response_parts)
 
@@ -155,14 +151,14 @@ class ResponseFormatterTool(BaseTool):
             preview_data = data[:10]
             total_rows = len(data)
 
-            # Create markdown table
+            # Create markdown table with proper spacing
             table_lines = []
 
-            # Header row
+            # Header row with proper spacing
             header = " | ".join(f"**{col}**" for col in columns[:6])  # Limit columns too
             table_lines.append(f"| {header} |")
 
-            # Separator
+            # Separator with proper alignment
             separator = " | ".join("---" for _ in columns[:6])
             table_lines.append(f"| {separator} |")
 
@@ -198,8 +194,8 @@ class ResponseFormatterTool(BaseTool):
             logger.error(f"Table formatting error: {e}")
             return "Error displaying data preview"
 
-    def _generate_key_insights(self, query_result: Dict[str, Any]) -> str:
-        """Generate key insights from the data."""
+    def _generate_key_insights_formatted(self, query_result: Dict[str, Any]) -> str:
+        """Generate key insights with proper line breaks."""
         try:
             data = query_result.get('data', [])
             columns = query_result.get('columns', [])
@@ -244,31 +240,47 @@ class ResponseFormatterTool(BaseTool):
                 last_item = self._format_cell_value_clean(data[-1][0])
                 insights.append(f"• **Range:** From {first_item} to {last_item}")
 
+            # Join with proper line breaks
             return "\n".join(insights[:4])  # Limit to 4 insights
 
         except Exception as e:
             logger.debug(f"Insights generation failed: {e}")
             return ""
 
-    def _format_files_section(self, csv_result: Dict[str, Any] = None,
-                            visualization_result: Dict[str, Any] = None) -> str:
-        """Format the files section for Streamlit."""
-        files_info = []
+    def _format_download_buttons_section(self, csv_result: Dict[str, Any] = None,
+                                       visualization_result: Dict[str, Any] = None) -> str:
+        """Format the download buttons section for Streamlit."""
+        if not csv_result and not visualization_result:
+            return ""
 
+        buttons_info = []
+
+        # CSV Download Button Info
         if csv_result and csv_result.get('success', False):
             filename = csv_result.get('filename', 'data.csv')
             file_size = csv_result.get('file_stats', {}).get('size_human', 'Unknown')
-            files_info.append(f"📊 **CSV Export:** `{filename}` ({file_size})")
+            buttons_info.append({
+                'type': 'csv',
+                'filename': filename,
+                'size': file_size,
+                'label': f"📊 Download CSV Data"
+            })
 
+        # Chart Download Button Info
         if visualization_result and visualization_result.get('success', False):
             file_stats = visualization_result.get('file_stats', {})
             filename = file_stats.get('filename', 'chart.html')
             file_size = file_stats.get('size_human', 'Unknown')
-            viz_type = visualization_result.get('visualization_type', 'chart')
-            files_info.append(f"📈 **Interactive {viz_type.title()} Chart:** `{filename}` ({file_size})")
+            viz_type = visualization_result.get('visualization_type', 'Chart')
+            buttons_info.append({
+                'type': 'chart',
+                'filename': filename,
+                'size': file_size,
+                'label': f"📈 Download {viz_type.title()} Chart"
+            })
 
-        if files_info:
-            return "**📁 Generated Files:**\n" + "\n".join(files_info) + "\n\n*Use the download buttons above to save these files*"
+        if buttons_info:
+            return "[DOWNLOAD_BUTTONS_PLACEHOLDER]"
 
         return ""
 
