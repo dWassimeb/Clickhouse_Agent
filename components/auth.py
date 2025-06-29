@@ -1,6 +1,5 @@
 """
-Authentication Manager for Telmi
-Handles user registration, login, and account management
+Updated Authentication Manager with Delete User Functionality
 """
 
 import json
@@ -27,7 +26,11 @@ class AuthManager:
         if os.path.exists(self.users_file):
             try:
                 with open(self.users_file, 'r') as f:
-                    self.users = json.load(f)
+                    content = f.read().strip()
+                    if content:
+                        self.users = json.loads(content)
+                    else:
+                        self.users = {}
             except (json.JSONDecodeError, FileNotFoundError):
                 self.users = {}
         else:
@@ -124,9 +127,27 @@ class AuthManager:
         self._save_users()
         return True
 
+    def delete_user(self, username: str) -> bool:
+        """Delete a user account completely."""
+        if username not in self.users:
+            return False
+
+        try:
+            # Remove user from users dictionary
+            del self.users[username]
+
+            # Save updated users file
+            self._save_users()
+
+            return True
+        except Exception as e:
+            print(f"Error deleting user: {e}")
+            return False
+
     def render_account_settings(self):
-        """Render the account settings interface."""
+        """Render account settings interface - SIMPLIFIED VERSION WITHOUT NESTED EXPANDERS."""
         if not st.session_state.user_info:
+            st.warning("⚠️ Please log in to access account settings")
             return
 
         username = st.session_state.user_info['username']
@@ -134,97 +155,95 @@ class AuthManager:
 
         st.markdown("### 👤 Account Settings")
 
-        # Profile Settings
-        with st.expander("Profile Settings", expanded=True):
-            col1, col2 = st.columns(2)
+        # Profile Settings - NO EXPANDER
+        st.markdown("#### Profile Information")
+        st.markdown(f"**Username:** {username}")
+        st.markdown(f"**Email:** {user_data.get('email', 'No email set')}")
+        st.markdown(f"**Account Created:** {user_data.get('created_at', 'Unknown')[:10]}")
 
-            with col1:
-                new_email = st.text_input(
-                    "Email",
-                    value=user_data.get('email', ''),
-                    key="settings_email"
-                )
+        # Theme Settings
+        theme = st.selectbox(
+            "Theme",
+            options=['light', 'dark'],
+            index=0 if user_data['preferences'].get('theme', 'light') == 'light' else 1,
+            key="main_settings_theme"
+        )
 
-            with col2:
-                theme = st.selectbox(
-                    "Theme",
-                    options=['light', 'dark'],
-                    index=0 if user_data['preferences'].get('theme', 'light') == 'light' else 1,
-                    key="settings_theme"
-                )
+        # Database Settings - NO EXPANDER
+        st.markdown("#### Database Connection")
+        db_settings = user_data.get('database_settings', {})
 
-        # Database Settings
-        with st.expander("Database Connection", expanded=False):
-            db_settings = user_data.get('database_settings', {})
+        col1, col2 = st.columns(2)
 
-            col1, col2 = st.columns(2)
-
-            with col1:
-                db_host = st.text_input(
-                    "ClickHouse Host",
-                    value=db_settings.get('host', '172.20.157.162'),
-                    key="settings_db_host"
-                )
-
-                db_database = st.text_input(
-                    "Database",
-                    value=db_settings.get('database', 'default'),
-                    key="settings_db_database"
-                )
-
-            with col2:
-                db_port = st.number_input(
-                    "Port",
-                    value=db_settings.get('port', 8123),
-                    min_value=1,
-                    max_value=65535,
-                    key="settings_db_port"
-                )
-
-                db_username = st.text_input(
-                    "Username",
-                    value=db_settings.get('username', 'default'),
-                    key="settings_db_username"
-                )
-
-            db_password = st.text_input(
-                "Password",
-                value=db_settings.get('password', ''),
-                type="password",
-                key="settings_db_password"
+        with col1:
+            db_host = st.text_input(
+                "ClickHouse Host",
+                value=db_settings.get('host', '172.20.157.162'),
+                key="main_settings_db_host"
             )
 
-        # Password Change
-        with st.expander("Change Password", expanded=False):
-            col1, col2 = st.columns(2)
+            db_database = st.text_input(
+                "Database",
+                value=db_settings.get('database', 'default'),
+                key="main_settings_db_database"
+            )
 
-            with col1:
-                old_password = st.text_input(
-                    "Current Password",
-                    type="password",
-                    key="old_password"
-                )
+        with col2:
+            db_port = st.number_input(
+                "Port",
+                value=db_settings.get('port', 8123),
+                min_value=1,
+                max_value=65535,
+                key="main_settings_db_port"
+            )
 
-            with col2:
-                new_password = st.text_input(
-                    "New Password",
-                    type="password",
-                    key="new_password"
-                )
+            db_username = st.text_input(
+                "Username",
+                value=db_settings.get('username', 'default'),
+                key="main_settings_db_username"
+            )
 
-            if st.button("Change Password", key="change_password_btn"):
-                if old_password and new_password:
-                    if self.change_password(username, old_password, new_password):
-                        st.success("Password changed successfully!")
-                    else:
-                        st.error("Current password is incorrect")
+        db_password = st.text_input(
+            "Password",
+            value=db_settings.get('password', ''),
+            type="password",
+            key="main_settings_db_password"
+        )
+
+        # Password Change - NO EXPANDER
+        st.markdown("#### Change Password")
+        col1, col2 = st.columns(2)
+
+        with col1:
+            old_password = st.text_input(
+                "Current Password",
+                type="password",
+                key="main_old_password"
+            )
+
+        with col2:
+            new_password = st.text_input(
+                "New Password",
+                type="password",
+                key="main_new_password"
+            )
+
+        if st.button("🔒 Change Password", key="main_change_password_btn"):
+            if old_password and new_password:
+                if self.change_password(username, old_password, new_password):
+                    st.success("✅ Password changed successfully!")
+                    # Clear password fields
+                    st.session_state.main_old_password = ""
+                    st.session_state.main_new_password = ""
+                    st.rerun()
                 else:
-                    st.error("Please fill in both password fields")
+                    st.error("❌ Current password is incorrect")
+            else:
+                st.error("⚠️ Please fill in both password fields")
 
         # Save Settings Button
         if st.button("💾 Save Settings", use_container_width=True):
             settings_update = {
-                'email': new_email,
                 'preferences': {
                     'theme': theme,
                     'language': user_data['preferences'].get('language', 'en'),
@@ -240,18 +259,60 @@ class AuthManager:
             }
 
             if self.update_user_settings(username, settings_update):
-                st.success("Settings saved successfully!")
+                st.success("✅ Settings saved successfully!")
                 # Update session state
                 st.session_state.user_info = self.get_user_info(username)
                 st.rerun()
             else:
-                st.error("Failed to save settings")
+                st.error("❌ Failed to save settings")
 
-        # Logout button
+        # Account Actions
         st.markdown("---")
-        if st.button("🚪 Logout", use_container_width=True):
-            st.session_state.authenticated = False
-            st.session_state.user_info = None
-            st.session_state.current_messages = []
-            st.session_state.current_session_id = None
-            st.rerun()
+        st.markdown("#### Account Actions")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button("🚪 Logout", use_container_width=True):
+                st.session_state.authenticated = False
+                st.session_state.user_info = None
+                st.session_state.current_messages = []
+                st.session_state.current_session_id = None
+                st.rerun()
+
+        with col2:
+            if st.button("🗑️ Delete Account", use_container_width=True, type="secondary"):
+                st.session_state.show_main_delete_confirmation = True
+                st.rerun()
+
+        # Delete confirmation in main settings
+        if getattr(st.session_state, 'show_main_delete_confirmation', False):
+            st.markdown("---")
+            st.error("⚠️ **DELETE ACCOUNT CONFIRMATION**")
+            st.markdown("""
+            **This action is irreversible!**
+            
+            All your data will be permanently deleted including:
+            • Your user account and profile
+            • All chat history and conversations  
+            • All saved preferences and settings
+            """)
+
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("❌ Cancel", key="main_cancel_delete", use_container_width=True):
+                    st.session_state.show_main_delete_confirmation = False
+                    st.rerun()
+
+            with col2:
+                if st.button("🗑️ Confirm Delete", key="main_confirm_delete", use_container_width=True, type="primary"):
+                    if self.delete_user(username):
+                        st.session_state.authenticated = False
+                        st.session_state.user_info = None
+                        st.session_state.current_messages = []
+                        st.session_state.current_session_id = None
+                        st.session_state.show_main_delete_confirmation = False
+                        st.success("✅ Account deleted successfully!")
+                        st.rerun()
+                    else:
+                        st.error("❌ Failed to delete account")

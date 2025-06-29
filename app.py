@@ -87,61 +87,6 @@ class TelmiApp:
             if key not in st.session_state:
                 st.session_state[key] = default_value
 
-    def _load_sessions_from_file(self):
-        """Load chat sessions from file for the current user."""
-        if not st.session_state.user_info:
-            return
-
-        username = st.session_state.user_info['username']
-        sessions_file = "data/chat_sessions.json"
-
-        try:
-            if os.path.exists(sessions_file):
-                with open(sessions_file, 'r') as f:
-                    all_sessions = json.load(f)
-
-                # Filter sessions for current user
-                user_sessions = {
-                    session_id: session_data
-                    for session_id, session_data in all_sessions.items()
-                    if session_data.get('user') == username
-                }
-
-                st.session_state.chat_sessions = user_sessions
-            else:
-                st.session_state.chat_sessions = {}
-
-        except (json.JSONDecodeError, FileNotFoundError, Exception) as e:
-            logger.error(f"Error loading sessions: {e}")
-            st.session_state.chat_sessions = {}
-
-    def _save_sessions_to_file(self):
-        """Save current chat sessions to file."""
-        if not st.session_state.user_info or not hasattr(st.session_state, 'chat_sessions'):
-            return
-
-        sessions_file = "data/chat_sessions.json"
-
-        try:
-            # Load existing sessions
-            all_sessions = {}
-            if os.path.exists(sessions_file):
-                with open(sessions_file, 'r') as f:
-                    all_sessions = json.load(f)
-
-            # Update with current user's sessions
-            username = st.session_state.user_info['username']
-            for session_id, session_data in st.session_state.chat_sessions.items():
-                session_data['user'] = username
-                all_sessions[session_id] = session_data
-
-            # Save back to file
-            with open(sessions_file, 'w') as f:
-                json.dump(all_sessions, f, indent=2)
-
-        except Exception as e:
-            logger.error(f"Error saving sessions: {e}")
-
     def run(self):
         """Main application entry point."""
         # Apply custom styling
@@ -158,12 +103,102 @@ class TelmiApp:
         else:
             self._show_main_interface()
 
+
+    def _save_sessions_to_file(self):
+        """Save current chat sessions to file - IMPROVED ERROR HANDLING."""
+        if not st.session_state.user_info:
+            return
+
+        sessions_file = "data/chat_sessions.json"
+
+        try:
+            # Ensure data directory exists
+            os.makedirs("data", exist_ok=True)
+
+            # Load existing sessions from file
+            all_sessions = {}
+            if os.path.exists(sessions_file):
+                try:
+                    with open(sessions_file, 'r') as f:
+                        content = f.read().strip()
+                        if content:  # Only parse if file has content
+                            all_sessions = json.loads(content)
+                        else:
+                            logger.info("📄 Sessions file was empty, starting fresh")
+                except json.JSONDecodeError as e:
+                    logger.warning(f"⚠️ Corrupted sessions file, creating new one: {e}")
+                    all_sessions = {}
+
+            # Update with current user's sessions
+            username = st.session_state.user_info['username']
+            for session_id, session_data in st.session_state.chat_sessions.items():
+                session_data['user'] = username
+                all_sessions[session_id] = session_data
+
+            # Save back to file with proper formatting
+            with open(sessions_file, 'w') as f:
+                json.dump(all_sessions, f, indent=2, ensure_ascii=False)
+
+            logger.info(f"💾 Saved {len(st.session_state.chat_sessions)} sessions to file")
+
+        except Exception as e:
+            logger.error(f"❌ Error saving sessions to file: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+
+    def _load_sessions_from_file(self):
+        """Load chat sessions from file for the current user - IMPROVED ERROR HANDLING."""
+        if not st.session_state.user_info:
+            return
+
+        username = st.session_state.user_info['username']
+        sessions_file = "data/chat_sessions.json"
+
+        try:
+            if os.path.exists(sessions_file):
+                with open(sessions_file, 'r') as f:
+                    content = f.read().strip()
+                    if not content:
+                        logger.info("📄 Sessions file is empty")
+                        st.session_state.chat_sessions = {}
+                        return
+
+                    all_sessions = json.loads(content)
+
+                # Filter sessions for current user
+                user_sessions = {
+                    session_id: session_data
+                    for session_id, session_data in all_sessions.items()
+                    if session_data.get('user') == username
+                }
+
+                st.session_state.chat_sessions = user_sessions
+                logger.info(f"📂 Loaded {len(user_sessions)} sessions for user {username}")
+            else:
+                st.session_state.chat_sessions = {}
+                logger.info("📄 No sessions file found, starting fresh")
+
+        except json.JSONDecodeError as e:
+            logger.error(f"❌ Error parsing sessions file: {e}")
+            # Create a backup of the corrupted file
+            backup_file = f"{sessions_file}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            try:
+                os.rename(sessions_file, backup_file)
+                logger.info(f"📄 Corrupted file backed up as: {backup_file}")
+            except:
+                pass
+            st.session_state.chat_sessions = {}
+        except Exception as e:
+            logger.error(f"❌ Error loading sessions: {e}")
+            st.session_state.chat_sessions = {}
+
+
     def _show_integration_error(self):
         """Show integration error screen."""
         st.error("🔧 **Setup Required**")
         st.markdown("""
         The Telmi backend integration is not properly configured.
-        
+
         **Please check the following:**
         1. Make sure you're running from the project root directory
         2. Verify all modules exist:
@@ -172,6 +207,10 @@ class TelmiApp:
            - `tools/` directory
         3. Check if the CLI agent works: `python3 main.py`
         4. Restart the Streamlit application
+
+        **Current Status:**
+        - Database server appears to be down (172.20.157.162:8123)
+        - Try demo mode when available
         """)
 
     def _show_login_screen(self):
@@ -477,64 +516,90 @@ class TelmiApp:
                 self._process_user_message(user_input.strip())
 
     def _process_user_message(self, user_input: str):
-        """Process user input and get agent response."""
+        """Process user input and get agent response - SIMPLE FIX."""
+
         # Add user message
         self._add_message('user', user_input)
 
-        # Show thinking indicator immediately
+        # Set thinking state (but don't rerun immediately)
         st.session_state.agent_thinking = True
-        st.rerun()  # Rerun to show the thinking indicator
+
+        # Show a temporary thinking message while processing
+        thinking_placeholder = st.empty()
+        thinking_placeholder.markdown("""
+            <div class="typing-indicator">
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <span class="typing-text">Telmi is analyzing your question...</span>
+            </div>
+        """, unsafe_allow_html=True)
 
         try:
-            # Process question through the bridge
+            logger.info(f"🔄 Sending question to agent: {user_input[:50]}...")
+
+            # Call the bridge directly
             result = telmi_bridge.process_question(user_input)
 
-            # Store the result for table extraction
-            if result.get('success'):
-                # Extract the actual query result from the agent response
-                # This is a bit hacky but necessary to get the data
-                if hasattr(telmi_bridge, 'agent') and telmi_bridge.agent:
-                    # Get the last query execution result
-                    try:
-                        # We need to parse the agent's internal state or modify the bridge
-                        # For now, let's try to extract from the response
-                        st.session_state.last_query_result = self._parse_query_result_from_response(result['response'])
-                    except:
-                        st.session_state.last_query_result = None
+            logger.info(f"🔄 Agent response received: success={result.get('success')}")
 
             if result['success']:
                 response = result['response']
+                processing_time = result.get('processing_time', 0)
+
+                # Add processing time info for debugging
+                if processing_time > 0:
+                    response += f"\n\n*⏱️ Processed in {processing_time:.2f} seconds*"
+
                 # Parse response for attachments
                 attachments = self._extract_attachments(response)
+
                 # Add agent response
                 self._add_message('agent', response, attachments)
+
+                logger.info("✅ Agent response processed successfully")
             else:
                 # Add error response
-                self._add_message('agent', result['response'])
+                error_response = result.get('response', 'Unknown error occurred')
+                self._add_message('agent', error_response)
+
+                logger.error(f"❌ Agent processing failed: {result.get('error', 'Unknown error')}")
 
         except Exception as e:
             # Add detailed error response
             error_response = f"""❌ **Unexpected Error**
 
-**Issue:** {str(e)}
+    **Issue:** {str(e)}
 
-**Possible Solutions:**
-• Restart the Streamlit application
-• Check if the backend agent is properly configured
-• Verify all dependencies are installed
-• Make sure you're running from the project root directory
+    **Type:** {type(e).__name__}
 
-**Debug Info:** {type(e).__name__}: {str(e)}"""
+    **Possible Solutions:**
+    • Check the terminal console for detailed errors
+    • Restart the Streamlit application  
+    • Verify the backend agent is working: `python3 debug_telmi.py`
+    • Try a simpler question: "List available tables"
+
+    **Debug Info:** {str(e)}"""
 
             self._add_message('agent', error_response)
+            logger.error(f"❌ Unexpected error in message processing: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
 
         finally:
-            # Hide thinking indicator
+            # Clear thinking state and placeholder
             st.session_state.agent_thinking = False
+            thinking_placeholder.empty()  # Remove the thinking indicator
+            logger.info("🔄 Question processing completed")
+
+            # Now rerun to show the complete conversation
             st.rerun()
 
+
     def _add_message(self, role: str, content: str, attachments: Dict[str, Any] = None):
-        """Add a message to the current session."""
+        """Add a message to the current session - FIXED to ensure saving."""
         message = {
             'role': role,
             'content': content,
@@ -544,9 +609,16 @@ class TelmiApp:
 
         st.session_state.current_messages.append(message)
 
-        # Save to session history
-        if st.session_state.current_session_id:
-            self._save_session_to_history()
+        # ALWAYS save to session history after adding a message
+        self._ensure_session_exists()
+        self._save_session_to_history()
+
+
+    def _ensure_session_exists(self):
+        """Ensure we have a session ID for saving."""
+        if not st.session_state.current_session_id:
+            st.session_state.current_session_id = str(uuid.uuid4())
+            logger.info(f"📝 Created new session ID: {st.session_state.current_session_id}")
 
     def _extract_attachments(self, response: str) -> Dict[str, Any]:
         """Extract file attachments and data from agent response."""
@@ -596,19 +668,37 @@ class TelmiApp:
         return attachments
 
     def _save_session_to_history(self):
-        """Save current session to chat history."""
-        if not st.session_state.current_session_id:
-            st.session_state.current_session_id = str(uuid.uuid4())
+        """Save current session to chat history - FIXED VERSION."""
+        if not st.session_state.user_info:
+            logger.warning("⚠️ No user info - cannot save session")
+            return
 
-        st.session_state.chat_sessions[st.session_state.current_session_id] = {
-            'title': self._generate_session_title(),
-            'messages': st.session_state.current_messages.copy(),
-            'timestamp': datetime.now().isoformat(),
-            'user': st.session_state.user_info['username']
-        }
+        if not st.session_state.current_messages:
+            logger.warning("⚠️ No messages to save")
+            return
 
-        # Also save to file
-        self._save_sessions_to_file()
+        try:
+            # Ensure we have a session ID
+            self._ensure_session_exists()
+
+            # Create session data
+            session_data = {
+                'title': self._generate_session_title(),
+                'messages': st.session_state.current_messages.copy(),
+                'timestamp': datetime.now().isoformat(),
+                'user': st.session_state.user_info['username']
+            }
+
+            # Update in-memory sessions
+            st.session_state.chat_sessions[st.session_state.current_session_id] = session_data
+
+            # Save to file immediately
+            self._save_sessions_to_file()
+
+            logger.info(f"💾 Session saved: {st.session_state.current_session_id} with {len(st.session_state.current_messages)} messages")
+
+        except Exception as e:
+            logger.error(f"❌ Failed to save session: {e}")
 
     def _generate_session_title(self) -> str:
         """Generate a title for the chat session."""

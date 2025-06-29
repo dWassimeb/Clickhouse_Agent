@@ -1,0 +1,90 @@
+{
+  "test_session": {
+    "title": "Test Session",
+    "messages": [
+      {
+        "role": "user",
+        "content": "test message",
+        "timestamp": "2025-06-29T15:51:15.073793"
+      }
+    ],
+    "timestamp": "2025-06-29T15:51:15.073873",
+    "user": "test_user"
+  },
+  "96b7d40f-d485-45f4-bab3-5b9100395de2": {
+    "title": "give me top 5 clients by number of tickets",
+    "messages": [
+      {
+        "role": "user",
+        "content": "give me top 5 clients by number of tickets",
+        "timestamp": "2025-06-29T16:15:08.733884",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "❌ **Database Connection Failed**\n\n**Issue:** Database connection failed - server may be unreachable\n**Status:** disconnected\n**Suggestion:** Check if ClickHouse server is running at 172.20.157.162:8123",
+        "timestamp": "2025-06-29T16:15:25.519496",
+        "attachments": {}
+      }
+    ],
+    "timestamp": "2025-06-29T16:16:55.420280",
+    "user": "wassime.elyamani@gmail.com"
+  },
+  "f96f513f-dc9d-49bd-b4bb-4cd2ac5eb27f": {
+    "title": "give 10 clients by number of ticket",
+    "messages": [
+      {
+        "role": "user",
+        "content": "give 10 clients by number of ticket",
+        "timestamp": "2025-06-29T16:15:49.289784",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "❌ **Database Connection Failed**\n\n**Issue:** Database connection failed - server may be unreachable\n**Status:** disconnected\n**Suggestion:** Check if ClickHouse server is running at 172.20.157.162:8123",
+        "timestamp": "2025-06-29T16:16:05.456218",
+        "attachments": {}
+      }
+    ],
+    "timestamp": "2025-06-29T16:16:31.494811",
+    "user": "wassime.elyamani@gmail.com"
+  },
+  "656341ee-894f-4cb0-ac19-0078d800fd9a": {
+    "title": "give me top 5 clients by number of tickets",
+    "messages": [
+      {
+        "role": "user",
+        "content": "give me top 5 clients by number of tickets",
+        "timestamp": "2025-06-29T16:22:46.601000",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n• **Dataset Size:** 5 records across 2 columns\n• **client_name:** 5 unique values\n• **ticket_count:** Range 161.8M - 793.0M, Avg 387.8M\n• **Range:** From STELLANTIS to EURO INFORMATION / EPS\n\n**⚡ Executed Query:**\n```sql\nSELECT c.NAME AS client_name, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA r\nJOIN CUSTOMER c ON r.PARTY_ID = c.PARTY_ID\nGROUP BY c.NAME\nORDER BY ticket_count DESC\nLIMIT 5\n```\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 25.72 seconds*",
+        "timestamp": "2025-06-29T16:23:12.327237",
+        "attachments": {}
+      }
+    ],
+    "timestamp": "2025-06-29T16:23:12.327345",
+    "user": "wassime.elyamani@gmail.com"
+  },
+  "f7b7e4d3-30c8-40a5-a92e-ad9f23429a54": {
+    "title": "Give top 10 clients by number of tickets",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Give top 10 clients by number of tickets",
+        "timestamp": "2025-06-29T16:23:58.602415",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n• **Dataset Size:** 10 records across 2 columns\n• **client_name:** 10 unique values\n• **ticket_count:** Range 44.0M - 793.0M, Avg 226.4M\n• **Range:** From STELLANTIS to YUNEX TRAFFIC AUSTRIA GMBH\n\n**⚡ Executed Query:**\n```sql\nSELECT CUSTOMER.NAME AS client_name, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 10\n```\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 32.89 seconds*",
+        "timestamp": "2025-06-29T16:24:31.493717",
+        "attachments": {}
+      }
+    ],
+    "timestamp": "2025-06-29T16:24:31.493790",
+    "user": "wassime.elyamani@gmail.com"
+  }
+}

@@ -1,16 +1,14 @@
 """
-Enhanced Agent Bridge with Timeout and Better Error Handling
+Fixed Agent Bridge - Direct execution without threading
+Since your agent completes in 4.25 seconds, threading is unnecessary and causing issues
 """
 
 import sys
 import os
 import logging
-import signal
-import threading
 from typing import Dict, Any, Optional
 import traceback
 from datetime import datetime
-import time
 
 # Ensure we can import from the project root
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -23,22 +21,13 @@ for path in [project_root, current_dir]:
 
 logger = logging.getLogger(__name__)
 
-class TimeoutError(Exception):
-    """Custom timeout exception."""
-    pass
-
-def timeout_handler(signum, frame):
-    """Handle timeout signal."""
-    raise TimeoutError("Operation timed out")
-
 class TelmiAgentBridge:
-    """Enhanced bridge with timeout and debugging capabilities."""
+    """Simplified bridge without threading - direct execution."""
 
     def __init__(self):
         self.agent = None
         self.connection_tested = False
         self.last_error = None
-        self.last_query_result = None  # Store last query result for debugging
         self._setup_logging()
 
         # Try to initialize immediately
@@ -82,15 +71,15 @@ class TelmiAgentBridge:
             logger.error(f"❌ Unexpected import error: {e}")
             raise
 
-    def initialize_agent(self, verbose: bool = True) -> bool:
-        """Initialize the LangGraph agent with detailed error reporting."""
+    def initialize_agent(self, verbose: bool = False) -> bool:
+        """Initialize the LangGraph agent."""
         try:
             logger.info("🔧 Initializing ClickHouse LangGraph Agent...")
 
             # Import the agent class
             from core.agent import ClickHouseGraphAgent
 
-            # Create the agent instance with verbose mode for debugging
+            # Create the agent instance - DISABLE VERBOSE for Streamlit
             self.agent = ClickHouseGraphAgent(verbose=verbose)
 
             if self.agent is not None:
@@ -116,7 +105,7 @@ class TelmiAgentBridge:
             return False
 
     def test_database_connection(self) -> Dict[str, Any]:
-        """Test the ClickHouse database connection with detailed diagnostics."""
+        """Test the ClickHouse database connection."""
         try:
             logger.info("🔌 Testing ClickHouse database connection...")
 
@@ -161,97 +150,16 @@ class TelmiAgentBridge:
                 'suggestion': 'Check database configuration and network connectivity'
             }
 
-    def process_question_with_timeout(self, user_question: str, timeout_seconds: int = 60) -> Dict[str, Any]:
-        """Process question with timeout mechanism."""
-
-        def run_agent():
-            """Run the agent in a separate thread."""
-            try:
-                logger.info(f"🧠 Starting LangGraph processing for: {user_question[:50]}...")
-                response = self.agent.process_question(user_question)
-                self.thread_result = {
-                    'success': True,
-                    'response': response,
-                    'message': 'Question processed successfully'
-                }
-                logger.info("✅ LangGraph processing completed successfully")
-            except Exception as e:
-                error_msg = f"LangGraph processing failed: {e}"
-                logger.error(f"❌ {error_msg}")
-                logger.error(f"Full traceback: {traceback.format_exc()}")
-                self.thread_result = {
-                    'success': False,
-                    'response': f"""❌ **LangGraph Processing Error**
-
-**Issue:** {str(e)}
-
-**Type:** {type(e).__name__}
-
-**Debug Info:** The agent workflow failed during execution. This could be due to:
-• SQL generation issues
-• Database query timeout
-• Tool execution problems
-• LangGraph workflow configuration
-
-**Suggestion:** Check the terminal logs for detailed error information.""",
-                    'error': str(e)
-                }
-
-        # Initialize result container
-        self.thread_result = None
-
-        # Create and start the thread
-        agent_thread = threading.Thread(target=run_agent)
-        agent_thread.daemon = True
-        agent_thread.start()
-
-        # Wait for completion with timeout
-        agent_thread.join(timeout=timeout_seconds)
-
-        if agent_thread.is_alive():
-            # Thread is still running - timeout occurred
-            logger.error(f"❌ Agent processing timed out after {timeout_seconds} seconds")
-            return {
-                'success': False,
-                'response': f"""⏰ **Processing Timeout**
-
-**Issue:** The agent took longer than {timeout_seconds} seconds to process your question.
-
-**Possible Causes:**
-• Complex query requiring extensive database processing
-• Database server performance issues
-• Network connectivity problems
-• LangGraph workflow getting stuck
-
-**Suggestions:**
-• Try a simpler question first
-• Check database server performance
-• Restart the application
-• Try: "List available tables" or "Show me 5 customers"
-
-**Your Question:** "{user_question}" """,
-                'error': 'Processing timeout'
-            }
-
-        # Return the result from the thread
-        if self.thread_result:
-            return self.thread_result
-        else:
-            return {
-                'success': False,
-                'response': "❌ **Unknown Error**: Agent processing completed but no result was returned.",
-                'error': 'No result returned'
-            }
-
     def process_question(self, user_question: str) -> Dict[str, Any]:
-        """Process user question through the LangGraph agent with enhanced debugging."""
+        """Process user question DIRECTLY without threading."""
         try:
             logger.info(f"🤔 Processing question: {user_question[:50]}...")
 
             # Ensure agent is initialized
             if self.agent is None:
                 logger.info("🔧 Agent not initialized, attempting to initialize...")
-                if not self.initialize_agent(verbose=True):  # Enable verbose for debugging
+                # Initialize with VERBOSE=False for Streamlit to reduce noise
+                if not self.initialize_agent(verbose=False):
                     return {
                         'success': False,
                         'response': f"""❌ **Agent Initialization Failed**
@@ -261,9 +169,9 @@ class TelmiAgentBridge:
 **Last Error:** {self.last_error or 'Unknown error'}
 
 **Debug Steps:**
-1. Test CLI agent: `python3 main.py`
-2. Check imports: `python3 -c "from core.agent import ClickHouseGraphAgent; print('OK')"`
-3. Check database: `python3 -c "from database.connection import clickhouse_connection; print(clickhouse_connection.test_connection())"`""",
+1. Check if CLI agent works: `python3 main.py`
+2. Check terminal console for detailed errors
+3. Verify all dependencies: `pip install -r requirements.txt`""",
                         'error': 'Agent not initialized'
                     }
 
@@ -282,8 +190,49 @@ class TelmiAgentBridge:
                         'error': db_test['message']
                     }
 
-            # Process with timeout (60 seconds)
-            return self.process_question_with_timeout(user_question, timeout_seconds=60)
+            # Process DIRECTLY without threading
+            logger.info(f"🧠 Starting direct LangGraph processing...")
+            start_time = datetime.now()
+
+            try:
+                # Call agent directly - this is where it was getting stuck in threading
+                response = self.agent.process_question(user_question)
+
+                end_time = datetime.now()
+                processing_time = (end_time - start_time).total_seconds()
+
+                logger.info(f"✅ LangGraph processing completed in {processing_time:.2f} seconds")
+
+                return {
+                    'success': True,
+                    'response': response,
+                    'processing_time': processing_time,
+                    'message': 'Question processed successfully'
+                }
+
+            except Exception as e:
+                end_time = datetime.now()
+                processing_time = (end_time - start_time).total_seconds()
+
+                error_msg = f"LangGraph processing failed after {processing_time:.2f}s: {e}"
+                logger.error(f"❌ {error_msg}")
+                logger.error(f"Full traceback: {traceback.format_exc()}")
+
+                return {
+                    'success': False,
+                    'response': f"""❌ **LangGraph Processing Error**
+
+**Issue:** {str(e)}
+
+**Processing Time:** {processing_time:.2f} seconds
+
+**Type:** {type(e).__name__}
+
+**Debug Info:** The agent workflow failed during execution. Check the terminal console for detailed traceback.
+
+**Your Question:** "{user_question}" """,
+                    'error': str(e)
+                }
 
         except Exception as e:
             error_msg = f"Question processing failed: {e}"
@@ -303,10 +252,6 @@ class TelmiAgentBridge:
                 'error': str(e)
             }
 
-    def test_simple_query(self) -> Dict[str, Any]:
-        """Test a simple query to verify the agent is working."""
-        return self.process_question("List available tables")
-
     def get_agent_status(self) -> Dict[str, Any]:
         """Get comprehensive status of the agent and database connection."""
         status = {
@@ -315,7 +260,9 @@ class TelmiAgentBridge:
             'ready': False,
             'last_error': self.last_error,
             'project_structure_ok': self._check_project_structure(),
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now().isoformat(),
+            'threading_disabled': True,  # Indicate we're not using threading
+            'mode': 'direct_execution'
         }
 
         # Test database connection if agent is initialized
@@ -332,7 +279,7 @@ class TelmiAgentBridge:
             status['ready'] = status['agent_initialized'] and status.get('database_connected', False)
         else:
             # Try to initialize if not already done
-            status['initialization_attempted'] = self.initialize_agent(verbose=True)
+            status['initialization_attempted'] = self.initialize_agent(verbose=False)
             if status['initialization_attempted']:
                 return self.get_agent_status()  # Recursive call after initialization
 
