@@ -1,5 +1,6 @@
 """
-UTF-8 Fixed Professional Visualization Tool - FIXED INDENTATION ISSUE
+UTF-8 Fixed Professional Visualization Tool - COMPLETE UPDATED VERSION
+Optimized for Streamlit with better chart sizing and container fitting
 """
 
 from typing import Dict, Any, List, Optional, ClassVar
@@ -16,12 +17,12 @@ import re
 logger = logging.getLogger(__name__)
 
 class ModernVisualizationTool(BaseTool):
-    """Create professional, minimalistic visualizations with proper UTF-8 handling."""
+    """Create professional, minimalistic visualizations with proper UTF-8 handling and Streamlit optimization."""
 
     name: str = "create_visualization"
     description: str = """
     Generate clean, professional charts and dashboards from query results.
-    Creates HTML files with Chart.js visualizations that are minimalistic and finance-appropriate.
+    Creates HTML files with Chart.js visualizations optimized for Streamlit containers.
     """
 
     export_dir: str = Field(default="visualizations")
@@ -645,8 +646,8 @@ class ModernVisualizationTool(BaseTool):
         if self._should_log_debug():
             logger.info(f"Chart data prepared: {chart_data}")
 
-        # Generate HTML content with safe encoding
-        html_content = self._generate_professional_html_template_safe(chart_data, viz_analysis, user_question)
+        # Generate HTML content with safe encoding - UPDATED FOR STREAMLIT
+        html_content = self._generate_streamlit_optimized_html_template(chart_data, viz_analysis, user_question)
 
         # Write to file with proper encoding
         try:
@@ -919,9 +920,8 @@ class ModernVisualizationTool(BaseTool):
         else:
             return f"{value:.2f}" if isinstance(value, float) else str(value)
 
-
-    def _generate_professional_html_template_safe(self, chart_data: Dict[str, Any], viz_analysis: Dict[str, Any], user_question: str) -> str:
-        """Generate clean, professional HTML template with safe UTF-8 encoding."""
+    def _generate_streamlit_optimized_html_template(self, chart_data: Dict[str, Any], viz_analysis: Dict[str, Any], user_question: str) -> str:
+        """UPDATED: Generate HTML template optimized for Streamlit container with better sizing."""
 
         chart_type = viz_analysis.get('chart_type', 'bar')
         title = self._clean_string_utf8(viz_analysis.get('title', 'Data Analysis'))
@@ -937,6 +937,7 @@ class ModernVisualizationTool(BaseTool):
         clean_labels = [self._clean_string_utf8(str(label)) for label in chart_data['labels']]
         clean_values = chart_data['values']
 
+        # UPDATED: Streamlit-optimized template with better sizing
         html_template = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -956,87 +957,98 @@ class ModernVisualizationTool(BaseTool):
         
         body {{
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8fafc;
+            background: #ffffff;
             color: #2d3748;
             line-height: 1.5;
+            padding: 0;
         }}
         
         .container {{
-            max-width: 1200px;
-            margin: 24px auto;
+            width: 100%;
+            height: 100vh;
             background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }}
         
         .header {{
             background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
-            padding: 24px 32px;
+            padding: 12px 16px;
+            flex-shrink: 0;
         }}
         
         .header h1 {{
-            font-size: 24px;
+            font-size: 18px;
             font-weight: 600;
             color: #1a1d29;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }}
         
         .header p {{
-            font-size: 14px;
+            font-size: 12px;
             color: #718096;
             font-weight: 400;
+            margin: 0;
         }}
         
         .chart-container {{
-            padding: 32px;
+            flex: 1;
+            padding: 16px;
             background: #ffffff;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }}
         
         .chart-wrapper {{
             position: relative;
             width: 100%;
-            height: 480px;
+            height: 100%;
+            min-height: 300px;
         }}
         
         .stats-panel {{
             background: #f8fafc;
             border-top: 1px solid #e2e8f0;
-            padding: 24px 32px;
+            padding: 12px 16px;
+            flex-shrink: 0;
+            max-height: 120px;
+            overflow-y: auto;
         }}
         
         .stats-title {{
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 500;
             color: #2d3748;
-            margin-bottom: 16px;
+            margin-bottom: 8px;
         }}
         
         .stats-grid {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
         }}
         
         .stat-card {{
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 6px;
-            padding: 16px;
-            text-align: left;
+            padding: 8px;
+            text-align: center;
         }}
         
         .stat-value {{
-            font-size: 20px;
+            font-size: 16px;
             font-weight: 600;
             color: #1a1d29;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }}
         
         .stat-label {{
-            font-size: 12px;
+            font-size: 10px;
             color: #718096;
             font-weight: 400;
             text-transform: uppercase;
@@ -1045,37 +1057,47 @@ class ModernVisualizationTool(BaseTool):
         
         .footer {{
             text-align: center;
-            padding: 16px 32px;
+            padding: 8px 16px;
             background: #f8fafc;
             border-top: 1px solid #e2e8f0;
-            font-size: 12px;
+            font-size: 10px;
             color: #a0aec0;
+            flex-shrink: 0;
         }}
         
-        @media (max-width: 768px) {{
-            .container {{
-                margin: 16px;
-                border-radius: 6px;
-            }}
-            
+        @media (max-height: 500px) {{
             .header {{
-                padding: 20px;
+                padding: 8px 12px;
             }}
             
             .header h1 {{
-                font-size: 20px;
+                font-size: 16px;
+            }}
+            
+            .header p {{
+                font-size: 11px;
             }}
             
             .chart-container {{
-                padding: 20px;
-            }}
-            
-            .chart-wrapper {{
-                height: 360px;
+                padding: 12px;
             }}
             
             .stats-panel {{
-                padding: 20px;
+                display: none;
+            }}
+            
+            .footer {{
+                display: none;
+            }}
+        }}
+        
+        @media (max-width: 600px) {{
+            .stats-grid {{
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }}
+            
+            .chart-container {{
+                padding: 8px;
             }}
         }}
     </style>
@@ -1109,7 +1131,7 @@ class ModernVisualizationTool(BaseTool):
         // Chart configuration
         const chartConfig = {chart_config};
         
-        // Create the chart
+        // Create the chart with responsive sizing
         const ctx = document.getElementById('mainChart').getContext('2d');
         const mainChart = new Chart(ctx, chartConfig);
         
@@ -1152,6 +1174,24 @@ class ModernVisualizationTool(BaseTool):
         
         // Initialize stats
         generateStats();
+        
+        // Enhanced responsive behavior for Streamlit
+        function handleResize() {{
+            if (mainChart) {{
+                mainChart.resize();
+            }}
+        }}
+        
+        window.addEventListener('resize', handleResize);
+        
+        // Ensure chart fits properly in Streamlit container
+        document.addEventListener('DOMContentLoaded', function() {{
+            setTimeout(() => {{
+                if (mainChart) {{
+                    mainChart.resize();
+                }}
+            }}, 100);
+        }});
     </script>
 </body>
 </html>"""
@@ -1605,14 +1645,6 @@ class ModernVisualizationTool(BaseTool):
             )
 
         return config_json
-
-    def _format_file_size(self, size_bytes: int) -> str:
-        """Format file size in human readable format."""
-        for unit in ['B', 'KB', 'MB', 'GB']:
-            if size_bytes < 1024.0:
-                return f"{size_bytes:.1f} {unit}"
-            size_bytes /= 1024.0
-        return f"{size_bytes:.1f} TB"
 
     def _should_log_debug(self) -> bool:
         """Check if debug logging should be enabled."""

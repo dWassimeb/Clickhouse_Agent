@@ -73,6 +73,318 @@
     "timestamp": "2025-06-30T14:21:22.491364",
     "user": "wassime.elyamani@gmail.com"
   },
+  "a4999ce2-e098-4efb-af8a-48b8b5235bfd": {
+    "title": "Quel est le nombre de tickets entre 14h00 et 14h30...",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Quel est le nombre de tickets entre 14h00 et 14h30 hier pour le client LYRA NETWORK r\u00e9parti par offre tarifaire ?",
+        "timestamp": "2025-06-30T15:11:56.559284",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**\ud83d\udcca Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**\ud83d\udd0d Key Insights:**\n\n\u2022 **Dataset Size:** 7 records across 2 columns\n\n\u2022 **OFFER_CODE:** 7 unique values\n\n\u2022 **ticket_count:** Range 33 - 24.0K, Avg 6.6K\n\n\u2022 **Range:** From LYRA7 to LYRA_EU2\n\n**\u26a1 Executed Query:**\n\n```sql\nSELECT rd.OFFER_CODE, COUNT(*) as ticket_count\nFROM RM_AGGREGATED_DATA rd\nJOIN CUSTOMER c ON rd.PARTY_ID = c.PARTY_ID\nWHERE c.NAME = 'LYRA NETWORK' AND rd.RECORD_OPENING_TIME >= toDateTime(toDate(now() - INTERVAL 1 DAY)) + INTERVAL 14 HOUR AND rd.RECORD_OPENING_TIME < toDateTime(toDate(now() - INTERVAL 1 DAY)) + INTERVAL 14 HOUR + INTERVAL 30 MINUTE\nGROUP BY rd.OFFER_CODE\nLIMIT 100\n```\n\n**\ud83d\udcc8 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**\ud83d\udcc1 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*\u23f1\ufe0f Processed in 15.32 seconds*",
+        "timestamp": "2025-06-30T15:12:11.950677",
+        "attachments": {
+          "csv": {
+            "filename": "query_quel_est_le_nombre_de_tickets__20250630_151209.csv",
+            "path": "exports/query_quel_est_le_nombre_de_tickets__20250630_151209.csv",
+            "size": "0.1 KB"
+          },
+          "chart": {
+            "filename": "chart_20250630_151211.html",
+            "path": "visualizations/chart_20250630_151211.html",
+            "size": "11.2 KB"
+          },
+          "table_data": {
+            "columns": [
+              "OFFER_CODE",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "LYRA7",
+                33
+              ],
+              [
+                "LYRA_EU",
+                3477
+              ],
+              [
+                "LYR_CMPT",
+                473
+              ],
+              [
+                "PALIERS_RCARD",
+                33
+              ],
+              [
+                "LYRA8",
+                14919
+              ],
+              [
+                "OFFRE_PALIERS_LYRA",
+                3400
+              ],
+              [
+                "LYRA_EU2",
+                24039
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "role": "user",
+        "content": "give me the top 20 clients by number of tickets in pie chart",
+        "timestamp": "2025-06-30T15:50:32.146949",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**\ud83d\udcca Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**\ud83d\udd0d Key Insights:**\n\n\u2022 **Dataset Size:** 20 records across 2 columns\n\n\u2022 **client_name:** 20 unique values\n\n\u2022 **ticket_count:** Range 22.7M - 784.8M, Avg 125.3M\n\n\u2022 **Range:** From STELLANTIS to OTIS France\n\n**\u26a1 Executed Query:**\n\n```sql\nSELECT CUSTOMER.NAME AS client_name, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 20\n```\n\n**\ud83d\udcc8 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**\ud83d\udcc1 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*\u23f1\ufe0f Processed in 23.17 seconds*",
+        "timestamp": "2025-06-30T15:50:55.414882",
+        "attachments": {
+          "csv": {
+            "filename": "query_give_me_the_top_20_clients_by__20250630_155053.csv",
+            "path": "exports/query_give_me_the_top_20_clients_by__20250630_155053.csv",
+            "size": "0.5 KB"
+          },
+          "chart": {
+            "filename": "chart_20250630_155055.html",
+            "path": "visualizations/chart_20250630_155055.html",
+            "size": "10.9 KB"
+          },
+          "table_data": {
+            "columns": [
+              "client_name",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "STELLANTIS",
+                784810274
+              ],
+              [
+                "ERDF-LINKY-PROD",
+                535066022
+              ],
+              [
+                "VERISURE SAS",
+                261937605
+              ],
+              [
+                "VOLTALIS",
+                159529532
+              ],
+              [
+                "EURO INFORMATION / EPS",
+                158914945
+              ],
+              [
+                "ARVAL",
+                107487209
+              ],
+              [
+                "WSF_FIXE",
+                61786948
+              ],
+              [
+                "TRANSICS FRANCE",
+                52350845
+              ],
+              [
+                "LYRA NETWORK",
+                51745383
+              ],
+              [
+                "YUNEX TRAFFIC AUSTRIA GMBH",
+                43579147
+              ],
+              [
+                "ENEDIS-USR-ILE DE FRANCE",
+                40542624
+              ],
+              [
+                "NORALSY",
+                34731460
+              ],
+              [
+                "ENEDIS-USR-RHONE ALPES BOURGOGNE",
+                29204198
+              ],
+              [
+                "ENEDIS-USR-MEDITERRANEE",
+                29072473
+              ],
+              [
+                "ENEDIS-USR OUEST",
+                28525893
+              ],
+              [
+                "SAUR",
+                28464550
+              ],
+              [
+                "ENEDIS-USR-MANCHE MER DU NORD",
+                25961529
+              ],
+              [
+                "GETRALINE",
+                25750228
+              ],
+              [
+                "FLOWBIRD",
+                23462310
+              ],
+              [
+                "OTIS France",
+                22705058
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "role": "user",
+        "content": "donne moi l'\u00e9volution journali\u00e8re de nombre de tickets du client STELLANTIS pour l'\u00e9ann\u00e9e 2025",
+        "timestamp": "2025-06-30T15:51:52.268611",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**\ud83d\udcca Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**\ud83d\udd0d Key Insights:**\n\n\u2022 **Dataset Size:** 26 records across 2 columns\n\n\u2022 **date:** 26 unique values\n\n\u2022 **ticket_count:** Range 3.7M - 55.9M, Avg 30.2M\n\n\u2022 **Range:** From 2025-05-30 to 2025-06-30\n\n**\u26a1 Executed Query:**\n\n```sql\nSELECT toDate(RECORD_OPENING_TIME) AS date, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nWHERE CUSTOMER.NAME = 'STELLANTIS' AND RECORD_OPENING_TIME >= toDateTime('2025-01-01 00:00:00') AND RECORD_OPENING_TIME < toDateTime('2026-01-01 00:00:00')\nGROUP BY date\nORDER BY date\nLIMIT 1000\n```\n\n**\ud83d\udcc8 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**\ud83d\udcc1 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*\u23f1\ufe0f Processed in 19.20 seconds*",
+        "timestamp": "2025-06-30T15:52:11.587782",
+        "attachments": {
+          "csv": {
+            "filename": "query_donne_moi_l\u00e9volution_journali\u00e8_20250630_155210.csv",
+            "path": "exports/query_donne_moi_l\u00e9volution_journali\u00e8_20250630_155210.csv",
+            "size": "0.6 KB"
+          },
+          "chart": {
+            "filename": "chart_20250630_155211.html",
+            "path": "visualizations/chart_20250630_155211.html",
+            "size": "12.8 KB"
+          },
+          "table_data": {
+            "columns": [
+              "date",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "2025-05-30",
+                16873770
+              ],
+              [
+                "2025-05-31",
+                14322290
+              ],
+              [
+                "2025-06-01",
+                20910763
+              ],
+              [
+                "2025-06-02",
+                30442474
+              ],
+              [
+                "2025-06-03",
+                30961309
+              ],
+              [
+                "2025-06-04",
+                30944225
+              ],
+              [
+                "2025-06-05",
+                31265259
+              ],
+              [
+                "2025-06-06",
+                32094263
+              ],
+              [
+                "2025-06-07",
+                26478624
+              ],
+              [
+                "2025-06-08",
+                19463099
+              ],
+              [
+                "2025-06-09",
+                25235713
+              ],
+              [
+                "2025-06-10",
+                30655530
+              ],
+              [
+                "2025-06-11",
+                3699235
+              ],
+              [
+                "2025-06-18",
+                16290023
+              ],
+              [
+                "2025-06-19",
+                30464417
+              ],
+              [
+                "2025-06-20",
+                31313232
+              ],
+              [
+                "2025-06-21",
+                26249030
+              ],
+              [
+                "2025-06-22",
+                20291497
+              ],
+              [
+                "2025-06-23",
+                38934763
+              ],
+              [
+                "2025-06-24",
+                52262937
+              ],
+              [
+                "2025-06-25",
+                52792771
+              ],
+              [
+                "2025-06-26",
+                54294134
+              ],
+              [
+                "2025-06-27",
+                55926368
+              ],
+              [
+                "2025-06-28",
+                43097129
+              ],
+              [
+                "2025-06-29",
+                33225555
+              ],
+              [
+                "2025-06-30",
+                16321864
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-06-30T16:13:57.332690",
+    "user": "wassime.elyamani@gmail.com"
+  },
   "2f0797d3-6018-4ebb-b941-2bccd87005d2": {
     "title": "give me top 6 clients by number of tickets",
     "messages": [
@@ -83,7 +395,86 @@
         "attachments": {}
       }
     ],
-    "timestamp": "2025-06-30T14:21:32.337261",
+    "timestamp": "2025-06-30T16:14:02.609309",
+    "user": "wassime.elyamani@gmail.com"
+  },
+  "99fbb95d-e459-4674-95d4-0ba018b24af2": {
+    "title": "Quel est le nombre de tickets entre 14h00 et 14h30...",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Quel est le nombre de tickets entre 14h00 et 14h30 hier pour le client LYRA NETWORK r\u00e9parti par offre tarifaire ?",
+        "timestamp": "2025-06-30T15:05:07.089135",
+        "attachments": {}
+      }
+    ],
+    "timestamp": "2025-06-30T16:14:01.382985",
+    "user": "wassime.elyamani@gmail.com"
+  },
+  "c83d5ed7-d81a-4bb2-9b64-b7882f6f671d": {
+    "title": "Quel est le nombre de tickets entre 14h00 et 14h30...",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Quel est le nombre de tickets entre 14h00 et 14h30 hier pour le client LYRA NETWORK r\u00e9parti par offre tarifaire ?",
+        "timestamp": "2025-06-30T16:13:18.746270",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**\ud83d\udcca Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**\ud83d\udd0d Key Insights:**\n\n\u2022 **Dataset Size:** 7 records across 2 columns\n\n\u2022 **ticket_count:** Range 33 - 24.0K, Avg 6.6K\n\n\u2022 **OFFER_CODE:** 7 unique values\n\n\u2022 **Range:** From 33 to 24.0K\n\n**\u26a1 Executed Query:**\n\n```sql\nSELECT COUNT(*) AS ticket_count, OFFER_CODE\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nWHERE CUSTOMER.NAME = 'LYRA NETWORK' AND RECORD_OPENING_TIME >= toDateTime(toDate(now() - INTERVAL 1 DAY)) + INTERVAL 14 HOUR AND RECORD_OPENING_TIME < toDateTime(toDate(now() - INTERVAL 1 DAY)) + INTERVAL 14 HOUR + INTERVAL 30 MINUTE\nGROUP BY OFFER_CODE\nLIMIT 100\n```\n\n**\ud83d\udcc8 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**\ud83d\udcc1 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*\u23f1\ufe0f Processed in 13.60 seconds*",
+        "timestamp": "2025-06-30T16:13:32.408487",
+        "attachments": {
+          "csv": {
+            "filename": "query_quel_est_le_nombre_de_tickets__20250630_161330.csv",
+            "path": "exports/query_quel_est_le_nombre_de_tickets__20250630_161330.csv",
+            "size": "0.1 KB"
+          },
+          "chart": {
+            "filename": "chart_20250630_161332.html",
+            "path": "visualizations/chart_20250630_161332.html",
+            "size": "9.6 KB"
+          },
+          "table_data": {
+            "columns": [
+              "ticket_count",
+              "OFFER_CODE"
+            ],
+            "data": [
+              [
+                33,
+                "LYRA7"
+              ],
+              [
+                3477,
+                "LYRA_EU"
+              ],
+              [
+                473,
+                "LYR_CMPT"
+              ],
+              [
+                33,
+                "PALIERS_RCARD"
+              ],
+              [
+                14919,
+                "LYRA8"
+              ],
+              [
+                3400,
+                "OFFRE_PALIERS_LYRA"
+              ],
+              [
+                24039,
+                "LYRA_EU2"
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-06-30T16:14:02.048327",
     "user": "wassime.elyamani@gmail.com"
   }
 }

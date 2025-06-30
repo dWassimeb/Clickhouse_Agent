@@ -1,12 +1,12 @@
 """
-CSS Styling and Themes for Telmi
-Modern, minimalist ChatGPT-like interface styling
+CSS Styling and Themes for Telmi - UPDATED VERSION
+Modern, minimalist ChatGPT-like interface styling with requested improvements
 """
 
 import streamlit as st
 
 def apply_custom_styling():
-    """Apply custom CSS styling to the Streamlit app."""
+    """Apply custom CSS styling to the Streamlit app with improved visual hierarchy."""
 
     st.markdown("""
     <style>
@@ -113,12 +113,13 @@ def apply_custom_styling():
         font-size: 1rem;
     }
     
-    /* Message containers */
+    /* Message containers - FIXED USER AVATAR ALIGNMENT */
     .message-container {
         display: flex;
         margin: 1rem 0;
         gap: 0.75rem;
         max-width: 100%;
+        align-items: flex-start; /* FIXED: Align items to start for proper alignment */
     }
     
     .message-container.user-message {
@@ -153,6 +154,7 @@ def apply_custom_styling():
         border-bottom-left-radius: var(--radius-sm);
     }
     
+    /* FIXED: Avatar alignment to center with message bubble */
     .message-avatar {
         width: 2.5rem;
         height: 2.5rem;
@@ -162,7 +164,8 @@ def apply_custom_styling():
         justify-content: center;
         font-size: 1.2rem;
         flex-shrink: 0;
-        align-self: flex-start;
+        align-self: flex-start; /* FIXED: Changed from center to flex-start */
+        margin-top: 0.5rem; /* FIXED: Add small margin to align with first line of text */
     }
     
     .user-avatar {
@@ -176,13 +179,21 @@ def apply_custom_styling():
         color: var(--text-primary);
     }
     
-    /* Section titles - medium sized for better hierarchy */
+    /* UPDATED: Section titles - BIGGER size for better visual hierarchy */
+    .message-bubble h3,
     .message-bubble strong,
     h3, h4, .section-title {
-        font-size: 1.1rem !important;
+        font-size: 1.25rem !important; /* INCREASED from 1.1rem to 1.25rem */
         font-weight: 600;
         color: var(--text-primary);
         margin: 1rem 0 0.5rem 0;
+        line-height: 1.3;
+    }
+    
+    /* Special styling for main section headers in agent responses */
+    .message-bubble h3:first-child,
+    .message-bubble strong:first-child {
+        margin-top: 0.5rem; /* Reduce top margin for first heading */
     }
     
     /* Welcome message */
@@ -220,7 +231,27 @@ def apply_custom_styling():
         line-height: 1.5;
     }
     
-    /* Typing indicator */
+    /* UPDATED: Typing indicator - ABOVE INPUT AREA with compact width */
+    .thinking-indicator {
+        position: fixed;
+        bottom: 120px; /* CHANGED: Position above input area */
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        background: var(--surface-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 0.75rem 1rem;
+        box-shadow: var(--shadow-md);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-width: fit-content; /* CHANGED: Compact width based on content */
+        max-width: 400px; /* CHANGED: Maximum width constraint */
+        width: auto; /* CHANGED: Auto width instead of fixed */
+    }
+    
+    /* Legacy typing indicator for backward compatibility */
     .typing-indicator {
         display: flex;
         align-items: center;
@@ -266,6 +297,7 @@ def apply_custom_styling():
     .typing-text {
         color: var(--text-muted);
         font-size: 0.9rem;
+        white-space: nowrap; /* ADDED: Prevent text wrapping for compact display */
     }
     
     /* Sidebar styling */
@@ -445,13 +477,14 @@ def apply_custom_styling():
         background: var(--primary-hover);
     }
     
-    /* Chart container styling */
+    /* UPDATED: Chart container styling - Better fitting */
     .chart-container {
         margin: 1rem 0;
         border-radius: var(--radius-lg);
         overflow: hidden;
         box-shadow: var(--shadow-md);
         border: 1px solid var(--border-color);
+        max-height: 600px; /* ADDED: Limit chart height */
     }
     
     /* Download buttons container */
@@ -560,6 +593,15 @@ def apply_custom_styling():
         
         .login-header h1 {
             font-size: 2rem;
+        }
+        
+        /* RESPONSIVE: Adjust thinking indicator for mobile */
+        .thinking-indicator {
+            bottom: 100px;
+            max-width: 300px;
+            left: 1rem;
+            right: 1rem;
+            transform: none;
         }
     }
     

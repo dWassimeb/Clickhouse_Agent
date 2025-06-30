@@ -1,6 +1,6 @@
 """
 Telmi - Modern ClickHouse Analytics Chat Interface
-FIXED VERSION - Unified agent response box for all elements
+FINAL FIXED VERSION - Complete chart display + modern thinking indicator
 """
 
 import streamlit as st
@@ -52,7 +52,7 @@ st.set_page_config(
 )
 
 class TelmiApp:
-    """Main Telmi application class with unified response rendering."""
+    """Main Telmi application class with modern thinking indicator and complete chart display."""
 
     def __init__(self):
         self.auth_manager = AuthManager()
@@ -70,7 +70,9 @@ class TelmiApp:
             'chat_sessions': {},
             'current_session_id': None,
             'current_messages': [],
-            'agent_thinking': False,
+            'agent_thinking': False,  # Track if agent is thinking
+            'processing_question': False,  # NEW: Track if we're processing
+            'pending_question': None,  # NEW: Store pending question
             'typing_response': "",
             'show_account_settings': False,
             'agent_status_checked': False,
@@ -92,6 +94,9 @@ class TelmiApp:
         # Apply custom styling
         apply_custom_styling()
 
+        # UPDATED: Add modern thinking indicator CSS
+        self._add_modern_thinking_indicator_css()
+
         # Check if integration is available
         if not INTEGRATION_AVAILABLE:
             self._show_integration_error()
@@ -102,6 +107,123 @@ class TelmiApp:
             self._show_login_screen()
         else:
             self._show_main_interface()
+
+    def _add_modern_thinking_indicator_css(self):
+        """Add modern CSS for the thinking indicator that matches chat interface."""
+        st.markdown("""
+        <style>
+        /* Modern thinking indicator with glass morphism effect */
+        .modern-thinking-indicator {
+            position: fixed;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            
+            /* Modern glass morphism styling */
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            
+            /* Flexbox for content */
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            
+            /* Smooth entrance animation */
+            animation: thinkingSlideIn 0.3s ease-out;
+            
+            /* Typography matching chat interface */
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4a5568;
+            
+            /* Compact width */
+            width: auto;
+            min-width: fit-content;
+            max-width: 400px;
+        }
+        
+        /* Animated dots */
+        .thinking-dots {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .thinking-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4299e1, #63b3ed);
+            animation: thinkingPulse 1.4s infinite;
+        }
+        
+        .thinking-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .thinking-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        /* Thinking text */
+        .thinking-text {
+            color: #2d3748;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+        
+        /* Bot icon */
+        .thinking-icon {
+            font-size: 18px;
+            line-height: 1;
+        }
+        
+        /* Smooth animations */
+        @keyframes thinkingSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+        
+        @keyframes thinkingPulse {
+            0%, 60%, 100% {
+                transform: scale(1);
+                opacity: 0.7;
+            }
+            30% {
+                transform: scale(1.3);
+                opacity: 1;
+            }
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .modern-thinking-indicator {
+                bottom: 120px;
+                max-width: 320px;
+                left: 16px;
+                right: 16px;
+                transform: none;
+                margin: 0 auto;
+            }
+        }
+        
+        /* Prevent page flashing during thinking state */
+        .thinking-overlay {
+            pointer-events: none;
+        }
+        </style>
+        """, unsafe_allow_html=True)
 
     def _save_sessions_to_file(self):
         """Save current chat sessions to file - IMPROVED ERROR HANDLING."""
@@ -286,11 +408,94 @@ class TelmiApp:
                     st.session_state.agent_status_checked = True
                     st.error(f"❌ Agent initialization failed: {e}")
 
+        # FIXED: Handle pending question processing BEFORE showing interface
+        if st.session_state.processing_question and st.session_state.pending_question:
+            self._execute_agent_processing()
+
         # Sidebar
         self.sidebar_manager.render_sidebar()
 
+        # UPDATED: Modern thinking indicator (shows BEFORE main chat)
+        if st.session_state.agent_thinking:
+            self._render_modern_thinking_indicator()
+
         # Main chat interface
         self._render_main_chat()
+
+    def _execute_agent_processing(self):
+        """FIXED: Execute agent processing without infinite loops."""
+        try:
+            user_input = st.session_state.pending_question
+            logger.info(f"🔄 Processing pending question: {user_input[:50]}...")
+
+            # Call the bridge directly
+            result = telmi_bridge.process_question(user_input)
+
+            logger.info(f"🔄 Agent response received: success={result.get('success')}")
+
+            if result['success']:
+                response = result['response']
+                processing_time = result.get('processing_time', 0)
+
+                # Add processing time info for debugging
+                if processing_time > 0:
+                    response += f"\n\n*⏱️ Processed in {processing_time:.2f} seconds*"
+
+                # Parse response for attachments
+                attachments = self._extract_attachments(response)
+
+                # Add agent response
+                self._add_message('agent', response, attachments)
+
+                logger.info("✅ Agent response processed successfully")
+            else:
+                # Add error response
+                error_response = result.get('response', 'Unknown error occurred')
+                self._add_message('agent', error_response)
+
+                logger.error(f"❌ Agent processing failed: {result.get('error', 'Unknown error')}")
+
+        except Exception as e:
+            # Add detailed error response
+            error_response = f"""❌ **Unexpected Error**
+
+**Issue:** {str(e)}
+
+**Type:** {type(e).__name__}
+
+**Possible Solutions:**
+• Check the terminal console for detailed errors
+• Restart the Streamlit application  
+• Verify the backend agent is working: `python3 debug.py`
+• Try a simpler question: "List available tables"
+
+**Debug Info:** {str(e)}"""
+
+            self._add_message('agent', error_response)
+            logger.error(f"❌ Unexpected error in message processing: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+
+        finally:
+            # FIXED: Clear processing states
+            st.session_state.processing_question = False
+            st.session_state.pending_question = None
+            st.session_state.agent_thinking = False
+            logger.info("🔄 Question processing completed")
+
+    def _render_modern_thinking_indicator(self):
+        """UPDATED: Render modern thinking indicator that matches chat interface."""
+        st.markdown("""
+            <div class="modern-thinking-indicator">
+                <span class="thinking-icon">🔮</span>
+                <div class="thinking-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <span class="thinking-text">Telmi is analyzing your question...</span>
+            </div>
+        """, unsafe_allow_html=True)
 
     def _render_main_chat(self):
         """Render the main chat interface."""
@@ -412,9 +617,9 @@ class TelmiApp:
                 if section_title:
                     st.markdown(section_title)
 
-                # Render chart with clean viewer
+                # UPDATED: Render chart with FULL content display
                 if 'chart' in attachments:
-                    self._render_chart_clean(attachments['chart'])
+                    self._render_chart_complete(attachments['chart'])
 
             elif '[DOWNLOAD_BUTTONS_PLACEHOLDER]' in section:
                 # Render section title
@@ -437,7 +642,7 @@ class TelmiApp:
         # IMPORTANT: Always render chart and downloads if they exist, even if placeholders are missing
         if 'chart' in attachments and '[CHART_DISPLAY_PLACEHOLDER]' not in content:
             st.markdown("### **📈 Chart Generated:**")
-            self._render_chart_clean(attachments['chart'])
+            self._render_chart_complete(attachments['chart'])
 
         if ('csv' in attachments or 'chart' in attachments) and '[DOWNLOAD_BUTTONS_PLACEHOLDER]' not in content:
             st.markdown("### **📁 Downloads:**")
@@ -489,7 +694,6 @@ class TelmiApp:
                 # Regular markdown
                 st.markdown(line)
 
-
     def _render_table_clean(self, table_data: Dict[str, Any]):
         """Render data table with clean styling."""
         try:
@@ -518,15 +722,16 @@ class TelmiApp:
         except Exception as e:
             st.error(f"Error displaying table: {e}")
 
-    def _render_chart_clean(self, chart_info: Dict[str, str]):
-        """Render chart with clean styling."""
+    def _render_chart_complete(self, chart_info: Dict[str, str]):
+        """UPDATED: Render chart with COMPLETE content including analysis summary."""
         if os.path.exists(chart_info['path']):
             try:
                 with open(chart_info['path'], 'r', encoding='utf-8') as file:
                     html_content = file.read()
 
-                # Render chart with clean container
-                st.components.v1.html(html_content, height=500, scrolling=True)
+                # UPDATED: Render chart with INCREASED height to show complete content
+                # Including the analysis summary section that was cut off
+                st.components.v1.html(html_content, height=600, scrolling=True)
 
                 # Add chart info with consistent styling (no asterisks)
                 st.markdown(f"<small style='color: #666; font-style: italic;'>📈 Interactive chart • {chart_info.get('size', 'Unknown size')}</small>", unsafe_allow_html=True)
@@ -598,7 +803,6 @@ class TelmiApp:
                             help="Download the interactive chart as HTML file"
                         )
 
-
     def _render_input_area(self):
         """Render the input area at the bottom."""
         # Input form
@@ -619,85 +823,20 @@ class TelmiApp:
                 self._process_user_message(user_input.strip())
 
     def _process_user_message(self, user_input: str):
-        """Process user input and get agent response."""
+        """FIXED: Process user input without infinite loops."""
 
-        # Add user message
+        # Add user message immediately
         self._add_message('user', user_input)
 
-        # Show a thinking indicator
-        thinking_container = st.container()
-        with thinking_container:
-            st.markdown("""
-                <div class="message-container agent-message">
-                    <div class="message-avatar agent-avatar">🔮</div>
-                    <div class="message-bubble agent-bubble">
-                        <div class="typing-indicator">
-                            <div class="typing-dots">
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                            </div>
-                            <span class="typing-text">Telmi is analyzing your question...</span>
-                        </div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+        # FIXED: Set up processing states and queue the question
+        st.session_state.agent_thinking = True
+        st.session_state.processing_question = True
+        st.session_state.pending_question = user_input
 
-        try:
-            logger.info(f"🔄 Sending question to agent: {user_input[:50]}...")
+        logger.info(f"🔄 Queued question for processing: {user_input[:50]}...")
 
-            # Call the bridge directly
-            result = telmi_bridge.process_question(user_input)
-
-            logger.info(f"🔄 Agent response received: success={result.get('success')}")
-
-            if result['success']:
-                response = result['response']
-                processing_time = result.get('processing_time', 0)
-
-                # Add processing time info for debugging
-                if processing_time > 0:
-                    response += f"\n\n*⏱️ Processed in {processing_time:.2f} seconds*"
-
-                # Parse response for attachments
-                attachments = self._extract_attachments(response)
-
-                # Add agent response
-                self._add_message('agent', response, attachments)
-
-                logger.info("✅ Agent response processed successfully")
-            else:
-                # Add error response
-                error_response = result.get('response', 'Unknown error occurred')
-                self._add_message('agent', error_response)
-
-                logger.error(f"❌ Agent processing failed: {result.get('error', 'Unknown error')}")
-
-        except Exception as e:
-            # Add detailed error response
-            error_response = f"""❌ **Unexpected Error**
-
-**Issue:** {str(e)}
-
-**Type:** {type(e).__name__}
-
-**Possible Solutions:**
-• Check the terminal console for detailed errors
-• Restart the Streamlit application  
-• Verify the backend agent is working: `python3 debug.py`
-• Try a simpler question: "List available tables"
-
-**Debug Info:** {str(e)}"""
-
-            self._add_message('agent', error_response)
-            logger.error(f"❌ Unexpected error in message processing: {e}")
-            import traceback
-            logger.error(f"Traceback: {traceback.format_exc()}")
-
-        finally:
-            logger.info("🔄 Question processing completed")
-            # Now rerun to show the complete conversation
-            st.rerun()
+        # FIXED: Rerun will trigger _execute_agent_processing on next cycle
+        st.rerun()
 
     def _add_message(self, role: str, content: str, attachments: Dict[str, Any] = None):
         """Add a message to the current session."""
