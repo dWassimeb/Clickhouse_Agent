@@ -1,5 +1,5 @@
 """
-CSV export tool for saving query results.
+CSV export tool for saving query results - UPDATED: Clean data only, no metadata
 """
 
 import csv
@@ -13,12 +13,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 class CsvExportTool(BaseTool):
-    """Tool for exporting query results to CSV files."""
+    """Tool for exporting query results to CSV files with clean data only."""
 
     name: str = "export_csv"
     description: str = """
     Export query results to CSV files for download.
-    Creates CSV files with proper formatting and provides file path.
+    Creates clean CSV files with only the data, no metadata or query information.
     """
 
     # Properly declare the export_dir field for Pydantic v2
@@ -30,7 +30,7 @@ class CsvExportTool(BaseTool):
         os.makedirs(self.export_dir, exist_ok=True)
 
     def _run(self, query_result: Dict[str, Any], user_question: str = "", filename: str = None) -> Dict[str, Any]:
-        """Export query results to CSV file."""
+        """Export query results to CSV file with clean data only."""
         try:
             # Check if we have valid data to export
             if not self._has_exportable_data(query_result):
@@ -47,8 +47,8 @@ class CsvExportTool(BaseTool):
             # Get data from query result
             export_data = self._extract_export_data(query_result)
 
-            # Create CSV file
-            file_path = self._create_csv_file(export_data, filename)
+            # Create CSV file with clean data only
+            file_path = self._create_clean_csv_file(export_data, filename)
 
             # Get file stats
             file_stats = self._get_file_stats(file_path)
@@ -58,7 +58,7 @@ class CsvExportTool(BaseTool):
                 'file_path': file_path,
                 'filename': filename,
                 'file_stats': file_stats,
-                'message': f"CSV file created successfully: {filename}"
+                'message': f"Clean CSV file created successfully: {filename}"
             }
 
         except Exception as e:
@@ -113,13 +113,11 @@ class CsvExportTool(BaseTool):
         return {
             'columns': result_data.get('columns', []),
             'data': result_data.get('data', []),
-            'row_count': result_data.get('row_count', 0),
-            'query': query_result.get('executed_query', ''),
-            'timestamp': datetime.now().isoformat()
+            'row_count': result_data.get('row_count', 0)
         }
 
-    def _create_csv_file(self, export_data: Dict[str, Any], filename: str) -> str:
-        """Create the actual CSV file."""
+    def _create_clean_csv_file(self, export_data: Dict[str, Any], filename: str) -> str:
+        """Create CSV file with ONLY the clean data - no metadata."""
         file_path = os.path.join(self.export_dir, filename)
 
         with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
@@ -129,20 +127,13 @@ class CsvExportTool(BaseTool):
             columns = export_data['columns']
             writer.writerow(columns)
 
-            # Write data rows
+            # Write ONLY the data rows - no metadata, no query, no comments
             for row in export_data['data']:
                 # Convert each value to string and handle None values
                 csv_row = [self._format_csv_value(value) for value in row]
                 writer.writerow(csv_row)
 
-            # Write metadata as comments (optional)
-            if export_data.get('query'):
-                csvfile.write(f"\n# Query: {export_data['query']}")
-            if export_data.get('timestamp'):
-                csvfile.write(f"\n# Generated: {export_data['timestamp']}")
-            csvfile.write(f"\n# Total rows: {export_data['row_count']}")
-
-        logger.info(f"CSV file created: {file_path}")
+        logger.info(f"Clean CSV file created: {file_path}")
         return file_path
 
     def _format_csv_value(self, value: Any) -> str:

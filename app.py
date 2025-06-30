@@ -1,6 +1,6 @@
 """
 Telmi - Modern ClickHouse Analytics Chat Interface
-Fixed version - keeping original working structure, just fixing formatting
+FIXED VERSION - Unified agent response box for all elements
 """
 
 import streamlit as st
@@ -46,13 +46,13 @@ from components.styling import apply_custom_styling
 # Configure Streamlit page
 st.set_page_config(
     page_title="Telmi - Telecom Analytics Assistant",
-    page_icon="📊",
+    page_icon="🔮",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 class TelmiApp:
-    """Main Telmi application class with full backend integration."""
+    """Main Telmi application class with unified response rendering."""
 
     def __init__(self):
         self.auth_manager = AuthManager()
@@ -74,7 +74,7 @@ class TelmiApp:
             'typing_response': "",
             'show_account_settings': False,
             'agent_status_checked': False,
-            'sessions_loaded': False,  # Add this flag
+            'sessions_loaded': False,
             'agent_status': {
                 'agent_initialized': False,
                 'database_connected': False,
@@ -220,7 +220,7 @@ class TelmiApp:
             st.markdown("""
                 <div class="login-container">
                     <div class="login-header">
-                        <h1>🔮 Telmi</h1>
+                        <h1>Telmi</h1>
                         <p>Your Intelligent Telecom Analytics Assistant</p>
                     </div>
                 </div>
@@ -297,7 +297,7 @@ class TelmiApp:
         # Header
         st.markdown("""
             <div class="chat-header">
-                <h1>🔮 Telmi</h1>
+                <h1>Telmi</h1>
                 <p>Ask me anything about your telecom data</p>
             </div>
         """, unsafe_allow_html=True)
@@ -329,7 +329,7 @@ class TelmiApp:
                     <p>{status_message}</p>
                     <p>I'm your intelligent telecom analytics assistant. Ask me questions about:</p>
                     <ul>
-                        <li>📊 Data usage and traffic analysis</li>
+                        <li>📉 Data usage and traffic analysis</li>
                         <li>👥 Customer analytics and rankings</li>
                         <li>🌍 Geographic distribution and roaming</li>
                         <li>📱 Device and technology insights</li>
@@ -343,7 +343,7 @@ class TelmiApp:
             if message['role'] == 'user':
                 self._render_user_message(message['content'])
             else:
-                self._render_agent_message(message)
+                self._render_agent_message_unified(message)
 
     def _render_user_message(self, content: str):
         """Render a user message."""
@@ -356,101 +356,143 @@ class TelmiApp:
             </div>
         """, unsafe_allow_html=True)
 
-    def _render_agent_message(self, message: Dict[str, Any]):
-        """Render an agent message with embedded elements in correct order."""
+    def _render_agent_message_unified(self, message: Dict[str, Any]):
+        """SIMPLIFIED: Clean rendering without bubbles - just parse everything in order."""
         content = message['content']
         attachments = message.get('attachments', {})
 
-        # Create a container for the entire agent message
-        with st.container():
-            # Agent avatar and start of message (using columns for layout)
-            col1, col2 = st.columns([0.1, 0.9])
+        # Simple container with avatar and clean content
+        col1, col2 = st.columns([0.08, 0.92])
 
-            with col1:
-                st.markdown("""
-                    <div style="
-                        width: 2.5rem; 
-                        height: 2.5rem; 
-                        border-radius: 50%; 
-                        background: #f8fafc; 
-                        border: 1px solid #e2e8f0; 
-                        display: flex; 
-                        align-items: center; 
-                        justify-content: center; 
-                        font-size: 1.2rem;
-                    ">🔮</div>
-                """, unsafe_allow_html=True)
+        with col1:
+            st.markdown("""
+                <div style="
+                    width: 2.5rem; 
+                    height: 2.5rem; 
+                    border-radius: 50%; 
+                    background: linear-gradient(135deg, #8b5cf6, #a855f7); 
+                    border: 1px solid #7c3aed; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    font-size: 1.2rem;
+                    margin-top: 0.5rem;
+                    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+                ">🔮</div>
+            """, unsafe_allow_html=True)
 
-            with col2:
-                # Render content by sections with elements inserted at placeholders
-                self._render_content_with_embedded_elements(content, attachments)
+        with col2:
+            # Just render everything cleanly in order
+            self._render_content_cleanly(content, attachments)
 
-    def _render_content_with_embedded_elements(self, content: str, attachments: Dict[str, Any]):
-        """Render content with elements embedded at the right places."""
+    def _render_content_cleanly(self, content: str, attachments: Dict[str, Any]):
+        """Render content cleanly with proper viewers for each element type."""
 
-        # Split content into parts around placeholders
-        parts = []
-        current_text = content
+        # Split content by lines and process each section
+        lines = content.split('\n\n')  # Split by double newlines to preserve sections
 
-        # Process each placeholder in order
-        placeholders = [
-            ('[TABLE_DATA_PLACEHOLDER]', 'table'),
-            ('[CHART_DISPLAY_PLACEHOLDER]', 'chart'),
-            ('[DOWNLOAD_BUTTONS_PLACEHOLDER]', 'downloads')
-        ]
+        for section in lines:
+            section = section.strip()
+            if not section:
+                continue
 
-        for placeholder, element_type in placeholders:
-            if placeholder in current_text:
-                # Split at this placeholder
-                before, after = current_text.split(placeholder, 1)
+            # Handle each type of placeholder with appropriate rendering
+            if '[TABLE_DATA_PLACEHOLDER]' in section:
+                # Render section title
+                section_title = section.replace('[TABLE_DATA_PLACEHOLDER]', '').strip()
+                if section_title:
+                    st.markdown(section_title)
 
-                # Add the text before placeholder
-                if before.strip():
-                    parts.append(('text', before.strip()))
+                # Render table with clean viewer
+                if 'table_data' in attachments:
+                    self._render_table_clean(attachments['table_data'])
 
-                # Add the element
-                parts.append((element_type, ''))
+            elif '[CHART_DISPLAY_PLACEHOLDER]' in section:
+                # Render section title
+                section_title = section.replace('[CHART_DISPLAY_PLACEHOLDER]', '').strip()
+                if section_title:
+                    st.markdown(section_title)
 
-                # Continue with the text after placeholder
-                current_text = after
+                # Render chart with clean viewer
+                if 'chart' in attachments:
+                    self._render_chart_clean(attachments['chart'])
 
-        # Add any remaining text
-        if current_text.strip():
-            parts.append(('text', current_text.strip()))
+            elif '[DOWNLOAD_BUTTONS_PLACEHOLDER]' in section:
+                # Render section title
+                section_title = section.replace('[DOWNLOAD_BUTTONS_PLACEHOLDER]', '').strip()
+                if section_title:
+                    st.markdown(section_title)
 
-        # If no placeholders found, just add the original content
-        if not parts:
-            parts.append(('text', content))
+                # Render downloads with clean viewer
+                if attachments:
+                    self._render_downloads_clean(attachments)
 
-        # Render each part
-        for part_type, part_content in parts:
-            if part_type == 'text':
-                # Style the text content to look like a message bubble
-                st.markdown(f"""
-                    <div style="
-                        background: #f8fafc;
-                        color: #1a202c;
-                        padding: 1rem 1.25rem;
-                        border-radius: 12px;
-                        border: 1px solid #e2e8f0;
-                        margin-bottom: 0.5rem;
-                        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                    ">
-                        {part_content}
-                    </div>
-                """, unsafe_allow_html=True)
+            elif '```sql' in section or (section.startswith('```') and 'sql' in section.lower()):
+                # Handle SQL code block
+                self._render_sql_block_from_section(section)
 
-            elif part_type == 'table' and 'table_data' in attachments:
-                self._render_data_table_embedded(attachments['table_data'])
+            else:
+                # Regular content section
+                self._render_regular_section(section)
 
-            elif part_type == 'chart' and attachments.get('chart'):
-                self._render_chart_embedded(attachments['chart'])
+        # IMPORTANT: Always render chart and downloads if they exist, even if placeholders are missing
+        if 'chart' in attachments and '[CHART_DISPLAY_PLACEHOLDER]' not in content:
+            st.markdown("### **📈 Chart Generated:**")
+            self._render_chart_clean(attachments['chart'])
 
-            elif part_type == 'downloads' and attachments:
-                self._render_downloads_embedded(attachments)
+        if ('csv' in attachments or 'chart' in attachments) and '[DOWNLOAD_BUTTONS_PLACEHOLDER]' not in content:
+            st.markdown("### **📁 Downloads:**")
+            self._render_downloads_clean(attachments)
 
-    def _render_data_table_embedded(self, table_data: Dict[str, Any]):
-        """Render data table as an embedded element."""
+    def _render_sql_block_from_section(self, section: str):
+        """Render SQL code block from a section."""
+        lines = section.split('\n')
+        sql_lines = []
+        in_sql = False
+
+        for line in lines:
+            if line.strip().startswith('```') and ('sql' in line.lower() or in_sql):
+                if in_sql:
+                    break  # End of SQL block
+                else:
+                    in_sql = True  # Start of SQL block
+                    continue
+            elif in_sql:
+                sql_lines.append(line)
+
+        if sql_lines:
+            sql_content = '\n'.join(sql_lines)
+            st.code(sql_content, language='sql')
+
+    def _render_regular_section(self, section: str):
+        """Render regular content section."""
+        lines = section.split('\n')
+
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            if line.startswith('**') and line.endswith(':**'):
+                # Section headers - make them bigger and more prominent
+                # Replace 📊 with 📉 for data results
+                if '📊' in line:
+                    line = line.replace('📊', '📉')
+                st.markdown(f"### {line}")
+            elif line.startswith('•'):
+                # Bullet points
+                st.markdown(line)
+            elif line.startswith('*⏱️'):
+                # Processing time - render as styled caption like other info messages
+                time_text = line.replace('*', '').replace('⏱️', '⏱️').strip()
+                st.markdown(f"*{time_text}*")
+            else:
+                # Regular markdown
+                st.markdown(line)
+
+
+    def _render_table_clean(self, table_data: Dict[str, Any]):
+        """Render data table with clean styling."""
         try:
             import pandas as pd
 
@@ -458,110 +500,105 @@ class TelmiApp:
             data = table_data.get('data', [])
 
             if not columns or not data:
+                st.warning("No data to display")
                 return
 
             # Create DataFrame
             df = pd.DataFrame(data, columns=columns)
 
-            # Add a styled container for the table
-            st.markdown("""
-                <div style="
-                    background: white;
-                    border-radius: 8px;
-                    border: 1px solid #e2e8f0;
-                    padding: 1rem;
-                    margin: 0.5rem 0;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                ">
-            """, unsafe_allow_html=True)
-
-            # Display the dataframe
+            # Render with clean styling
             st.dataframe(
                 df,
                 use_container_width=True,
                 hide_index=True,
             )
 
-            # Add summary
-            st.caption(f"*{len(data):,} rows total • {len(columns)} columns*")
-
-            st.markdown("</div>", unsafe_allow_html=True)
+            # Add summary info with consistent styling (no asterisks)
+            st.markdown(f"<small style='color: #666; font-style: italic;'>📉 {len(data):,} rows × {len(columns)} columns</small>", unsafe_allow_html=True)
 
         except Exception as e:
             st.error(f"Error displaying table: {e}")
 
-    def _render_chart_embedded(self, chart_info: Dict[str, str]):
-        """Render chart as an embedded element."""
+    def _render_chart_clean(self, chart_info: Dict[str, str]):
+        """Render chart with clean styling."""
         if os.path.exists(chart_info['path']):
             try:
                 with open(chart_info['path'], 'r', encoding='utf-8') as file:
                     html_content = file.read()
 
-                # Add a styled container for the chart
-                st.markdown("""
-                    <div style="
-                        background: white;
-                        border-radius: 8px;
-                        border: 1px solid #e2e8f0;
-                        padding: 1rem;
-                        margin: 0.5rem 0;
-                        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                    ">
-                """, unsafe_allow_html=True)
+                # Render chart with clean container
+                st.components.v1.html(html_content, height=500, scrolling=True)
 
-                st.components.v1.html(html_content, height=600, scrolling=True)
-
-                st.markdown("</div>", unsafe_allow_html=True)
+                # Add chart info with consistent styling (no asterisks)
+                st.markdown(f"<small style='color: #666; font-style: italic;'>📈 Interactive chart • {chart_info.get('size', 'Unknown size')}</small>", unsafe_allow_html=True)
 
             except Exception as e:
                 st.error(f"Error displaying chart: {e}")
+        else:
+            st.warning("Chart file not found")
 
-    def _render_downloads_embedded(self, attachments: Dict[str, Any]):
-        """Render download buttons as embedded elements."""
+    def _render_downloads_clean(self, attachments: Dict[str, Any]):
+        """Render download buttons with clean styling and attractive green colors."""
+        # Create columns for downloads
+        download_items = []
 
-        # Add a styled container for the downloads
+        if 'csv' in attachments:
+            download_items.append(('csv', attachments['csv']))
+        if 'chart' in attachments:
+            download_items.append(('chart', attachments['chart']))
+
+        if not download_items:
+            st.warning("No downloads available")
+            return
+
+        # Create columns based on number of items
+        cols = st.columns(len(download_items))
+
+        # Add custom CSS for green download buttons
         st.markdown("""
-            <div style="
-                background: white;
-                border-radius: 8px;
-                border: 1px solid #e2e8f0;
-                padding: 1rem;
-                margin: 0.5rem 0;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            ">
+            <style>
+            .stDownloadButton > button {
+                background-color: #22c55e !important;
+                color: white !important;
+                border: none !important;
+                border-radius: 8px !important;
+                font-weight: 500 !important;
+                transition: all 0.2s ease !important;
+            }
+            .stDownloadButton > button:hover {
+                background-color: #16a34a !important;
+                transform: translateY(-1px) !important;
+                box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3) !important;
+            }
+            .stDownloadButton > button:active {
+                transform: translateY(0px) !important;
+            }
+            </style>
         """, unsafe_allow_html=True)
 
-        col1, col2 = st.columns(2)
-
-        with col1:
-            if 'csv' in attachments:
-                csv_info = attachments['csv']
-                if os.path.exists(csv_info['path']):
-                    with open(csv_info['path'], 'rb') as file:
+        for i, (item_type, item_info) in enumerate(download_items):
+            with cols[i]:
+                if item_type == 'csv' and os.path.exists(item_info['path']):
+                    with open(item_info['path'], 'rb') as file:
                         st.download_button(
-                            label="📊 Download CSV Data",
+                            label=f"📉 CSV Data ({item_info.get('size', 'Unknown')})",
                             data=file.read(),
-                            file_name=csv_info['filename'],
+                            file_name=item_info['filename'],
                             mime='text/csv',
                             use_container_width=True,
-                            type="secondary"
+                            help="Download the complete dataset as CSV file"
                         )
-
-        with col2:
-            if 'chart' in attachments:
-                chart_info = attachments['chart']
-                if os.path.exists(chart_info['path']):
-                    with open(chart_info['path'], 'rb') as file:
+                elif item_type == 'chart' and os.path.exists(item_info['path']):
+                    with open(item_info['path'], 'rb') as file:
                         st.download_button(
-                            label="📈 Download Chart",
+                            label=f"📈 Chart ({item_info.get('size', 'Unknown')})",
                             data=file.read(),
-                            file_name=chart_info['filename'],
+                            file_name=item_info['filename'],
                             mime='text/html',
                             use_container_width=True,
-                            type="secondary"
+                            help="Download the interactive chart as HTML file"
                         )
 
-        st.markdown("</div>", unsafe_allow_html=True)
 
     def _render_input_area(self):
         """Render the input area at the bottom."""
@@ -583,12 +620,12 @@ class TelmiApp:
                 self._process_user_message(user_input.strip())
 
     def _process_user_message(self, user_input: str):
-        """Process user input and get agent response - BACK TO ORIGINAL WORKING STRUCTURE."""
+        """Process user input and get agent response."""
 
         # Add user message
         self._add_message('user', user_input)
 
-        # Show a thinking indicator in the message area (not input area)
+        # Show a thinking indicator
         thinking_container = st.container()
         with thinking_container:
             st.markdown("""
@@ -660,12 +697,11 @@ class TelmiApp:
 
         finally:
             logger.info("🔄 Question processing completed")
-
             # Now rerun to show the complete conversation
             st.rerun()
 
     def _add_message(self, role: str, content: str, attachments: Dict[str, Any] = None):
-        """Add a message to the current session - FIXED to ensure saving."""
+        """Add a message to the current session."""
         message = {
             'role': role,
             'content': content,
@@ -675,7 +711,7 @@ class TelmiApp:
 
         st.session_state.current_messages.append(message)
 
-        # ALWAYS save to session history after adding a message
+        # Save to session history
         self._ensure_session_exists()
         self._save_session_to_history()
 
@@ -686,19 +722,15 @@ class TelmiApp:
             logger.info(f"📝 Created new session ID: {st.session_state.current_session_id}")
 
     def _extract_attachments(self, response: str) -> Dict[str, Any]:
-        """Extract file attachments and data from agent response - FIXED VERSION."""
+        """Extract file attachments and data from agent response."""
         attachments = {}
 
         try:
-            # Look for the most recent CSV and chart files based on timestamp
-            # Since the response might not contain the exact filenames
-
-            # Find the most recent CSV file
+            # Find the most recent CSV and chart files
             csv_dir = "exports"
             if os.path.exists(csv_dir):
                 csv_files = [f for f in os.listdir(csv_dir) if f.endswith('.csv')]
                 if csv_files:
-                    # Get the most recent CSV file
                     csv_files.sort(key=lambda x: os.path.getmtime(os.path.join(csv_dir, x)), reverse=True)
                     latest_csv = csv_files[0]
                     csv_path = os.path.join(csv_dir, latest_csv)
@@ -717,7 +749,6 @@ class TelmiApp:
             if os.path.exists(chart_dir):
                 chart_files = [f for f in os.listdir(chart_dir) if f.endswith('.html')]
                 if chart_files:
-                    # Get the most recent chart file
                     chart_files.sort(key=lambda x: os.path.getmtime(os.path.join(chart_dir, x)), reverse=True)
                     latest_chart = chart_files[0]
                     chart_path = os.path.join(chart_dir, latest_chart)
@@ -731,7 +762,7 @@ class TelmiApp:
 
                     logger.info(f"📈 Found chart file: {latest_chart}")
 
-            # Extract table data from CSV for display (MOST IMPORTANT)
+            # Extract table data from CSV for display
             if 'csv' in attachments:
                 try:
                     import pandas as pd
@@ -744,49 +775,15 @@ class TelmiApp:
                 except Exception as e:
                     logger.error(f"❌ Could not extract table data from CSV: {e}")
 
-            # Also try the original regex approach as backup
-            import re
-
-            csv_pattern = r'\[Download CSV file\]\(([^)]+)\)'
-            chart_pattern = r'\[Download Chart\]\(([^)]+)\)'
-
-            csv_match = re.search(csv_pattern, response)
-            chart_match = re.search(chart_pattern, response)
-
-            # If regex found files and we haven't found them yet, use those
-            if csv_match and 'csv' not in attachments:
-                csv_filename = csv_match.group(1)
-                csv_path = os.path.join('exports', csv_filename)
-                if os.path.exists(csv_path):
-                    stat = os.stat(csv_path)
-                    attachments['csv'] = {
-                        'filename': csv_filename,
-                        'path': csv_path,
-                        'size': f"{stat.st_size/1024:.1f} KB"
-                    }
-
-            if chart_match and 'chart' not in attachments:
-                chart_filename = chart_match.group(1)
-                chart_path = os.path.join('visualizations', chart_filename)
-                if os.path.exists(chart_path):
-                    stat = os.stat(chart_path)
-                    attachments['chart'] = {
-                        'filename': chart_filename,
-                        'path': chart_path,
-                        'size': f"{stat.st_size/1024:.1f} KB"
-                    }
-
             logger.info(f"🔗 Total attachments found: CSV={('csv' in attachments)}, Chart={('chart' in attachments)}, Table={('table_data' in attachments)}")
 
         except Exception as e:
             logger.error(f"❌ Error extracting attachments: {e}")
-            import traceback
-            logger.error(f"Traceback: {traceback.format_exc()}")
 
         return attachments
 
     def _save_session_to_history(self):
-        """Save current session to chat history - FIXED VERSION."""
+        """Save current session to chat history."""
         if not st.session_state.user_info:
             logger.warning("⚠️ No user info - cannot save session")
             return
