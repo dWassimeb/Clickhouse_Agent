@@ -1,7 +1,7 @@
 """
-Fixed Sidebar Manager for Telmi - Complete Implementation
-- Fixed missing methods error
-- Updated for new blue theme
+Fixed Sidebar Manager for Telmi - Account Settings Order Fix
+- Moved delete account button before logout button
+- Improved visual organization
 """
 
 import streamlit as st
@@ -27,7 +27,7 @@ class SidebarManager:
     def render_sidebar(self):
         """Render the complete sidebar interface with clean structure."""
         with st.sidebar:
-            # Header with clean text only
+            # Header
             self._render_sidebar_header()
 
             # Section 1: Chat History
@@ -43,7 +43,7 @@ class SidebarManager:
             self._render_sidebar_footer()
 
     def _render_sidebar_header(self):
-        """Render the sidebar header with clean text only."""
+        """Render the sidebar header."""
         st.markdown("""
             <div class="sidebar-header">
                 <h2>Telmi</h2>
@@ -118,7 +118,7 @@ class SidebarManager:
                     st.error(f"❌ Status check failed: {e}")
 
     def _render_account_settings_section(self):
-        """Render the account settings section."""
+        """Render the account settings section - FIXED ORDER: DELETE BEFORE LOGOUT."""
         if st.session_state.user_info:
             username = st.session_state.user_info['username']
             email = st.session_state.user_info.get('email', 'No email set')
@@ -163,7 +163,7 @@ class SidebarManager:
 
                 st.markdown("---")
 
-                # Account Actions Section
+                # Account Actions Section - FIXED ORDER
                 st.markdown("**⚙️ Account Actions:**")
 
                 # Delete Account button FIRST
@@ -269,7 +269,7 @@ class SidebarManager:
             st.rerun()
 
     def _delete_chat_session(self, session_id: str):
-        """Delete a chat session."""
+        """Delete a chat session - FIXED VERSION."""
         try:
             # Load all sessions from file
             all_sessions = {}
@@ -460,6 +460,6 @@ class SidebarManager:
 
         st.markdown("""
             <div class="sidebar-footer">
-                <small>Powered by Telmi AI</small>
+                <small>Powered by Castor</small>
             </div>
         """, unsafe_allow_html=True)

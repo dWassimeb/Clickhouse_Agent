@@ -168,7 +168,7 @@ class ChatInterface:
         return content
 
     def render_typing_indicator(self):
-        """Render typing indicator."""
+        """Render typing indicator above input area."""
         st.markdown("""
             <div class="typing-indicator">
                 <div class="typing-dots">
@@ -176,7 +176,7 @@ class ChatInterface:
                     <span></span>
                     <span></span>
                 </div>
-                <span class="typing-text">Telmi is thinking...</span>
+                <span class="typing-text">Telmi is analyzing your question...</span>
             </div>
         """, unsafe_allow_html=True)
 
@@ -187,7 +187,7 @@ class ChatInterface:
                 <h3>👋 Welcome to Telmi!</h3>
                 <p>I'm your intelligent telecom analytics assistant. Ask me questions about:</p>
                 <ul>
-                    <li>📊 Data usage and traffic analysis</li>
+                    <li>📉 Data usage and traffic analysis</li>
                     <li>👥 Customer analytics and rankings</li>
                     <li>🌍 Geographic distribution and roaming</li>
                     <li>📱 Device and technology insights</li>
@@ -278,7 +278,7 @@ class ChatInterface:
         if os.path.exists(csv_info['path']):
             with open(csv_info['path'], 'rb') as file:
                 st.download_button(
-                    label=f"📊 CSV Data ({csv_info['size']})",
+                    label=f"📉 CSV Data ({csv_info['size']})",
                     data=file.read(),
                     file_name=csv_info['filename'],
                     mime='text/csv',
@@ -402,7 +402,7 @@ class ChatInterface:
             attachment_info = []
             for attachment_type, info in attachments.items():
                 if attachment_type == 'csv':
-                    attachment_info.append(f"📊 CSV file: {info['filename']}")
+                    attachment_info.append(f"📉 CSV file: {info['filename']}")
                 elif attachment_type == 'chart':
                     attachment_info.append(f"📈 Chart: {info['filename']}")
 
@@ -417,7 +417,7 @@ class ChatInterface:
         text = re.sub(r'\n{3,}', '\n\n', text)
 
         # Clean up markdown artifacts
-        text = text.replace('**Results:**', '**📊 Results:**')
+        text = text.replace('**Results:**', '**📉 Results:**')
         text = text.replace('**Analysis:**', '**🔍 Analysis:**')
         text = text.replace('**Executed Query:**', '**⚡ Executed Query:**')
 

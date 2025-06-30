@@ -370,14 +370,13 @@ class TelmiApp:
                     width: 2.5rem; 
                     height: 2.5rem; 
                     border-radius: 50%; 
-                    background: linear-gradient(135deg, #8b5cf6, #a855f7); 
-                    border: 1px solid #7c3aed; 
+                    background: #f1f5f9; 
+                    border: 1px solid #e2e8f0; 
                     display: flex; 
                     align-items: center; 
                     justify-content: center; 
                     font-size: 1.2rem;
-                    margin-top: 0.5rem;
-                    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+                    flex-shrink: 0;
                 ">🔮</div>
             """, unsafe_allow_html=True)
 

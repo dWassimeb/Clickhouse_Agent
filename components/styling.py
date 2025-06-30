@@ -1,19 +1,19 @@
 """
-CSS Styling and Themes for Telmi - FIXED: Purple Crystal Ball Emoji
-Modern, minimalist ChatGPT-like interface styling with proper emoji colors
+CSS Styling and Themes for Telmi
+Modern, minimalist ChatGPT-like interface styling
 """
 
 import streamlit as st
 
 def apply_custom_styling():
-    """Apply custom CSS styling to the Streamlit app with fixed emoji colors."""
+    """Apply custom CSS styling to the Streamlit app."""
 
     st.markdown("""
     <style>
     /* Import Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
-    /* Root variables for consistent theming - Softer Professional Blue */
+    /* Root variables for consistent theming - ChatGPT-like colors */
     :root {
         --primary-color: #4299e1;
         --primary-hover: #3182ce;
@@ -21,13 +21,13 @@ def apply_custom_styling():
         --secondary-color: #f7fafc;
         --background-color: #ffffff;
         --surface-color: #f7fafc;
-        --text-primary: #1e293b;
-        --text-secondary: #475569;
-        --text-muted: #94a3b8;
+        --text-primary: #1a202c;
+        --text-secondary: #4a5568;
+        --text-muted: #a0aec0;
         --border-color: #e2e8f0;
-        --success-color: #059669;
-        --error-color: #dc2626;
-        --warning-color: #d97706;
+        --success-color: #48bb78;
+        --error-color: #f56565;
+        --warning-color: #ed8936;
         --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
         --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
@@ -81,16 +81,6 @@ def apply_custom_styling():
         background-clip: text;
     }
     
-    /* FIXED: Preserve emoji's natural colors - no style override */
-    .login-header h1 span {
-        background: none !important;
-        -webkit-background-clip: unset !important;
-        -webkit-text-fill-color: unset !important;
-        background-clip: unset !important;
-        color: initial !important;
-        filter: none !important;
-    }
-    
     .login-header p {
         color: var(--text-secondary);
         font-size: 1.1rem;
@@ -117,16 +107,6 @@ def apply_custom_styling():
         background-clip: text;
     }
     
-    /* FIXED: Preserve emoji colors in chat header */
-    .chat-header h1 span {
-        background: none !important;
-        -webkit-background-clip: unset !important;
-        -webkit-text-fill-color: unset !important;
-        background-clip: unset !important;
-        color: initial !important;
-        filter: none !important;
-    }
-    
     .chat-header p {
         color: var(--text-secondary);
         margin: 0.5rem 0 0 0;
@@ -139,7 +119,6 @@ def apply_custom_styling():
         margin: 1rem 0;
         gap: 0.75rem;
         max-width: 100%;
-        align-items: flex-start;
     }
     
     .message-container.user-message {
@@ -183,7 +162,7 @@ def apply_custom_styling():
         justify-content: center;
         font-size: 1.2rem;
         flex-shrink: 0;
-        margin-top: 0.25rem;
+        align-self: flex-start;
     }
     
     .user-avatar {
@@ -192,9 +171,18 @@ def apply_custom_styling():
     }
     
     .agent-avatar {
-        background: var(--surface-color);
-        border: 1px solid var(--border-color);
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
         color: var(--text-primary);
+    }
+    
+    /* Section titles - medium sized for better hierarchy */
+    .message-bubble strong,
+    h3, h4, .section-title {
+        font-size: 1.1rem !important;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 1rem 0 0.5rem 0;
     }
     
     /* Welcome message */
@@ -297,16 +285,6 @@ def apply_custom_styling():
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-    }
-    
-    /* FIXED: Preserve emoji's natural colors in sidebar */
-    .sidebar-header h2 span {
-        background: none !important;
-        -webkit-background-clip: unset !important;
-        -webkit-text-fill-color: unset !important;
-        background-clip: unset !important;
-        color: initial !important;
-        filter: none !important;
     }
     
     .sidebar-header p {
