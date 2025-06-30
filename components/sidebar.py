@@ -1,7 +1,9 @@
 """
-Fixed Sidebar Manager for Telmi - Account Settings Order Fix
-- Moved delete account button before logout button
-- Improved visual organization
+IMPROVED Sidebar Manager for Telmi - Better styling and UX improvements
+- Bold, bigger section headers
+- Chat history closed by default
+- Left-aligned stats with better emoji
+- Intelligent session titles
 """
 
 import streamlit as st
@@ -13,7 +15,7 @@ from typing import Dict, Any, List
 from components.auth import AuthManager
 
 class SidebarManager:
-    """Manages the sidebar interface with clean, structured sections."""
+    """Manages the sidebar interface with improved styling and UX."""
 
     def __init__(self):
         self.auth_manager = AuthManager()
@@ -25,12 +27,15 @@ class SidebarManager:
         os.makedirs("data", exist_ok=True)
 
     def render_sidebar(self):
-        """Render the complete sidebar interface with clean structure."""
+        """Render the complete sidebar interface with improved styling."""
         with st.sidebar:
             # Header
             self._render_sidebar_header()
 
-            # Section 1: Chat History
+            # IMPROVED: Section headers with better styling
+            self._add_section_header_styling()
+
+            # Section 1: Chat History (CLOSED BY DEFAULT)
             self._render_chat_history_section()
 
             # Section 2: System Status
@@ -39,8 +44,55 @@ class SidebarManager:
             # Section 3: Account Settings
             self._render_account_settings_section()
 
-            # Footer
+            # Footer with IMPROVED stats styling
             self._render_sidebar_footer()
+
+    def _add_section_header_styling(self):
+        """Add CSS for better section header styling."""
+        st.markdown("""
+            <style>
+            /* IMPROVED: Make section headers more prominent */
+            .streamlit-expanderHeader {
+                font-weight: 600 !important;
+                font-size: 16px !important;
+                color: #2d3748 !important;
+                background: #f8fafc !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 8px !important;
+                margin: 8px 0 !important;
+            }
+            
+            .streamlit-expanderHeader:hover {
+                background: #edf2f7 !important;
+                border-color: #cbd5e0 !important;
+            }
+            
+            .streamlit-expanderContent {
+                border: 1px solid #e2e8f0 !important;
+                border-top: none !important;
+                border-radius: 0 0 8px 8px !important;
+                background: #ffffff !important;
+                margin-bottom: 8px !important;
+            }
+            
+            /* IMPROVED: Stats container - left aligned */
+            .sidebar-stats-improved {
+                background: #f8fafc !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 8px !important;
+                padding: 12px !important;
+                margin: 8px 0 !important;
+                text-align: left !important;  /* LEFT ALIGNED */
+            }
+            
+            .stats-text-improved {
+                font-size: 13px !important;
+                color: #4a5568 !important;
+                line-height: 1.4 !important;
+                margin: 0 !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
 
     def _render_sidebar_header(self):
         """Render the sidebar header."""
@@ -52,8 +104,9 @@ class SidebarManager:
         """, unsafe_allow_html=True)
 
     def _render_chat_history_section(self):
-        """Render the chat history section with dropdown."""
-        with st.expander("💬 Chat History", expanded=True):
+        """Render the chat history section - CLOSED BY DEFAULT."""
+        # IMPROVED: Use expanded=False to start closed
+        with st.expander("💬 Chat History", expanded=False):
             # New chat button at the top
             if st.button("➕ New Chat", use_container_width=True, key="new_chat_btn"):
                 self._start_new_chat()
@@ -78,7 +131,7 @@ class SidebarManager:
                     self._render_session_item(session_id, session_data)
 
     def _render_system_status_section(self):
-        """Render the system status section with dropdown."""
+        """Render the system status section."""
         with st.expander("🔧 System Status", expanded=False):
             # Get agent status
             if 'agent_status' in st.session_state:
@@ -118,7 +171,7 @@ class SidebarManager:
                     st.error(f"❌ Status check failed: {e}")
 
     def _render_account_settings_section(self):
-        """Render the account settings section - FIXED ORDER: DELETE BEFORE LOGOUT."""
+        """Render the account settings section."""
         if st.session_state.user_info:
             username = st.session_state.user_info['username']
             email = st.session_state.user_info.get('email', 'No email set')
@@ -163,7 +216,7 @@ class SidebarManager:
 
                 st.markdown("---")
 
-                # Account Actions Section - FIXED ORDER
+                # Account Actions Section
                 st.markdown("**⚙️ Account Actions:**")
 
                 # Delete Account button FIRST
@@ -207,7 +260,7 @@ class SidebarManager:
                 st.info("⚠️ Please log in to access account settings")
 
     def _render_session_item(self, session_id: str, session_data: Dict[str, Any]):
-        """Render a single chat session item."""
+        """Render a single chat session item with IMPROVED titles."""
         title = session_data.get('title', 'Untitled Chat')
         timestamp = session_data.get('timestamp', '')
         message_count = len(session_data.get('messages', []))
@@ -225,8 +278,11 @@ class SidebarManager:
         col1, col2 = st.columns([4, 1])
 
         with col1:
+            # IMPROVED: Show smarter title truncation
+            display_title = title if len(title) <= 30 else title[:27] + "..."
+
             if st.button(
-                    f"📝 {title[:25]}{'...' if len(title) > 25 else ''}",
+                    f"📝 {display_title}",
                     key=f"session_{session_id}",
                     help=f"{message_count} messages • {time_str}",
                     use_container_width=True,
@@ -269,7 +325,7 @@ class SidebarManager:
             st.rerun()
 
     def _delete_chat_session(self, session_id: str):
-        """Delete a chat session - FIXED VERSION."""
+        """Delete a chat session."""
         try:
             # Load all sessions from file
             all_sessions = {}
@@ -440,21 +496,22 @@ class SidebarManager:
         st.rerun()
 
     def _render_sidebar_footer(self):
-        """Render the sidebar footer."""
+        """Render the sidebar footer with IMPROVED stats styling."""
         st.markdown("---")
 
-        # Statistics
+        # IMPROVED: Statistics with better styling and left alignment
         if st.session_state.user_info:
             sessions = self._load_user_sessions()
             total_sessions = len(sessions)
             total_messages = sum(len(session.get('messages', [])) for session in sessions.values())
 
+            # IMPROVED: Use better emoji for conversations and left-aligned layout
             st.markdown(f"""
-                <div class="sidebar-stats">
-                    <small>
-                        📊 {total_sessions} conversations<br>
+                <div class="sidebar-stats-improved">
+                    <div class="stats-text-improved">
+                        💭 {total_sessions} conversations<br>
                         💬 {total_messages} messages
-                    </small>
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
 

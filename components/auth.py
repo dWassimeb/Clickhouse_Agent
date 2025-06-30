@@ -1,5 +1,6 @@
 """
-Updated Authentication Manager with Delete User Functionality
+Updated Authentication Manager with Separate Username and Email Fields
+Clean, professional design with proper distinction between username and email
 """
 
 import json
@@ -10,7 +11,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 
 class AuthManager:
-    """Manages user authentication and account settings."""
+    """Manages user authentication and account settings with separate username and email."""
 
     def __init__(self):
         self.users_file = "data/users.json"
@@ -45,14 +46,47 @@ class AuthManager:
         """Hash a password using SHA-256."""
         return hashlib.sha256(password.encode()).hexdigest()
 
-    def create_user(self, username: str, password: str, email: str = None) -> bool:
-        """Create a new user account."""
-        if username in self.users:
-            return False
+    def create_user(self, username: str, email: str, password: str) -> Dict[str, Any]:
+        """
+        Create a new user account with separate username and email.
 
+        Returns:
+            Dict with 'success' boolean and 'message' string
+        """
+        # Validate inputs
+        if not username or not email or not password:
+            return {
+                'success': False,
+                'message': 'All fields are required'
+            }
+
+        # Basic email validation
+        if '@' not in email or '.' not in email.split('@')[1]:
+            return {
+                'success': False,
+                'message': 'Please enter a valid email address'
+            }
+
+        # Check if username already exists
+        if username in self.users:
+            return {
+                'success': False,
+                'message': 'Username already exists'
+            }
+
+        # Check if email already exists
+        for existing_user, user_data in self.users.items():
+            if user_data.get('email') == email:
+                return {
+                    'success': False,
+                    'message': 'Email address already registered'
+                }
+
+        # Create new user
         self.users[username] = {
             'password': self._hash_password(password),
-            'email': email or f"{username}@telmi.local",
+            'email': email,  # Store actual email, not generated one
+            'username': username,  # Store username separately for clarity
             'created_at': datetime.now().isoformat(),
             'last_login': None,
             'preferences': {
@@ -70,7 +104,10 @@ class AuthManager:
         }
 
         self._save_users()
-        return True
+        return {
+            'success': True,
+            'message': 'Account created successfully!'
+        }
 
     def authenticate_user(self, username: str, password: str) -> bool:
         """Authenticate a user login."""
@@ -94,7 +131,6 @@ class AuthManager:
             user_info = self.users[username].copy()
             # Remove password from returned info
             user_info.pop('password', None)
-            user_info['username'] = username
             return user_info
         return None
 
@@ -111,9 +147,14 @@ class AuthManager:
         if 'database_settings' in settings:
             self.users[username]['database_settings'].update(settings['database_settings'])
 
-        # Update email
+        # Update email (with validation)
         if 'email' in settings:
-            self.users[username]['email'] = settings['email']
+            new_email = settings['email']
+            # Check if email is already used by another user
+            for existing_user, user_data in self.users.items():
+                if existing_user != username and user_data.get('email') == new_email:
+                    return False  # Email already in use
+            self.users[username]['email'] = new_email
 
         self._save_users()
         return True
@@ -145,7 +186,7 @@ class AuthManager:
             return False
 
     def render_account_settings(self):
-        """Render account settings interface - SIMPLIFIED VERSION WITHOUT NESTED EXPANDERS."""
+        """Render account settings interface with improved email handling."""
         if not st.session_state.user_info:
             st.warning("⚠️ Please log in to access account settings")
             return
@@ -155,11 +196,20 @@ class AuthManager:
 
         st.markdown("### 👤 Account Settings")
 
-        # Profile Settings - NO EXPANDER
+        # Profile Settings
         st.markdown("#### Profile Information")
         st.markdown(f"**Username:** {username}")
         st.markdown(f"**Email:** {user_data.get('email', 'No email set')}")
         st.markdown(f"**Account Created:** {user_data.get('created_at', 'Unknown')[:10]}")
+
+        # Email Update Section
+        st.markdown("#### Update Email")
+        new_email = st.text_input(
+            "New Email Address",
+            value=user_data.get('email', ''),
+            key="main_settings_email",
+            help="Enter your new email address"
+        )
 
         # Theme Settings
         theme = st.selectbox(
@@ -169,7 +219,7 @@ class AuthManager:
             key="main_settings_theme"
         )
 
-        # Database Settings - NO EXPANDER
+        # Database Settings
         st.markdown("#### Database Connection")
         db_settings = user_data.get('database_settings', {})
 
@@ -210,7 +260,7 @@ class AuthManager:
             key="main_settings_db_password"
         )
 
-        # Password Change - NO EXPANDER
+        # Password Change
         st.markdown("#### Change Password")
         col1, col2 = st.columns(2)
 
@@ -244,6 +294,7 @@ class AuthManager:
         # Save Settings Button
         if st.button("💾 Save Settings", use_container_width=True):
             settings_update = {
+                'email': new_email,
                 'preferences': {
                     'theme': theme,
                     'language': user_data['preferences'].get('language', 'en'),
@@ -264,7 +315,7 @@ class AuthManager:
                 st.session_state.user_info = self.get_user_info(username)
                 st.rerun()
             else:
-                st.error("❌ Failed to save settings")
+                st.error("❌ Failed to save settings (email might already be in use)")
 
         # Account Actions
         st.markdown("---")
@@ -285,7 +336,7 @@ class AuthManager:
                 st.session_state.show_main_delete_confirmation = True
                 st.rerun()
 
-        # Delete confirmation in main settings
+        # Delete confirmation
         if getattr(st.session_state, 'show_main_delete_confirmation', False):
             st.markdown("---")
             st.error("⚠️ **DELETE ACCOUNT CONFIRMATION**")

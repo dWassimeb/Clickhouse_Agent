@@ -1,6 +1,6 @@
 """
 Telmi - Modern ClickHouse Analytics Chat Interface
-FINAL FIXED VERSION - Complete chart display + modern thinking indicator
+FIXED VERSION - Proper thinking indicator + improved chat history + better sidebar
 """
 
 import streamlit as st
@@ -52,7 +52,7 @@ st.set_page_config(
 )
 
 class TelmiApp:
-    """Main Telmi application class with modern thinking indicator and complete chart display."""
+    """Main Telmi application class with FIXED thinking indicator and improved chat history."""
 
     def __init__(self):
         self.auth_manager = AuthManager()
@@ -70,9 +70,8 @@ class TelmiApp:
             'chat_sessions': {},
             'current_session_id': None,
             'current_messages': [],
-            'agent_thinking': False,  # Track if agent is thinking
-            'processing_question': False,  # NEW: Track if we're processing
-            'pending_question': None,  # NEW: Store pending question
+            'processing_message': False,  # FIXED: Single processing flag
+            'show_thinking': False,       # FIXED: Separate flag for thinking indicator
             'typing_response': "",
             'show_account_settings': False,
             'agent_status_checked': False,
@@ -94,8 +93,8 @@ class TelmiApp:
         # Apply custom styling
         apply_custom_styling()
 
-        # UPDATED: Add modern thinking indicator CSS
-        self._add_modern_thinking_indicator_css()
+        # FIXED: Add thinking indicator CSS
+        self._add_thinking_indicator_css()
 
         # Check if integration is available
         if not INTEGRATION_AVAILABLE:
@@ -108,210 +107,88 @@ class TelmiApp:
         else:
             self._show_main_interface()
 
-    def _add_modern_thinking_indicator_css(self):
-        """Add modern CSS for the thinking indicator that matches chat interface."""
+    def _add_thinking_indicator_css(self):
+        """FIXED: Add CSS for thinking indicator without causing layout issues."""
         st.markdown("""
         <style>
-        /* Modern thinking indicator with glass morphism effect */
-        .modern-thinking-indicator {
+        .thinking-overlay {
             position: fixed;
-            bottom: 140px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            
-            /* Modern glass morphism styling */
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            
-            /* Flexbox for content */
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            
-            /* Smooth entrance animation */
-            animation: thinkingSlideIn 0.3s ease-out;
-            
-            /* Typography matching chat interface */
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            color: #4a5568;
-            
-            /* Compact width */
-            width: auto;
-            min-width: fit-content;
-            max-width: 400px;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-in;
         }
         
-        /* Animated dots */
+        .thinking-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px 32px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            min-width: 280px;
+        }
+        
+        .thinking-icon {
+            font-size: 24px;
+            animation: pulse 2s infinite;
+        }
+        
+        .thinking-content h3 {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+        
+        .thinking-content p {
+            margin: 0;
+            font-size: 14px;
+            color: #718096;
+        }
+        
         .thinking-dots {
             display: flex;
             gap: 4px;
+            margin-top: 8px;
         }
         
         .thinking-dots span {
             width: 8px;
             height: 8px;
+            background: #4299e1;
             border-radius: 50%;
-            background: linear-gradient(135deg, #4299e1, #63b3ed);
-            animation: thinkingPulse 1.4s infinite;
+            animation: bounce 1.4s infinite;
         }
         
-        .thinking-dots span:nth-child(2) {
-            animation-delay: 0.2s;
+        .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         
-        .thinking-dots span:nth-child(3) {
-            animation-delay: 0.4s;
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
         
-        /* Thinking text */
-        .thinking-text {
-            color: #2d3748;
-            white-space: nowrap;
-            font-weight: 500;
-        }
-        
-        /* Bot icon */
-        .thinking-icon {
-            font-size: 18px;
-            line-height: 1;
-        }
-        
-        /* Smooth animations */
-        @keyframes thinkingSlideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-        
-        @keyframes thinkingPulse {
-            0%, 60%, 100% {
-                transform: scale(1);
-                opacity: 0.7;
-            }
-            30% {
-                transform: scale(1.3);
-                opacity: 1;
-            }
-        }
-        
-        /* Responsive design */
-        @media (max-width: 768px) {
-            .modern-thinking-indicator {
-                bottom: 120px;
-                max-width: 320px;
-                left: 16px;
-                right: 16px;
-                transform: none;
-                margin: 0 auto;
-            }
-        }
-        
-        /* Prevent page flashing during thinking state */
-        .thinking-overlay {
-            pointer-events: none;
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
         }
         </style>
         """, unsafe_allow_html=True)
-
-    def _save_sessions_to_file(self):
-        """Save current chat sessions to file - IMPROVED ERROR HANDLING."""
-        if not st.session_state.user_info:
-            return
-
-        sessions_file = "data/chat_sessions.json"
-
-        try:
-            # Ensure data directory exists
-            os.makedirs("data", exist_ok=True)
-
-            # Load existing sessions from file
-            all_sessions = {}
-            if os.path.exists(sessions_file):
-                try:
-                    with open(sessions_file, 'r') as f:
-                        content = f.read().strip()
-                        if content:  # Only parse if file has content
-                            all_sessions = json.loads(content)
-                        else:
-                            logger.info("📄 Sessions file was empty, starting fresh")
-                except json.JSONDecodeError as e:
-                    logger.warning(f"⚠️ Corrupted sessions file, creating new one: {e}")
-                    all_sessions = {}
-
-            # Update with current user's sessions
-            username = st.session_state.user_info['username']
-            for session_id, session_data in st.session_state.chat_sessions.items():
-                session_data['user'] = username
-                all_sessions[session_id] = session_data
-
-            # Save back to file with proper formatting
-            with open(sessions_file, 'w') as f:
-                json.dump(all_sessions, f, indent=2, ensure_ascii=False)
-
-            logger.info(f"💾 Saved {len(st.session_state.chat_sessions)} sessions to file")
-
-        except Exception as e:
-            logger.error(f"❌ Error saving sessions to file: {e}")
-            import traceback
-            logger.error(f"Traceback: {traceback.format_exc()}")
-
-    def _load_sessions_from_file(self):
-        """Load chat sessions from file for the current user - IMPROVED ERROR HANDLING."""
-        if not st.session_state.user_info:
-            return
-
-        username = st.session_state.user_info['username']
-        sessions_file = "data/chat_sessions.json"
-
-        try:
-            if os.path.exists(sessions_file):
-                with open(sessions_file, 'r') as f:
-                    content = f.read().strip()
-                    if not content:
-                        logger.info("📄 Sessions file is empty")
-                        st.session_state.chat_sessions = {}
-                        return
-
-                    all_sessions = json.loads(content)
-
-                # Filter sessions for current user
-                user_sessions = {
-                    session_id: session_data
-                    for session_id, session_data in all_sessions.items()
-                    if session_data.get('user') == username
-                }
-
-                st.session_state.chat_sessions = user_sessions
-                logger.info(f"📂 Loaded {len(user_sessions)} sessions for user {username}")
-            else:
-                st.session_state.chat_sessions = {}
-                logger.info("📄 No sessions file found, starting fresh")
-
-        except json.JSONDecodeError as e:
-            logger.error(f"❌ Error parsing sessions file: {e}")
-            # Create a backup of the corrupted file
-            backup_file = f"{sessions_file}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-            try:
-                os.rename(sessions_file, backup_file)
-                logger.info(f"📄 Corrupted file backed up as: {backup_file}")
-            except:
-                pass
-            st.session_state.chat_sessions = {}
-        except Exception as e:
-            logger.error(f"❌ Error loading sessions: {e}")
-            st.session_state.chat_sessions = {}
 
     def _show_integration_error(self):
         """Show integration error screen."""
@@ -334,7 +211,7 @@ class TelmiApp:
         """)
 
     def _show_login_screen(self):
-        """Display the login screen."""
+        """Display the improved login screen with separate username and email fields."""
         # Center the login form
         col1, col2, col3 = st.columns([1, 2, 1])
 
@@ -348,38 +225,133 @@ class TelmiApp:
                 </div>
             """, unsafe_allow_html=True)
 
-            # Login form
-            with st.form("login_form", clear_on_submit=False):
-                st.markdown("### Sign In")
+            # Login/Register tabs using streamlit's native tabs
+            login_tab, register_tab = st.tabs(["🔑 Sign In", "📝 Create Account"])
 
-                username = st.text_input("Username", placeholder="Enter your username")
-                password = st.text_input("Password", type="password", placeholder="Enter your password")
+            # LOGIN TAB
+            with login_tab:
+                with st.form("login_form", clear_on_submit=False):
+                    st.markdown("### Welcome Back")
+                    st.markdown("Please sign in to your account")
 
-                col_login, col_register = st.columns(2)
+                    # Add some spacing
+                    st.markdown("<br>", unsafe_allow_html=True)
 
-                with col_login:
-                    login_submitted = st.form_submit_button("Sign In", use_container_width=True)
+                    username = st.text_input(
+                        "Username",
+                        placeholder="Enter your username",
+                        key="login_username"
+                    )
 
-                with col_register:
-                    register_submitted = st.form_submit_button("Create Account", use_container_width=True)
+                    password = st.text_input(
+                        "Password",
+                        type="password",
+                        placeholder="Enter your password",
+                        key="login_password"
+                    )
 
-                if login_submitted:
-                    if self.auth_manager.authenticate_user(username, password):
-                        st.session_state.authenticated = True
-                        st.session_state.user_info = self.auth_manager.get_user_info(username)
-                        st.success("Login successful!")
-                        st.rerun()
-                    else:
-                        st.error("Invalid username or password")
+                    # Add some spacing
+                    st.markdown("<br>", unsafe_allow_html=True)
 
-                if register_submitted:
-                    if username and password:
-                        if self.auth_manager.create_user(username, password):
-                            st.success("Account created successfully! Please sign in.")
+                    login_submitted = st.form_submit_button(
+                        "🔑 Sign In",
+                        use_container_width=True,
+                        type="primary"
+                    )
+
+                    if login_submitted:
+                        if not username or not password:
+                            st.error("⚠️ Please fill in all fields")
+                        elif self.auth_manager.authenticate_user(username, password):
+                            st.session_state.authenticated = True
+                            st.session_state.user_info = self.auth_manager.get_user_info(username)
+                            st.success("✅ Login successful!")
+                            st.rerun()
                         else:
-                            st.error("Username already exists")
-                    else:
-                        st.error("Please fill in all fields")
+                            st.error("❌ Invalid username or password")
+
+            # REGISTER TAB
+            with register_tab:
+                with st.form("register_form", clear_on_submit=True):
+                    st.markdown("### Create Your Account")
+                    st.markdown("Join Telmi and start analyzing your telecom data")
+
+                    # Add some spacing
+                    st.markdown("<br>", unsafe_allow_html=True)
+
+                    # Two columns for better layout
+                    col_reg1, col_reg2 = st.columns(2)
+
+                    with col_reg1:
+                        reg_username = st.text_input(
+                            "Username *",
+                            placeholder="Choose a username",
+                            key="reg_username",
+                            help="This will be your unique identifier"
+                        )
+
+                    with col_reg2:
+                        reg_email = st.text_input(
+                            "Email Address *",
+                            placeholder="your.email@company.com",
+                            key="reg_email",
+                            help="We'll use this for account recovery"
+                        )
+
+                    reg_password = st.text_input(
+                        "Password *",
+                        type="password",
+                        placeholder="Create a secure password",
+                        key="reg_password",
+                        help="Choose a strong password for your account"
+                    )
+
+                    reg_password_confirm = st.text_input(
+                        "Confirm Password *",
+                        type="password",
+                        placeholder="Confirm your password",
+                        key="reg_password_confirm"
+                    )
+
+                    # Add some spacing
+                    st.markdown("<br>", unsafe_allow_html=True)
+
+                    register_submitted = st.form_submit_button(
+                        "📝 Create Account",
+                        use_container_width=True,
+                        type="primary"
+                    )
+
+                    if register_submitted:
+                        # Validation
+                        if not all([reg_username, reg_email, reg_password, reg_password_confirm]):
+                            st.error("⚠️ Please fill in all required fields")
+                        elif reg_password != reg_password_confirm:
+                            st.error("❌ Passwords do not match")
+                        elif len(reg_password) < 6:
+                            st.error("⚠️ Password must be at least 6 characters long")
+                        else:
+                            # Attempt to create user
+                            result = self.auth_manager.create_user(reg_username, reg_email, reg_password)
+
+                            if result['success']:
+                                st.success(f"✅ {result['message']}")
+                                st.info("💡 You can now sign in using the Sign In tab")
+                                # Clear form fields
+                                for key in ['reg_username', 'reg_email', 'reg_password', 'reg_password_confirm']:
+                                    if key in st.session_state:
+                                        st.session_state[key] = ""
+                            else:
+                                st.error(f"❌ {result['message']}")
+
+            # Footer with additional info
+            st.markdown("---")
+            st.markdown("""
+                <div style="text-align: center; color: #718096; font-size: 0.9rem; margin-top: 1rem;">
+                    <p>🔒 Your data is secure and encrypted</p>
+                    <p>Need help? Contact your system administrator</p>
+                </div>
+            """, unsafe_allow_html=True)
 
     def _show_main_interface(self):
         """Display the main chat interface."""
@@ -408,36 +380,58 @@ class TelmiApp:
                     st.session_state.agent_status_checked = True
                     st.error(f"❌ Agent initialization failed: {e}")
 
-        # FIXED: Handle pending question processing BEFORE showing interface
-        if st.session_state.processing_question and st.session_state.pending_question:
-            self._execute_agent_processing()
+        # FIXED: Show thinking overlay if processing
+        if st.session_state.show_thinking:
+            self._render_thinking_overlay()
 
-        # Sidebar
+        # Sidebar (with improvements)
         self.sidebar_manager.render_sidebar()
-
-        # UPDATED: Modern thinking indicator (shows BEFORE main chat)
-        if st.session_state.agent_thinking:
-            self._render_modern_thinking_indicator()
 
         # Main chat interface
         self._render_main_chat()
 
-    def _execute_agent_processing(self):
-        """FIXED: Execute agent processing without infinite loops."""
+        # FIXED: Handle message processing without infinite loops
+        if st.session_state.processing_message:
+            self._process_queued_message()
+
+    def _render_thinking_overlay(self):
+        """FIXED: Render thinking overlay that doesn't interfere with layout."""
+        st.markdown("""
+            <div class="thinking-overlay">
+                <div class="thinking-card">
+                    <div class="thinking-icon">🔮</div>
+                    <div class="thinking-content">
+                        <h3>Analyzing your question</h3>
+                        <p>Telmi is working on your request...</p>
+                        <div class="thinking-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    def _process_queued_message(self):
+        """FIXED: Process queued message without state conflicts."""
+        if 'queued_message' not in st.session_state:
+            st.session_state.processing_message = False
+            st.session_state.show_thinking = False
+            return
+
+        user_input = st.session_state.queued_message
+        logger.info(f"🔄 Processing queued message: {user_input[:50]}...")
+
         try:
-            user_input = st.session_state.pending_question
-            logger.info(f"🔄 Processing pending question: {user_input[:50]}...")
-
-            # Call the bridge directly
+            # Call the bridge
             result = telmi_bridge.process_question(user_input)
-
-            logger.info(f"🔄 Agent response received: success={result.get('success')}")
 
             if result['success']:
                 response = result['response']
                 processing_time = result.get('processing_time', 0)
 
-                # Add processing time info for debugging
+                # Add processing time info
                 if processing_time > 0:
                     response += f"\n\n*⏱️ Processed in {processing_time:.2f} seconds*"
 
@@ -446,17 +440,12 @@ class TelmiApp:
 
                 # Add agent response
                 self._add_message('agent', response, attachments)
-
-                logger.info("✅ Agent response processed successfully")
             else:
                 # Add error response
                 error_response = result.get('response', 'Unknown error occurred')
                 self._add_message('agent', error_response)
 
-                logger.error(f"❌ Agent processing failed: {result.get('error', 'Unknown error')}")
-
         except Exception as e:
-            # Add detailed error response
             error_response = f"""❌ **Unexpected Error**
 
 **Issue:** {str(e)}
@@ -473,29 +462,15 @@ class TelmiApp:
 
             self._add_message('agent', error_response)
             logger.error(f"❌ Unexpected error in message processing: {e}")
-            import traceback
-            logger.error(f"Traceback: {traceback.format_exc()}")
 
         finally:
-            # FIXED: Clear processing states
-            st.session_state.processing_question = False
-            st.session_state.pending_question = None
-            st.session_state.agent_thinking = False
-            logger.info("🔄 Question processing completed")
-
-    def _render_modern_thinking_indicator(self):
-        """UPDATED: Render modern thinking indicator that matches chat interface."""
-        st.markdown("""
-            <div class="modern-thinking-indicator">
-                <span class="thinking-icon">🔮</span>
-                <div class="thinking-dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                <span class="thinking-text">Telmi is analyzing your question...</span>
-            </div>
-        """, unsafe_allow_html=True)
+            # FIXED: Clear processing states properly
+            if 'queued_message' in st.session_state:
+                del st.session_state.queued_message
+            st.session_state.processing_message = False
+            st.session_state.show_thinking = False
+            logger.info("🔄 Message processing completed")
+            st.rerun()
 
     def _render_main_chat(self):
         """Render the main chat interface."""
@@ -514,8 +489,9 @@ class TelmiApp:
             # Display chat messages
             self._display_chat_messages()
 
-        # Input area at bottom
-        self._render_input_area()
+        # Input area at bottom (only if not processing)
+        if not st.session_state.processing_message:
+            self._render_input_area()
 
     def _display_chat_messages(self):
         """Display all chat messages."""
@@ -562,7 +538,7 @@ class TelmiApp:
         """, unsafe_allow_html=True)
 
     def _render_agent_message_unified(self, message: Dict[str, Any]):
-        """SIMPLIFIED: Clean rendering without bubbles - just parse everything in order."""
+        """Clean rendering of agent messages."""
         content = message['content']
         attachments = message.get('attachments', {})
 
@@ -586,60 +562,46 @@ class TelmiApp:
             """, unsafe_allow_html=True)
 
         with col2:
-            # Just render everything cleanly in order
             self._render_content_cleanly(content, attachments)
 
     def _render_content_cleanly(self, content: str, attachments: Dict[str, Any]):
         """Render content cleanly with proper viewers for each element type."""
-
         # Split content by lines and process each section
-        lines = content.split('\n\n')  # Split by double newlines to preserve sections
+        lines = content.split('\n\n')
 
         for section in lines:
             section = section.strip()
             if not section:
                 continue
 
-            # Handle each type of placeholder with appropriate rendering
+            # Handle each type of placeholder
             if '[TABLE_DATA_PLACEHOLDER]' in section:
-                # Render section title
                 section_title = section.replace('[TABLE_DATA_PLACEHOLDER]', '').strip()
                 if section_title:
                     st.markdown(section_title)
-
-                # Render table with clean viewer
                 if 'table_data' in attachments:
                     self._render_table_clean(attachments['table_data'])
 
             elif '[CHART_DISPLAY_PLACEHOLDER]' in section:
-                # Render section title
                 section_title = section.replace('[CHART_DISPLAY_PLACEHOLDER]', '').strip()
                 if section_title:
                     st.markdown(section_title)
-
-                # UPDATED: Render chart with FULL content display
                 if 'chart' in attachments:
                     self._render_chart_complete(attachments['chart'])
 
             elif '[DOWNLOAD_BUTTONS_PLACEHOLDER]' in section:
-                # Render section title
                 section_title = section.replace('[DOWNLOAD_BUTTONS_PLACEHOLDER]', '').strip()
                 if section_title:
                     st.markdown(section_title)
-
-                # Render downloads with clean viewer
                 if attachments:
                     self._render_downloads_clean(attachments)
 
             elif '```sql' in section or (section.startswith('```') and 'sql' in section.lower()):
-                # Handle SQL code block
                 self._render_sql_block_from_section(section)
-
             else:
-                # Regular content section
                 self._render_regular_section(section)
 
-        # IMPORTANT: Always render chart and downloads if they exist, even if placeholders are missing
+        # Always render chart and downloads if they exist
         if 'chart' in attachments and '[CHART_DISPLAY_PLACEHOLDER]' not in content:
             st.markdown("### **📈 Chart Generated:**")
             self._render_chart_complete(attachments['chart'])
@@ -657,9 +619,9 @@ class TelmiApp:
         for line in lines:
             if line.strip().startswith('```') and ('sql' in line.lower() or in_sql):
                 if in_sql:
-                    break  # End of SQL block
+                    break
                 else:
-                    in_sql = True  # Start of SQL block
+                    in_sql = True
                     continue
             elif in_sql:
                 sql_lines.append(line)
@@ -678,20 +640,15 @@ class TelmiApp:
                 continue
 
             if line.startswith('**') and line.endswith(':**'):
-                # Section headers - make them bigger and more prominent
-                # Replace 📊 with 📉 for data results
                 if '📊' in line:
                     line = line.replace('📊', '📉')
                 st.markdown(f"### {line}")
             elif line.startswith('•'):
-                # Bullet points
                 st.markdown(line)
             elif line.startswith('*⏱️'):
-                # Processing time - render as styled caption like other info messages
                 time_text = line.replace('*', '').replace('⏱️', '⏱️').strip()
                 st.markdown(f"*{time_text}*")
             else:
-                # Regular markdown
                 st.markdown(line)
 
     def _render_table_clean(self, table_data: Dict[str, Any]):
@@ -706,44 +663,28 @@ class TelmiApp:
                 st.warning("No data to display")
                 return
 
-            # Create DataFrame
             df = pd.DataFrame(data, columns=columns)
-
-            # Render with clean styling
-            st.dataframe(
-                df,
-                use_container_width=True,
-                hide_index=True,
-            )
-
-            # Add summary info with consistent styling (no asterisks)
+            st.dataframe(df, use_container_width=True, hide_index=True)
             st.markdown(f"<small style='color: #666; font-style: italic;'>📉 {len(data):,} rows × {len(columns)} columns</small>", unsafe_allow_html=True)
 
         except Exception as e:
             st.error(f"Error displaying table: {e}")
 
     def _render_chart_complete(self, chart_info: Dict[str, str]):
-        """UPDATED: Render chart with COMPLETE content including analysis summary."""
+        """Render chart with complete content."""
         if os.path.exists(chart_info['path']):
             try:
                 with open(chart_info['path'], 'r', encoding='utf-8') as file:
                     html_content = file.read()
-
-                # UPDATED: Render chart with INCREASED height to show complete content
-                # Including the analysis summary section that was cut off
                 st.components.v1.html(html_content, height=600, scrolling=True)
-
-                # Add chart info with consistent styling (no asterisks)
                 st.markdown(f"<small style='color: #666; font-style: italic;'>📈 Interactive chart • {chart_info.get('size', 'Unknown size')}</small>", unsafe_allow_html=True)
-
             except Exception as e:
                 st.error(f"Error displaying chart: {e}")
         else:
             st.warning("Chart file not found")
 
     def _render_downloads_clean(self, attachments: Dict[str, Any]):
-        """Render download buttons with clean styling and attractive green colors."""
-        # Create columns for downloads
+        """Render download buttons with clean styling."""
         download_items = []
 
         if 'csv' in attachments:
@@ -755,10 +696,9 @@ class TelmiApp:
             st.warning("No downloads available")
             return
 
-        # Create columns based on number of items
         cols = st.columns(len(download_items))
 
-        # Add custom CSS for green download buttons
+        # Green download buttons styling
         st.markdown("""
             <style>
             .stDownloadButton > button {
@@ -773,9 +713,6 @@ class TelmiApp:
                 background-color: #16a34a !important;
                 transform: translateY(-1px) !important;
                 box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3) !important;
-            }
-            .stDownloadButton > button:active {
-                transform: translateY(0px) !important;
             }
             </style>
         """, unsafe_allow_html=True)
@@ -805,7 +742,6 @@ class TelmiApp:
 
     def _render_input_area(self):
         """Render the input area at the bottom."""
-        # Input form
         with st.form("chat_input_form", clear_on_submit=True):
             col1, col2 = st.columns([6, 1])
 
@@ -824,18 +760,15 @@ class TelmiApp:
 
     def _process_user_message(self, user_input: str):
         """FIXED: Process user input without infinite loops."""
-
         # Add user message immediately
         self._add_message('user', user_input)
 
-        # FIXED: Set up processing states and queue the question
-        st.session_state.agent_thinking = True
-        st.session_state.processing_question = True
-        st.session_state.pending_question = user_input
+        # FIXED: Set up processing states properly
+        st.session_state.queued_message = user_input
+        st.session_state.processing_message = True
+        st.session_state.show_thinking = True
 
-        logger.info(f"🔄 Queued question for processing: {user_input[:50]}...")
-
-        # FIXED: Rerun will trigger _execute_agent_processing on next cycle
+        logger.info(f"🔄 Queued message for processing: {user_input[:50]}...")
         st.rerun()
 
     def _add_message(self, role: str, content: str, attachments: Dict[str, Any] = None):
@@ -880,8 +813,6 @@ class TelmiApp:
                         'size': f"{stat.st_size/1024:.1f} KB"
                     }
 
-                    logger.info(f"📊 Found CSV file: {latest_csv}")
-
             # Find the most recent chart file
             chart_dir = "visualizations"
             if os.path.exists(chart_dir):
@@ -898,8 +829,6 @@ class TelmiApp:
                         'size': f"{stat.st_size/1024:.1f} KB"
                     }
 
-                    logger.info(f"📈 Found chart file: {latest_chart}")
-
             # Extract table data from CSV for display
             if 'csv' in attachments:
                 try:
@@ -909,11 +838,8 @@ class TelmiApp:
                         'columns': df.columns.tolist(),
                         'data': df.values.tolist()
                     }
-                    logger.info(f"📋 Extracted table data: {len(df)} rows, {len(df.columns)} columns")
                 except Exception as e:
                     logger.error(f"❌ Could not extract table data from CSV: {e}")
-
-            logger.info(f"🔗 Total attachments found: CSV={('csv' in attachments)}, Chart={('chart' in attachments)}, Table={('table_data' in attachments)}")
 
         except Exception as e:
             logger.error(f"❌ Error extracting attachments: {e}")
@@ -922,46 +848,164 @@ class TelmiApp:
 
     def _save_session_to_history(self):
         """Save current session to chat history."""
-        if not st.session_state.user_info:
-            logger.warning("⚠️ No user info - cannot save session")
-            return
-
-        if not st.session_state.current_messages:
-            logger.warning("⚠️ No messages to save")
+        if not st.session_state.user_info or not st.session_state.current_messages:
             return
 
         try:
-            # Ensure we have a session ID
             self._ensure_session_exists()
 
-            # Create session data
+            # IMPROVED: Generate intelligent session title
             session_data = {
-                'title': self._generate_session_title(),
+                'title': self._generate_intelligent_session_title(),
                 'messages': st.session_state.current_messages.copy(),
                 'timestamp': datetime.now().isoformat(),
                 'user': st.session_state.user_info['username']
             }
 
-            # Update in-memory sessions
             st.session_state.chat_sessions[st.session_state.current_session_id] = session_data
-
-            # Save to file immediately
             self._save_sessions_to_file()
-
-            logger.info(f"💾 Session saved: {st.session_state.current_session_id} with {len(st.session_state.current_messages)} messages")
 
         except Exception as e:
             logger.error(f"❌ Failed to save session: {e}")
 
-    def _generate_session_title(self) -> str:
-        """Generate a title for the chat session."""
-        if st.session_state.current_messages:
-            first_user_message = next(
-                (msg['content'] for msg in st.session_state.current_messages if msg['role'] == 'user'),
-                "New Chat"
-            )
-            return first_user_message[:50] + "..." if len(first_user_message) > 50 else first_user_message
-        return "New Chat"
+    def _generate_intelligent_session_title(self) -> str:
+        """IMPROVED: Generate intelligent session titles as summaries."""
+        if not st.session_state.current_messages:
+            return "New Chat"
+
+        # Get first user message
+        first_user_message = next(
+            (msg['content'] for msg in st.session_state.current_messages if msg['role'] == 'user'),
+            "New Chat"
+        )
+
+        # Intelligent title generation based on common patterns
+        message_lower = first_user_message.lower()
+
+        # Common telecom analytics patterns
+        if any(word in message_lower for word in ['top', 'ranking', 'best', 'highest']):
+            if 'client' in message_lower or 'customer' in message_lower:
+                return "🏆 Top Clients Analysis"
+            elif 'usage' in message_lower or 'data' in message_lower:
+                return "📊 Top Data Usage"
+            else:
+                return "🥇 Ranking Analysis"
+
+        elif any(word in message_lower for word in ['evolution', 'trend', 'time', 'journalière', 'daily']):
+            return "📈 Time Trend Analysis"
+
+        elif any(word in message_lower for word in ['ticket', 'tickets']):
+            if 'between' in message_lower or 'entre' in message_lower:
+                return "🎫 Ticket Time Analysis"
+            else:
+                return "🎫 Ticket Analysis"
+
+        elif any(word in message_lower for word in ['country', 'pays', 'geographic']):
+            return "🌍 Geographic Analysis"
+
+        elif any(word in message_lower for word in ['distribution', 'répartition', 'breakdown']):
+            return "📊 Distribution Analysis"
+
+        elif any(word in message_lower for word in ['chart', 'pie', 'graph', 'graphique']):
+            return "📈 Chart Request"
+
+        elif any(word in message_lower for word in ['table', 'schema', 'structure']):
+            return "🗂️ Schema Query"
+
+        # Fallback: Use first few words with smart truncation
+        words = first_user_message.split()
+        if len(words) <= 6:
+            return first_user_message
+        else:
+            # Take first 4-5 meaningful words
+            meaningful_words = [w for w in words[:8] if len(w) > 2 and w.lower() not in ['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by']]
+            title = ' '.join(meaningful_words[:5])
+            return title + "..." if len(title) > 40 else title
+
+    def _save_sessions_to_file(self):
+        """Save current chat sessions to file - IMPROVED ERROR HANDLING."""
+        if not st.session_state.user_info:
+            return
+
+        sessions_file = "data/chat_sessions.json"
+
+        try:
+            os.makedirs("data", exist_ok=True)
+
+            # Load existing sessions from file
+            all_sessions = {}
+            if os.path.exists(sessions_file):
+                try:
+                    with open(sessions_file, 'r') as f:
+                        content = f.read().strip()
+                        if content:
+                            all_sessions = json.loads(content)
+                        else:
+                            logger.info("📄 Sessions file was empty, starting fresh")
+                except json.JSONDecodeError as e:
+                    logger.warning(f"⚠️ Corrupted sessions file, creating new one: {e}")
+                    all_sessions = {}
+
+            # Update with current user's sessions
+            username = st.session_state.user_info['username']
+            for session_id, session_data in st.session_state.chat_sessions.items():
+                session_data['user'] = username
+                all_sessions[session_id] = session_data
+
+            # Save back to file with proper formatting
+            with open(sessions_file, 'w') as f:
+                json.dump(all_sessions, f, indent=2, ensure_ascii=False)
+
+            logger.info(f"💾 Saved {len(st.session_state.chat_sessions)} sessions to file")
+
+        except Exception as e:
+            logger.error(f"❌ Error saving sessions to file: {e}")
+
+    def _load_sessions_from_file(self):
+        """Load chat sessions from file for the current user - IMPROVED ERROR HANDLING."""
+        if not st.session_state.user_info:
+            return
+
+        username = st.session_state.user_info['username']
+        sessions_file = "data/chat_sessions.json"
+
+        try:
+            if os.path.exists(sessions_file):
+                with open(sessions_file, 'r') as f:
+                    content = f.read().strip()
+                    if not content:
+                        logger.info("📄 Sessions file is empty")
+                        st.session_state.chat_sessions = {}
+                        return
+
+                    all_sessions = json.loads(content)
+
+                # Filter sessions for current user
+                user_sessions = {
+                    session_id: session_data
+                    for session_id, session_data in all_sessions.items()
+                    if session_data.get('user') == username
+                }
+
+                st.session_state.chat_sessions = user_sessions
+                logger.info(f"📂 Loaded {len(user_sessions)} sessions for user {username}")
+            else:
+                st.session_state.chat_sessions = {}
+                logger.info("📄 No sessions file found, starting fresh")
+
+        except json.JSONDecodeError as e:
+            logger.error(f"❌ Error parsing sessions file: {e}")
+            # Create a backup of the corrupted file
+            backup_file = f"{sessions_file}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            try:
+                os.rename(sessions_file, backup_file)
+                logger.info(f"📄 Corrupted file backed up as: {backup_file}")
+            except:
+                pass
+            st.session_state.chat_sessions = {}
+        except Exception as e:
+            logger.error(f"❌ Error loading sessions: {e}")
+            st.session_state.chat_sessions = {}
 
 
 def main():
