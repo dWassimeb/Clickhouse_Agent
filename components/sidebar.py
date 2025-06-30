@@ -1,7 +1,7 @@
 """
-Fixed Sidebar Manager for Telmi
-- Replaced email update with delete account feature
-- Fixed conversation deletion bug
+Fixed Sidebar Manager for Telmi - Account Settings Order Fix
+- Moved delete account button before logout button
+- Improved visual organization
 """
 
 import streamlit as st
@@ -118,7 +118,7 @@ class SidebarManager:
                     st.error(f"❌ Status check failed: {e}")
 
     def _render_account_settings_section(self):
-        """Render the account settings section with dropdown - UPDATED WITH DELETE ACCOUNT."""
+        """Render the account settings section - FIXED ORDER: DELETE BEFORE LOGOUT."""
         if st.session_state.user_info:
             username = st.session_state.user_info['username']
             email = st.session_state.user_info.get('email', 'No email set')
@@ -163,17 +163,17 @@ class SidebarManager:
 
                 st.markdown("---")
 
-                # Account Actions Section
+                # Account Actions Section - FIXED ORDER
                 st.markdown("**⚙️ Account Actions:**")
 
-                # Logout button
-                if st.button("🚪 Logout", key="logout_sidebar", use_container_width=True):
-                    self._logout()
-
-                # Delete Account button with confirmation
+                # Delete Account button FIRST
                 if st.button("🗑️ Delete Account", key="delete_account_sidebar", use_container_width=True, type="secondary"):
                     st.session_state.show_delete_confirmation = True
                     st.rerun()
+
+                # Logout button SECOND
+                if st.button("🚪 Logout", key="logout_sidebar", use_container_width=True):
+                    self._logout()
 
                 # Delete Account Confirmation Dialog
                 if getattr(st.session_state, 'show_delete_confirmation', False):

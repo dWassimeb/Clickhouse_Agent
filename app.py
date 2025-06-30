@@ -1,6 +1,6 @@
 """
 Telmi - Modern ClickHouse Analytics Chat Interface
-Final Production Version with Full Backend Integration - FIXED VERSION
+Fixed version - keeping original working structure, just fixing formatting
 """
 
 import streamlit as st
@@ -103,7 +103,6 @@ class TelmiApp:
         else:
             self._show_main_interface()
 
-
     def _save_sessions_to_file(self):
         """Save current chat sessions to file - IMPROVED ERROR HANDLING."""
         if not st.session_state.user_info:
@@ -191,7 +190,6 @@ class TelmiApp:
         except Exception as e:
             logger.error(f"❌ Error loading sessions: {e}")
             st.session_state.chat_sessions = {}
-
 
     def _show_integration_error(self):
         """Show integration error screen."""
@@ -311,19 +309,6 @@ class TelmiApp:
             # Display chat messages
             self._display_chat_messages()
 
-            # Typing indicator
-            if st.session_state.agent_thinking:
-                st.markdown("""
-                    <div class="typing-indicator">
-                        <div class="typing-dots">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                        <span class="typing-text">Telmi is analyzing your question...</span>
-                    </div>
-                """, unsafe_allow_html=True)
-
         # Input area at bottom
         self._render_input_area()
 
@@ -372,58 +357,100 @@ class TelmiApp:
         """, unsafe_allow_html=True)
 
     def _render_agent_message(self, message: Dict[str, Any]):
-        """Render an agent message with attachments and inline charts."""
+        """Render an agent message with embedded elements in correct order."""
         content = message['content']
         attachments = message.get('attachments', {})
 
-        # Check if this message contains table data
-        has_table_data = '[TABLE_DATA_PLACEHOLDER]' in content
+        # Create a container for the entire agent message
+        with st.container():
+            # Agent avatar and start of message (using columns for layout)
+            col1, col2 = st.columns([0.1, 0.9])
 
-        # Process content for placeholders
-        processed_content = self._process_content_placeholders(content, attachments)
+            with col1:
+                st.markdown("""
+                    <div style="
+                        width: 2.5rem; 
+                        height: 2.5rem; 
+                        border-radius: 50%; 
+                        background: #f8fafc; 
+                        border: 1px solid #e2e8f0; 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        font-size: 1.2rem;
+                    ">🔮</div>
+                """, unsafe_allow_html=True)
 
-        # Agent message bubble
-        st.markdown(f"""
-            <div class="message-container agent-message">
-                <div class="message-avatar agent-avatar">🔮</div>
-                <div class="message-bubble agent-bubble">
-                    {processed_content}
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
+            with col2:
+                # Render content by sections with elements inserted at placeholders
+                self._render_content_with_embedded_elements(content, attachments)
 
-        # Display table data if placeholder was found
-        if has_table_data and 'table_data' in attachments:
-            self._render_data_table(attachments['table_data'])
+    def _render_content_with_embedded_elements(self, content: str, attachments: Dict[str, Any]):
+        """Render content with elements embedded at the right places."""
 
-        # Display inline chart if placeholder was found
-        if '[CHART_DISPLAY_PLACEHOLDER]' in content and attachments.get('chart'):
-            self._render_inline_chart(attachments['chart'])
+        # Split content into parts around placeholders
+        parts = []
+        current_text = content
 
-        # Display download buttons if placeholder was found
-        if '[DOWNLOAD_BUTTONS_PLACEHOLDER]' in content and attachments:
-            self._render_download_buttons(attachments)
+        # Process each placeholder in order
+        placeholders = [
+            ('[TABLE_DATA_PLACEHOLDER]', 'table'),
+            ('[CHART_DISPLAY_PLACEHOLDER]', 'chart'),
+            ('[DOWNLOAD_BUTTONS_PLACEHOLDER]', 'downloads')
+        ]
 
-    def _process_content_placeholders(self, content: str, attachments: Dict[str, Any]) -> str:
-        """Process content placeholders for better display."""
-        processed_content = content
+        for placeholder, element_type in placeholders:
+            if placeholder in current_text:
+                # Split at this placeholder
+                before, after = current_text.split(placeholder, 1)
 
-        # Replace table placeholder
-        if '[TABLE_DATA_PLACEHOLDER]' in content:
-            processed_content = processed_content.replace('[TABLE_DATA_PLACEHOLDER]', '')
+                # Add the text before placeholder
+                if before.strip():
+                    parts.append(('text', before.strip()))
 
-        # Replace chart placeholder
-        if '[CHART_DISPLAY_PLACEHOLDER]' in content:
-            processed_content = processed_content.replace('[CHART_DISPLAY_PLACEHOLDER]', '')
+                # Add the element
+                parts.append((element_type, ''))
 
-        # Replace download buttons placeholder
-        if '[DOWNLOAD_BUTTONS_PLACEHOLDER]' in content:
-            processed_content = processed_content.replace('[DOWNLOAD_BUTTONS_PLACEHOLDER]', '')
+                # Continue with the text after placeholder
+                current_text = after
 
-        return processed_content
+        # Add any remaining text
+        if current_text.strip():
+            parts.append(('text', current_text.strip()))
 
-    def _render_data_table(self, table_data: Dict[str, Any]):
-        """Render data table using Streamlit's dataframe component."""
+        # If no placeholders found, just add the original content
+        if not parts:
+            parts.append(('text', content))
+
+        # Render each part
+        for part_type, part_content in parts:
+            if part_type == 'text':
+                # Style the text content to look like a message bubble
+                st.markdown(f"""
+                    <div style="
+                        background: #f8fafc;
+                        color: #1a202c;
+                        padding: 1rem 1.25rem;
+                        border-radius: 12px;
+                        border: 1px solid #e2e8f0;
+                        margin-bottom: 0.5rem;
+                        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                    ">
+                        {part_content}
+                    </div>
+                """, unsafe_allow_html=True)
+
+            elif part_type == 'table' and 'table_data' in attachments:
+                self._render_data_table_embedded(attachments['table_data'])
+
+            elif part_type == 'chart' and attachments.get('chart'):
+                self._render_chart_embedded(attachments['chart'])
+
+            elif part_type == 'downloads' and attachments:
+                self._render_downloads_embedded(attachments)
+
+    def _render_data_table_embedded(self, table_data: Dict[str, Any]):
+        """Render data table as an embedded element."""
         try:
             import pandas as pd
 
@@ -436,8 +463,19 @@ class TelmiApp:
             # Create DataFrame
             df = pd.DataFrame(data, columns=columns)
 
-            # Display with Streamlit's dataframe
-            st.markdown("**📊 Data Results:**")
+            # Add a styled container for the table
+            st.markdown("""
+                <div style="
+                    background: white;
+                    border-radius: 8px;
+                    border: 1px solid #e2e8f0;
+                    padding: 1rem;
+                    margin: 0.5rem 0;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                ">
+            """, unsafe_allow_html=True)
+
+            # Display the dataframe
             st.dataframe(
                 df,
                 use_container_width=True,
@@ -447,24 +485,51 @@ class TelmiApp:
             # Add summary
             st.caption(f"*{len(data):,} rows total • {len(columns)} columns*")
 
+            st.markdown("</div>", unsafe_allow_html=True)
+
         except Exception as e:
             st.error(f"Error displaying table: {e}")
 
-    def _render_inline_chart(self, chart_info: Dict[str, str]):
-        """Render chart inline in the chat."""
+    def _render_chart_embedded(self, chart_info: Dict[str, str]):
+        """Render chart as an embedded element."""
         if os.path.exists(chart_info['path']):
             try:
                 with open(chart_info['path'], 'r', encoding='utf-8') as file:
                     html_content = file.read()
 
-                st.markdown("**📈 Chart Generated:**")
+                # Add a styled container for the chart
+                st.markdown("""
+                    <div style="
+                        background: white;
+                        border-radius: 8px;
+                        border: 1px solid #e2e8f0;
+                        padding: 1rem;
+                        margin: 0.5rem 0;
+                        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                    ">
+                """, unsafe_allow_html=True)
+
                 st.components.v1.html(html_content, height=600, scrolling=True)
+
+                st.markdown("</div>", unsafe_allow_html=True)
+
             except Exception as e:
                 st.error(f"Error displaying chart: {e}")
 
-    def _render_download_buttons(self, attachments: Dict[str, Any]):
-        """Render modern download buttons that match the interface style."""
-        st.markdown("---")  # Add separator
+    def _render_downloads_embedded(self, attachments: Dict[str, Any]):
+        """Render download buttons as embedded elements."""
+
+        # Add a styled container for the downloads
+        st.markdown("""
+            <div style="
+                background: white;
+                border-radius: 8px;
+                border: 1px solid #e2e8f0;
+                padding: 1rem;
+                margin: 0.5rem 0;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            ">
+        """, unsafe_allow_html=True)
 
         col1, col2 = st.columns(2)
 
@@ -496,6 +561,8 @@ class TelmiApp:
                             type="secondary"
                         )
 
+        st.markdown("</div>", unsafe_allow_html=True)
+
     def _render_input_area(self):
         """Render the input area at the bottom."""
         # Input form
@@ -516,26 +583,29 @@ class TelmiApp:
                 self._process_user_message(user_input.strip())
 
     def _process_user_message(self, user_input: str):
-        """Process user input and get agent response - SIMPLE FIX."""
+        """Process user input and get agent response - BACK TO ORIGINAL WORKING STRUCTURE."""
 
         # Add user message
         self._add_message('user', user_input)
 
-        # Set thinking state (but don't rerun immediately)
-        st.session_state.agent_thinking = True
-
-        # Show a temporary thinking message while processing
-        thinking_placeholder = st.empty()
-        thinking_placeholder.markdown("""
-            <div class="typing-indicator">
-                <div class="typing-dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+        # Show a thinking indicator in the message area (not input area)
+        thinking_container = st.container()
+        with thinking_container:
+            st.markdown("""
+                <div class="message-container agent-message">
+                    <div class="message-avatar agent-avatar">🔮</div>
+                    <div class="message-bubble agent-bubble">
+                        <div class="typing-indicator">
+                            <div class="typing-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <span class="typing-text">Telmi is analyzing your question...</span>
+                        </div>
+                    </div>
                 </div>
-                <span class="typing-text">Telmi is analyzing your question...</span>
-            </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
         try:
             logger.info(f"🔄 Sending question to agent: {user_input[:50]}...")
@@ -571,17 +641,17 @@ class TelmiApp:
             # Add detailed error response
             error_response = f"""❌ **Unexpected Error**
 
-    **Issue:** {str(e)}
+**Issue:** {str(e)}
 
-    **Type:** {type(e).__name__}
+**Type:** {type(e).__name__}
 
-    **Possible Solutions:**
-    • Check the terminal console for detailed errors
-    • Restart the Streamlit application  
-    • Verify the backend agent is working: `python3 debug_telmi.py`
-    • Try a simpler question: "List available tables"
+**Possible Solutions:**
+• Check the terminal console for detailed errors
+• Restart the Streamlit application  
+• Verify the backend agent is working: `python3 debug.py`
+• Try a simpler question: "List available tables"
 
-    **Debug Info:** {str(e)}"""
+**Debug Info:** {str(e)}"""
 
             self._add_message('agent', error_response)
             logger.error(f"❌ Unexpected error in message processing: {e}")
@@ -589,14 +659,10 @@ class TelmiApp:
             logger.error(f"Traceback: {traceback.format_exc()}")
 
         finally:
-            # Clear thinking state and placeholder
-            st.session_state.agent_thinking = False
-            thinking_placeholder.empty()  # Remove the thinking indicator
             logger.info("🔄 Question processing completed")
 
             # Now rerun to show the complete conversation
             st.rerun()
-
 
     def _add_message(self, role: str, content: str, attachments: Dict[str, Any] = None):
         """Add a message to the current session - FIXED to ensure saving."""
@@ -613,7 +679,6 @@ class TelmiApp:
         self._ensure_session_exists()
         self._save_session_to_history()
 
-
     def _ensure_session_exists(self):
         """Ensure we have a session ID for saving."""
         if not st.session_state.current_session_id:
@@ -621,49 +686,102 @@ class TelmiApp:
             logger.info(f"📝 Created new session ID: {st.session_state.current_session_id}")
 
     def _extract_attachments(self, response: str) -> Dict[str, Any]:
-        """Extract file attachments and data from agent response."""
+        """Extract file attachments and data from agent response - FIXED VERSION."""
         attachments = {}
 
-        # Look for CSV and chart file patterns
-        import re
+        try:
+            # Look for the most recent CSV and chart files based on timestamp
+            # Since the response might not contain the exact filenames
 
-        csv_pattern = r'\[Download CSV file\]\(([^)]+)\)'
-        chart_pattern = r'\[Download Chart\]\(([^)]+)\)'
+            # Find the most recent CSV file
+            csv_dir = "exports"
+            if os.path.exists(csv_dir):
+                csv_files = [f for f in os.listdir(csv_dir) if f.endswith('.csv')]
+                if csv_files:
+                    # Get the most recent CSV file
+                    csv_files.sort(key=lambda x: os.path.getmtime(os.path.join(csv_dir, x)), reverse=True)
+                    latest_csv = csv_files[0]
+                    csv_path = os.path.join(csv_dir, latest_csv)
 
-        csv_match = re.search(csv_pattern, response)
-        chart_match = re.search(chart_pattern, response)
+                    stat = os.stat(csv_path)
+                    attachments['csv'] = {
+                        'filename': latest_csv,
+                        'path': csv_path,
+                        'size': f"{stat.st_size/1024:.1f} KB"
+                    }
 
-        if csv_match:
-            csv_filename = csv_match.group(1)
-            csv_path = os.path.join('exports', csv_filename)
-            if os.path.exists(csv_path):
-                stat = os.stat(csv_path)
-                attachments['csv'] = {
-                    'filename': csv_filename,
-                    'path': csv_path,
-                    'size': f"{stat.st_size/1024:.1f} KB"
-                }
+                    logger.info(f"📊 Found CSV file: {latest_csv}")
 
-        if chart_match:
-            chart_filename = chart_match.group(1)
-            chart_path = os.path.join('visualizations', chart_filename)
-            if os.path.exists(chart_path):
-                stat = os.stat(chart_path)
-                attachments['chart'] = {
-                    'filename': chart_filename,
-                    'path': chart_path,
-                    'size': f"{stat.st_size/1024:.1f} KB"
-                }
+            # Find the most recent chart file
+            chart_dir = "visualizations"
+            if os.path.exists(chart_dir):
+                chart_files = [f for f in os.listdir(chart_dir) if f.endswith('.html')]
+                if chart_files:
+                    # Get the most recent chart file
+                    chart_files.sort(key=lambda x: os.path.getmtime(os.path.join(chart_dir, x)), reverse=True)
+                    latest_chart = chart_files[0]
+                    chart_path = os.path.join(chart_dir, latest_chart)
 
-        # Extract table data from the last query execution for display
-        if hasattr(st.session_state, 'last_query_result') and st.session_state.last_query_result:
-            result = st.session_state.last_query_result
-            if result.get('success') and result.get('result', {}).get('data'):
-                query_result = result['result']
-                attachments['table_data'] = {
-                    'columns': query_result.get('columns', []),
-                    'data': query_result.get('data', [])
-                }
+                    stat = os.stat(chart_path)
+                    attachments['chart'] = {
+                        'filename': latest_chart,
+                        'path': chart_path,
+                        'size': f"{stat.st_size/1024:.1f} KB"
+                    }
+
+                    logger.info(f"📈 Found chart file: {latest_chart}")
+
+            # Extract table data from CSV for display (MOST IMPORTANT)
+            if 'csv' in attachments:
+                try:
+                    import pandas as pd
+                    df = pd.read_csv(attachments['csv']['path'])
+                    attachments['table_data'] = {
+                        'columns': df.columns.tolist(),
+                        'data': df.values.tolist()
+                    }
+                    logger.info(f"📋 Extracted table data: {len(df)} rows, {len(df.columns)} columns")
+                except Exception as e:
+                    logger.error(f"❌ Could not extract table data from CSV: {e}")
+
+            # Also try the original regex approach as backup
+            import re
+
+            csv_pattern = r'\[Download CSV file\]\(([^)]+)\)'
+            chart_pattern = r'\[Download Chart\]\(([^)]+)\)'
+
+            csv_match = re.search(csv_pattern, response)
+            chart_match = re.search(chart_pattern, response)
+
+            # If regex found files and we haven't found them yet, use those
+            if csv_match and 'csv' not in attachments:
+                csv_filename = csv_match.group(1)
+                csv_path = os.path.join('exports', csv_filename)
+                if os.path.exists(csv_path):
+                    stat = os.stat(csv_path)
+                    attachments['csv'] = {
+                        'filename': csv_filename,
+                        'path': csv_path,
+                        'size': f"{stat.st_size/1024:.1f} KB"
+                    }
+
+            if chart_match and 'chart' not in attachments:
+                chart_filename = chart_match.group(1)
+                chart_path = os.path.join('visualizations', chart_filename)
+                if os.path.exists(chart_path):
+                    stat = os.stat(chart_path)
+                    attachments['chart'] = {
+                        'filename': chart_filename,
+                        'path': chart_path,
+                        'size': f"{stat.st_size/1024:.1f} KB"
+                    }
+
+            logger.info(f"🔗 Total attachments found: CSV={('csv' in attachments)}, Chart={('chart' in attachments)}, Table={('table_data' in attachments)}")
+
+        except Exception as e:
+            logger.error(f"❌ Error extracting attachments: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
 
         return attachments
 
@@ -709,37 +827,6 @@ class TelmiApp:
             )
             return first_user_message[:50] + "..." if len(first_user_message) > 50 else first_user_message
         return "New Chat"
-
-    def _parse_query_result_from_response(self, response: str) -> Dict[str, Any]:
-        """Try to extract query result data from the agent response."""
-        # This is a temporary solution - ideally we'd modify the bridge to return structured data
-        try:
-            # Look for CSV files that were generated
-            import re
-            csv_pattern = r'\[Download CSV file\]\(([^)]+)\)'
-            csv_match = re.search(csv_pattern, response)
-
-            if csv_match:
-                csv_filename = csv_match.group(1)
-                csv_path = os.path.join('exports', csv_filename)
-
-                if os.path.exists(csv_path):
-                    import pandas as pd
-                    df = pd.read_csv(csv_path)
-
-                    return {
-                        'success': True,
-                        'result': {
-                            'columns': df.columns.tolist(),
-                            'data': df.values.tolist()
-                        }
-                    }
-
-            return None
-
-        except Exception as e:
-            logger.error(f"Error parsing query result: {e}")
-            return None
 
 
 def main():

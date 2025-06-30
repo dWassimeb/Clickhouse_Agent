@@ -1,6 +1,6 @@
 """
 Enhanced Response Formatter for Streamlit Interface
-Optimized for modern chat interface with better formatting
+Fixed version - keeping original structure, just improving formatting as requested
 """
 
 from typing import Dict, Any, List
@@ -52,7 +52,7 @@ class ResponseFormatterTool(BaseTool):
     def _format_streamlit_query_response(self, result: Dict[str, Any], user_question: str,
                                        csv_result: Dict[str, Any] = None,
                                        visualization_result: Dict[str, Any] = None) -> str:
-        """Format query results for Streamlit chat interface."""
+        """Format query results for Streamlit chat interface with YOUR REQUESTED STRUCTURE."""
         if not result.get('success', True):
             return self._format_error_response(result)
 
@@ -61,146 +61,44 @@ class ResponseFormatterTool(BaseTool):
         if not query_result.get('data'):
             return "**No Data Found** 📭\n\nThe query executed successfully but returned no results."
 
-        # Build modern chat response
+        # Build response with YOUR EXACT REQUESTED STRUCTURE
         response_parts = []
 
-        # 1. Data Results Table (using placeholder for Streamlit dataframe)
+        # 1. Data Results Section (placeholder for Streamlit dataframe)
+        response_parts.append("**📊 Data Results:**")
         response_parts.append("[TABLE_DATA_PLACEHOLDER]")
 
-        # 2. Key Insights (with proper line breaks)
+        # 2. Key Insights Section (with proper line breaks as you requested)
         insights = self._generate_key_insights_formatted(query_result)
         if insights:
-            response_parts.append(f"**🔍 Key Insights:**\n{insights}")
+            response_parts.append("**🔍 Key Insights:**")
+            response_parts.append(insights)
 
-        # 3. SQL Query
+        # 3. Executed Query Section
         if result.get('executed_query'):
             clean_query = self._clean_sql_for_streamlit(result['executed_query'])
-            response_parts.append(f"**⚡ Executed Query:**\n```sql\n{clean_query}\n```")
+            response_parts.append("**⚡ Executed Query:**")
+            response_parts.append(f"```sql\n{clean_query}\n```")
 
         # 4. Chart Generated Section
         if visualization_result and visualization_result.get('success', False):
+            response_parts.append("**📈 Chart Generated:**")
             response_parts.append("[CHART_DISPLAY_PLACEHOLDER]")
 
         # 5. Download Buttons Section
         if csv_result or visualization_result:
+            response_parts.append("**📁 Downloads:**")
             response_parts.append("[DOWNLOAD_BUTTONS_PLACEHOLDER]")
 
         return "\n\n".join(response_parts)
 
-    def _generate_quick_summary(self, query_result: Dict[str, Any], user_question: str) -> str:
-        """Generate a quick one-line summary of the results."""
-        try:
-            data = query_result.get('data', [])
-            columns = query_result.get('columns', [])
-
-            if not data or not columns:
-                return ""
-
-            row_count = len(data)
-
-            # Analyze question intent for summary
-            question_lower = user_question.lower()
-
-            if any(word in question_lower for word in ['top', 'highest', 'best', 'most']):
-                if row_count > 0:
-                    first_row = data[0]
-                    if len(first_row) >= 2:
-                        name = self._format_cell_value_clean(first_row[0])
-                        value = self._format_cell_value_clean(first_row[1])
-                        return f"Top result: **{name}** with **{value}**. Found {row_count:,} total records."
-
-            elif any(word in question_lower for word in ['count', 'number', 'how many']):
-                if row_count == 1 and len(data[0]) >= 1:
-                    count_value = self._format_cell_value_clean(data[0][0])
-                    return f"Total count: **{count_value}**"
-
-            elif any(word in question_lower for word in ['total', 'sum', 'volume']):
-                if row_count > 0 and len(columns) >= 2:
-                    # Find numeric column for sum
-                    numeric_totals = []
-                    for i, col in enumerate(columns[1:], 1):  # Skip first column (usually name/category)
-                        total = 0
-                        count = 0
-                        for row in data:
-                            if i < len(row) and isinstance(row[i], (int, float)):
-                                total += row[i]
-                                count += 1
-                        if count > 0:
-                            numeric_totals.append(self._format_cell_value_clean(total))
-
-                    if numeric_totals:
-                        return f"Total across {row_count:,} records: **{numeric_totals[0]}**"
-
-            # Default summary
-            return f"Found **{row_count:,} records** with **{len(columns)}** columns."
-
-        except Exception as e:
-            logger.debug(f"Summary generation failed: {e}")
-            return ""
-
-    def _format_data_preview_table(self, query_result: Dict[str, Any]) -> str:
-        """Format data into a clean preview table for Streamlit."""
-        try:
-            columns = query_result.get('columns', [])
-            data = query_result.get('data', [])
-
-            if not columns or not data:
-                return ""
-
-            # Limit preview to first 10 rows
-            preview_data = data[:10]
-            total_rows = len(data)
-
-            # Create markdown table with proper spacing
-            table_lines = []
-
-            # Header row with proper spacing
-            header = " | ".join(f"**{col}**" for col in columns[:6])  # Limit columns too
-            table_lines.append(f"| {header} |")
-
-            # Separator with proper alignment
-            separator = " | ".join("---" for _ in columns[:6])
-            table_lines.append(f"| {separator} |")
-
-            # Data rows
-            for row in preview_data:
-                formatted_row = []
-                for i, col in enumerate(columns[:6]):  # Limit to 6 columns for readability
-                    value = row[i] if i < len(row) else ""
-                    formatted_value = self._format_cell_value_clean(value)
-
-                    # Truncate long values
-                    if len(str(formatted_value)) > 25:
-                        formatted_value = str(formatted_value)[:22] + "..."
-
-                    formatted_row.append(str(formatted_value))
-
-                table_lines.append(f"| {' | '.join(formatted_row)} |")
-
-            table_str = "\n".join(table_lines)
-
-            # Add summary info
-            if total_rows > 10:
-                table_str += f"\n\n*Showing first 10 of {total_rows:,} total rows*"
-            else:
-                table_str += f"\n\n*{total_rows:,} rows total*"
-
-            if len(columns) > 6:
-                table_str += f" • *{len(columns)} columns (showing first 6)*"
-
-            return table_str
-
-        except Exception as e:
-            logger.error(f"Table formatting error: {e}")
-            return "Error displaying data preview"
-
     def _generate_key_insights_formatted(self, query_result: Dict[str, Any]) -> str:
-        """Generate key insights with proper line breaks."""
+        """Generate key insights with proper line breaks as you requested (NOT one single line)."""
         try:
             data = query_result.get('data', [])
             columns = query_result.get('columns', [])
 
-            if not data or len(data) < 2:
+            if not data or len(data) < 1:
                 return ""
 
             insights = []
@@ -208,81 +106,50 @@ class ResponseFormatterTool(BaseTool):
             # Dataset size insight
             insights.append(f"• **Dataset Size:** {len(data):,} records across {len(columns)} columns")
 
-            # Analyze numeric columns for insights
-            for i, col in enumerate(columns):
-                if i >= 4:  # Limit analysis to first 4 columns
+            # Analyze columns for insights (limit to first 4 columns for readability)
+            for i, col in enumerate(columns[:4]):
+                if i >= 4:  # Safety check
                     break
 
-                numeric_values = []
-                text_values = []
-
+                # Get column values
+                column_values = []
                 for row in data:
                     if i < len(row) and row[i] is not None:
-                        if isinstance(row[i], (int, float)):
-                            numeric_values.append(row[i])
-                        else:
-                            text_values.append(str(row[i]))
+                        column_values.append(row[i])
 
-                if numeric_values and len(numeric_values) >= 2:
-                    avg_val = sum(numeric_values) / len(numeric_values)
-                    max_val = max(numeric_values)
-                    min_val = min(numeric_values)
+                if not column_values:
+                    continue
 
-                    insights.append(f"• **{col}:** Range {self._format_number_clean(min_val)} - {self._format_number_clean(max_val)}, Avg {self._format_number_clean(avg_val)}")
-
-                elif text_values:
-                    unique_count = len(set(text_values))
+                # Analyze based on data type
+                if all(isinstance(val, (int, float)) for val in column_values):
+                    # Numeric column analysis
+                    if len(column_values) >= 2:
+                        avg_val = sum(column_values) / len(column_values)
+                        max_val = max(column_values)
+                        min_val = min(column_values)
+                        insights.append(f"• **{col}:** Range {self._format_number_clean(min_val)} - {self._format_number_clean(max_val)}, Avg {self._format_number_clean(avg_val)}")
+                else:
+                    # Text column analysis
+                    unique_count = len(set(str(val) for val in column_values))
                     insights.append(f"• **{col}:** {unique_count} unique values")
 
-            # Top/Bottom insights for ranked data
-            if len(data) >= 3 and len(columns) >= 2:
+            # Top/Bottom range insight for ranked data
+            if len(data) >= 2 and len(columns) >= 2:
                 first_item = self._format_cell_value_clean(data[0][0])
                 last_item = self._format_cell_value_clean(data[-1][0])
                 insights.append(f"• **Range:** From {first_item} to {last_item}")
 
-            # Join with proper line breaks
-            return "\n".join(insights[:4])  # Limit to 4 insights
+            # Join with proper line breaks (THIS IS KEY - separate lines, not one line)
+            # Make sure each insight is on its own line with proper spacing
+            formatted_insights = []
+            for insight in insights[:5]:  # Limit to 5 insights for readability
+                formatted_insights.append(insight)
+
+            return "\n\n".join(formatted_insights)  # Double line breaks for better spacing
 
         except Exception as e:
             logger.debug(f"Insights generation failed: {e}")
             return ""
-
-    def _format_download_buttons_section(self, csv_result: Dict[str, Any] = None,
-                                       visualization_result: Dict[str, Any] = None) -> str:
-        """Format the download buttons section for Streamlit."""
-        if not csv_result and not visualization_result:
-            return ""
-
-        buttons_info = []
-
-        # CSV Download Button Info
-        if csv_result and csv_result.get('success', False):
-            filename = csv_result.get('filename', 'data.csv')
-            file_size = csv_result.get('file_stats', {}).get('size_human', 'Unknown')
-            buttons_info.append({
-                'type': 'csv',
-                'filename': filename,
-                'size': file_size,
-                'label': f"📊 Download CSV Data"
-            })
-
-        # Chart Download Button Info
-        if visualization_result and visualization_result.get('success', False):
-            file_stats = visualization_result.get('file_stats', {})
-            filename = file_stats.get('filename', 'chart.html')
-            file_size = file_stats.get('size_human', 'Unknown')
-            viz_type = visualization_result.get('visualization_type', 'Chart')
-            buttons_info.append({
-                'type': 'chart',
-                'filename': filename,
-                'size': file_size,
-                'label': f"📈 Download {viz_type.title()} Chart"
-            })
-
-        if buttons_info:
-            return "[DOWNLOAD_BUTTONS_PLACEHOLDER]"
-
-        return ""
 
     def _clean_sql_for_streamlit(self, sql_query: str) -> str:
         """Clean SQL query for Streamlit display."""
@@ -291,7 +158,7 @@ class ResponseFormatterTool(BaseTool):
         clean_query = re.sub(r',\s*,', ',', clean_query)
         clean_query = re.sub(r'\s+', ' ', clean_query)
 
-        # Basic formatting
+        # Basic formatting with proper line breaks
         keywords = ['SELECT', 'FROM', 'JOIN', 'WHERE', 'GROUP BY', 'ORDER BY', 'LIMIT', 'HAVING']
         for keyword in keywords:
             clean_query = clean_query.replace(f' {keyword} ', f'\n{keyword} ')
