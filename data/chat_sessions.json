@@ -365,184 +365,6 @@
     "timestamp": "2025-07-01T13:34:14.486243",
     "user": "wassime"
   },
-  "d77aedb3-796a-417e-9aaf-dd5b473bba70": {
-    "title": "give me 10 random clients names",
-    "messages": [
-      {
-        "role": "user",
-        "content": "give me 10 random clients names",
-        "timestamp": "2025-07-01T13:44:28.778721",
-        "attachments": {}
-      },
-      {
-        "role": "agent",
-        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 1 columns\n\n• **NAME:** 10 unique values\n\n**⚡ Executed Query:**\n\n```sql\nSELECT NAME\nFROM CUSTOMER\nORDER BY rand()\nLIMIT 10\n```\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 4.78 seconds*",
-        "timestamp": "2025-07-01T13:44:33.638061",
-        "attachments": {
-          "csv": {
-            "filename": "query_give_me_10_random_clients_name_20250701_134433.csv",
-            "path": "exports/query_give_me_10_random_clients_name_20250701_134433.csv",
-            "size": "0.2 KB"
-          },
-          "chart": {
-            "filename": "chart_20250701_132844.html",
-            "path": "visualizations/chart_20250701_132844.html",
-            "size": "12.7 KB"
-          },
-          "table_data": {
-            "columns": [
-              "NAME"
-            ],
-            "data": [
-              [
-                "QOVOLTIS"
-              ],
-              [
-                "EDF DIGIT INDUSTRIEL"
-              ],
-              [
-                "BIZZBEE"
-              ],
-              [
-                "CHECKPOINT SYSTEMS FRANCE"
-              ],
-              [
-                "MADAME MURIELLE DUCHENE"
-              ],
-              [
-                "ENERGISME"
-              ],
-              [
-                "GLOBOCONNECT BURKINA FASSO"
-              ],
-              [
-                "ZP-ALCOM ELECTRONICS B.V."
-              ],
-              [
-                "OKKO SARL "
-              ],
-              [
-                "JC DECAUX SA"
-              ]
-            ]
-          }
-        }
-      },
-      {
-        "role": "user",
-        "content": "give top 20 clients by number of tickets",
-        "timestamp": "2025-07-01T13:44:53.450030",
-        "attachments": {}
-      },
-      {
-        "role": "agent",
-        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 20 records across 2 columns\n\n• **NAME:** 20 unique values\n\n• **ticket_count:** Range 22.6M - 804.3M, Avg 125.7M\n\n• **Range:** From STELLANTIS to OTIS France\n\n**⚡ Executed Query:**\n\n```sql\nSELECT CUSTOMER.NAME, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 20\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 28.99 seconds*",
-        "timestamp": "2025-07-01T13:45:22.576258",
-        "attachments": {
-          "csv": {
-            "filename": "query_give_top_20_clients_by_number__20250701_134521.csv",
-            "path": "exports/query_give_top_20_clients_by_number__20250701_134521.csv",
-            "size": "0.5 KB"
-          },
-          "chart": {
-            "filename": "chart_20250701_134522.html",
-            "path": "visualizations/chart_20250701_134522.html",
-            "size": "12.2 KB"
-          },
-          "table_data": {
-            "columns": [
-              "NAME",
-              "ticket_count"
-            ],
-            "data": [
-              [
-                "STELLANTIS",
-                804327205
-              ],
-              [
-                "ERDF-LINKY-PROD",
-                528351988
-              ],
-              [
-                "VERISURE SAS",
-                259442944
-              ],
-              [
-                "EURO INFORMATION / EPS",
-                159800840
-              ],
-              [
-                "VOLTALIS",
-                157825610
-              ],
-              [
-                "ARVAL",
-                108104350
-              ],
-              [
-                "WSF_FIXE",
-                60994547
-              ],
-              [
-                "TRANSICS FRANCE",
-                52426999
-              ],
-              [
-                "LYRA NETWORK",
-                51681686
-              ],
-              [
-                "YUNEX TRAFFIC AUSTRIA GMBH",
-                45990573
-              ],
-              [
-                "ENEDIS-USR-ILE DE FRANCE",
-                40060505
-              ],
-              [
-                "NORALSY",
-                34333335
-              ],
-              [
-                "ENEDIS-USR-RHONE ALPES BOURGOGNE",
-                28852168
-              ],
-              [
-                "ENEDIS-USR-MEDITERRANEE",
-                28715263
-              ],
-              [
-                "SAUR",
-                28266219
-              ],
-              [
-                "ENEDIS-USR OUEST",
-                28218380
-              ],
-              [
-                "ENEDIS-USR-MANCHE MER DU NORD",
-                25687977
-              ],
-              [
-                "GETRALINE",
-                25448709
-              ],
-              [
-                "FLOWBIRD",
-                23664565
-              ],
-              [
-                "OTIS France",
-                22604890
-              ]
-            ]
-          }
-        }
-      }
-    ],
-    "timestamp": "2025-07-01T13:47:08.676359",
-    "user": "wassime"
-  },
   "887f59ab-2a61-4485-a88a-f6160f7b03a2": {
     "title": "🏆 Top Clients Analysis",
     "messages": [
@@ -808,6 +630,1520 @@
       }
     ],
     "timestamp": "2025-07-01T14:01:58.085686",
+    "user": "wassime"
+  },
+  "60761991-7397-4fb2-bffe-95086324813f": {
+    "title": "📈 Time Trend Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "donne moi l'évolution journalière des tickets pour le clients STELLANTIS",
+        "timestamp": "2025-07-01T14:03:52.667487",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 8 records across 2 columns\n\n• **record_date:** 8 unique values\n\n• **ticket_count:** Range 24.2M - 55.9M, Avg 42.5M\n\n• **Range:** From 2025-06-24 to 2025-07-01\n\n**⚡ Executed Query:**\n\n```sql\nSELECT toDate(RECORD_OPENING_TIME) AS record_date, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nWHERE CUSTOMER.NAME = 'STELLANTIS' AND RECORD_OPENING_TIME >= now() - INTERVAL 7 DAY\nGROUP BY record_date\nORDER BY record_date ASC\nLIMIT 10\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 13.68 seconds*",
+        "timestamp": "2025-07-01T14:04:06.445852",
+        "attachments": {
+          "csv": {
+            "filename": "query_donne_moi_lévolution_journaliè_20250701_140405.csv",
+            "path": "exports/query_donne_moi_lévolution_journaliè_20250701_140405.csv",
+            "size": "0.2 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_140406.html",
+            "path": "visualizations/chart_20250701_140406.html",
+            "size": "11.6 KB"
+          },
+          "table_data": {
+            "columns": [
+              "record_date",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "2025-06-24",
+                25418892
+              ],
+              [
+                "2025-06-25",
+                52792771
+              ],
+              [
+                "2025-06-26",
+                54294134
+              ],
+              [
+                "2025-06-27",
+                55926368
+              ],
+              [
+                "2025-06-28",
+                43097129
+              ],
+              [
+                "2025-06-29",
+                33225555
+              ],
+              [
+                "2025-06-30",
+                50720823
+              ],
+              [
+                "2025-07-01",
+                24233969
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "role": "user",
+        "content": "give me 10 random names of the clients",
+        "timestamp": "2025-07-01T14:08:25.374193",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 1 columns\n\n• **NAME:** 10 unique values\n\n**⚡ Executed Query:**\n\n```sql\nSELECT NAME\nFROM CUSTOMER\nORDER BY rand()\nLIMIT 10\n```\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 4.70 seconds*",
+        "timestamp": "2025-07-01T14:08:30.208774",
+        "attachments": {
+          "csv": {
+            "filename": "query_give_me_10_random_names_of_the_20250701_140830.csv",
+            "path": "exports/query_give_me_10_random_names_of_the_20250701_140830.csv",
+            "size": "0.2 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_140406.html",
+            "path": "visualizations/chart_20250701_140406.html",
+            "size": "11.6 KB"
+          },
+          "table_data": {
+            "columns": [
+              "NAME"
+            ],
+            "data": [
+              [
+                "ZP-ALCOM ELECTRONICS B.V."
+              ],
+              [
+                "THALES SERVICES NUMERIQUES SAS"
+              ],
+              [
+                "ENEDIS-USR-RHONE ALPES BOURGOGNE"
+              ],
+              [
+                "IOGA"
+              ],
+              [
+                "EDF SEI GUYANE"
+              ],
+              [
+                "GENILINK"
+              ],
+              [
+                "Z - REGION NORMANDIE"
+              ],
+              [
+                "UPTIME"
+              ],
+              [
+                "ZP-2N TELEKOMUNIKACE A.S"
+              ],
+              [
+                "EDF DIGIT TERTIAIRE"
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-01T14:08:30.208885",
+    "user": "wassime"
+  },
+  "3304edbb-d242-47ba-b450-b2a1b7de93ef": {
+    "title": "give random clients names",
+    "messages": [
+      {
+        "role": "user",
+        "content": "give me the 10 random clients names",
+        "timestamp": "2025-07-01T14:10:39.140923",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 1 columns\n\n• **NAME:** 10 unique values\n\n**⚡ Executed Query:**\n\n```sql\nSELECT NAME\nFROM CUSTOMER\nORDER BY rand()\nLIMIT 10\n```\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 4.62 seconds*",
+        "timestamp": "2025-07-01T14:10:43.823283",
+        "attachments": {
+          "csv": {
+            "filename": "query_give_me_the_10_random_clients__20250701_141043.csv",
+            "path": "exports/query_give_me_the_10_random_clients__20250701_141043.csv",
+            "size": "0.2 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_140406.html",
+            "path": "visualizations/chart_20250701_140406.html",
+            "size": "11.6 KB"
+          },
+          "table_data": {
+            "columns": [
+              "NAME"
+            ],
+            "data": [
+              [
+                "ZP-DIODE ESPANA S.A."
+              ],
+              [
+                "ZP-S-CONNECT"
+              ],
+              [
+                "LA PREDICTIVE JMC"
+              ],
+              [
+                "MIROITERIE WINTER"
+              ],
+              [
+                "SIGMA-TEST"
+              ],
+              [
+                "GENILINK"
+              ],
+              [
+                "EPSILON-TEST"
+              ],
+              [
+                "GLOBOCONNECT FRANCE"
+              ],
+              [
+                "SCT TELECOM"
+              ],
+              [
+                "Z-TESSA"
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "role": "user",
+        "content": "tu peux me donner la répartition géographique en pourcentage des tickets par pays sur les deux dernières journées ? Tu te limiteras au 10 premiers résultats",
+        "timestamp": "2025-07-01T14:12:31.188373",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 2 columns\n\n• **COUNTRY_ISO3:** 10 unique values\n\n• **percentage:** Range 0 - 72, Avg 9\n\n• **Range:** From FRA to DNK\n\n**⚡ Executed Query:**\n\n```sql\nSELECT PLMN.COUNTRY_ISO3, COUNT(*) * 100.0 / (SELECT COUNT(*)\nFROM RM_AGGREGATED_DATA\nWHERE RECORD_OPENING_TIME >= now() - INTERVAL 2 DAY) AS percentage\nFROM RM_AGGREGATED_DATA\nJOIN PLMN ON RM_AGGREGATED_DATA.PLMN = PLMN.PLMN\nWHERE RECORD_OPENING_TIME >= now() - INTERVAL 2 DAY\nGROUP BY PLMN.COUNTRY_ISO3\nORDER BY percentage DESC\nLIMIT 10\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 11.86 seconds*",
+        "timestamp": "2025-07-01T14:12:43.171890",
+        "attachments": {
+          "csv": {
+            "filename": "query_tu_peux_me_donner_la_répartiti_20250701_141242.csv",
+            "path": "exports/query_tu_peux_me_donner_la_répartiti_20250701_141242.csv",
+            "size": "0.3 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_141243.html",
+            "path": "visualizations/chart_20250701_141243.html",
+            "size": "10.0 KB"
+          },
+          "table_data": {
+            "columns": [
+              "COUNTRY_ISO3",
+              "percentage"
+            ],
+            "data": [
+              [
+                "FRA",
+                71.51153559619026
+              ],
+              [
+                "GBR",
+                6.838419182498586
+              ],
+              [
+                "DEU",
+                3.6351778239135464
+              ],
+              [
+                "ESP",
+                2.9742756435306057
+              ],
+              [
+                "BEL",
+                2.0784872402491748
+              ],
+              [
+                "ITA",
+                2.023045750812692
+              ],
+              [
+                "NLD",
+                1.717329615401327
+              ],
+              [
+                "POL",
+                1.0742116960991466
+              ],
+              [
+                "PRT",
+                0.8139741559495768
+              ],
+              [
+                "DNK",
+                0.4534920111990332
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-01T14:12:43.172388",
+    "user": "wassime"
+  },
+  "5b26e13a-0c98-4eae-b777-def91f837011": {
+    "title": "📈 Time Trend Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "donne moi l'évolution journalière des tickets de STELLANTIS",
+        "timestamp": "2025-07-01T14:24:56.303470",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 8 records across 2 columns\n\n• **day:** 8 unique values\n\n• **ticket_count:** Range 24.2M - 55.9M, Avg 42.5M\n\n• **Range:** From 2025-06-24 to 2025-07-01\n\n**⚡ Executed Query:**\n\n```sql\nSELECT toDate(RECORD_OPENING_TIME) AS day, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nWHERE CUSTOMER.NAME = 'STELLANTIS' AND RECORD_OPENING_TIME >= now() - INTERVAL 7 DAY\nGROUP BY day\nORDER BY day ASC\nLIMIT 100\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 14.63 seconds*",
+        "timestamp": "2025-07-01T14:25:11.012210",
+        "attachments": {
+          "csv": {
+            "filename": "query_donne_moi_lévolution_journaliè_20250701_142509.csv",
+            "path": "exports/query_donne_moi_lévolution_journaliè_20250701_142509.csv",
+            "size": "0.2 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_142510.html",
+            "path": "visualizations/chart_20250701_142510.html",
+            "size": "10.3 KB"
+          },
+          "table_data": {
+            "columns": [
+              "day",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "2025-06-24",
+                24223136
+              ],
+              [
+                "2025-06-25",
+                52792771
+              ],
+              [
+                "2025-06-26",
+                54294134
+              ],
+              [
+                "2025-06-27",
+                55926368
+              ],
+              [
+                "2025-06-28",
+                43097129
+              ],
+              [
+                "2025-06-29",
+                33225555
+              ],
+              [
+                "2025-06-30",
+                50720823
+              ],
+              [
+                "2025-07-01",
+                25405110
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "role": "user",
+        "content": "donne moi les 5 clients qui ont générés le plus tickets",
+        "timestamp": "2025-07-01T14:26:00.138335",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 5 records across 2 columns\n\n• **NAME:** 5 unique values\n\n• **ticket_count:** Range 158.0M - 806.6M, Avg 382.7M\n\n• **Range:** From STELLANTIS to VOLTALIS\n\n**⚡ Executed Query:**\n\n```sql\nSELECT CUSTOMER.NAME, COUNT(*) as ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 5\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 34.64 seconds*",
+        "timestamp": "2025-07-01T14:26:34.930442",
+        "attachments": {
+          "csv": {
+            "filename": "query_donne_moi_les_5_clients_qui_on_20250701_142633.csv",
+            "path": "exports/query_donne_moi_les_5_clients_qui_on_20250701_142633.csv",
+            "size": "0.1 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_142634.html",
+            "path": "visualizations/chart_20250701_142634.html",
+            "size": "9.9 KB"
+          },
+          "table_data": {
+            "columns": [
+              "NAME",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "STELLANTIS",
+                806625541
+              ],
+              [
+                "ERDF-LINKY-PROD",
+                529037777
+              ],
+              [
+                "VERISURE SAS",
+                259775818
+              ],
+              [
+                "EURO INFORMATION / EPS",
+                160030489
+              ],
+              [
+                "VOLTALIS",
+                158045131
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-01T14:26:34.930778",
+    "user": "wassime"
+  },
+  "73093d67-c061-4b63-978c-2a76f468361f": {
+    "title": "🎫 Ticket Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "donne moi les 25 clients qui ont générés le plus tickets",
+        "timestamp": "2025-07-01T14:38:27.007241",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 25 records across 2 columns\n\n• **customer_name:** 25 unique values\n\n• **ticket_count:** Range 18.7M - 807.3M, Avg 104.9M\n\n• **Range:** From STELLANTIS to SOLUTIONS M2M - MARCHE PUBLIC\n\n**⚡ Executed Query:**\n\n```sql\nSELECT c.NAME AS customer_name, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA a\nJOIN CUSTOMER c ON a.PARTY_ID = c.PARTY_ID\nGROUP BY c.NAME\nORDER BY ticket_count DESC\nLIMIT 25\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 24.22 seconds*",
+        "timestamp": "2025-07-01T14:38:51.417166",
+        "attachments": {
+          "csv": {
+            "filename": "query_donne_moi_les_25_clients_qui_o_20250701_143849.csv",
+            "path": "exports/query_donne_moi_les_25_clients_qui_o_20250701_143849.csv",
+            "size": "0.7 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_143851.html",
+            "path": "visualizations/chart_20250701_143851.html",
+            "size": "11.5 KB"
+          },
+          "table_data": {
+            "columns": [
+              "customer_name",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "STELLANTIS",
+                807271911
+              ],
+              [
+                "ERDF-LINKY-PROD",
+                529233769
+              ],
+              [
+                "VERISURE SAS",
+                259870613
+              ],
+              [
+                "EURO INFORMATION / EPS",
+                160098484
+              ],
+              [
+                "VOLTALIS",
+                158100289
+              ],
+              [
+                "ARVAL",
+                108391812
+              ],
+              [
+                "WSF_FIXE",
+                61094759
+              ],
+              [
+                "TRANSICS FRANCE",
+                52533868
+              ],
+              [
+                "LYRA NETWORK",
+                51797024
+              ],
+              [
+                "YUNEX TRAFFIC AUSTRIA GMBH",
+                46165751
+              ],
+              [
+                "ENEDIS-USR-ILE DE FRANCE",
+                40128877
+              ],
+              [
+                "NORALSY",
+                34391144
+              ],
+              [
+                "ENEDIS-USR-RHONE ALPES BOURGOGNE",
+                28901400
+              ],
+              [
+                "ENEDIS-USR-MEDITERRANEE",
+                28764278
+              ],
+              [
+                "SAUR",
+                28319584
+              ],
+              [
+                "ENEDIS-USR OUEST",
+                28267023
+              ],
+              [
+                "ENEDIS-USR-MANCHE MER DU NORD",
+                25731777
+              ],
+              [
+                "GETRALINE",
+                25492438
+              ],
+              [
+                "FLOWBIRD",
+                23732558
+              ],
+              [
+                "OTIS France",
+                22647277
+              ],
+              [
+                "ENEDIS-USR-SUD OUEST",
+                21874454
+              ],
+              [
+                "ENEDIS - USR ACL - AUVERGNE CENTRE LIMOUSIN",
+                21424044
+              ],
+              [
+                "VIEW",
+                19798871
+              ],
+              [
+                "JC DECAUX SA",
+                19795306
+              ],
+              [
+                "SOLUTIONS M2M - MARCHE PUBLIC",
+                18676464
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "role": "user",
+        "content": "donne moi l'évolution journalière de nombre de tickets du client STELLANTIS pour l'année 2025",
+        "timestamp": "2025-07-01T14:39:59.864498",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 25 records across 2 columns\n\n• **date:** 25 unique values\n\n• **ticket_count:** Range 3.7M - 55.9M, Avg 32.3M\n\n• **Range:** From 2025-06-01 to 2025-07-01\n\n**⚡ Executed Query:**\n\n```sql\nSELECT toDate(RECORD_OPENING_TIME) as date, COUNT(*) as ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nWHERE CUSTOMER.NAME = 'STELLANTIS' AND RECORD_OPENING_TIME >= toDateTime('2025-01-01 00:00:00') AND RECORD_OPENING_TIME < toDateTime('2026-01-01 00:00:00')\nGROUP BY date\nORDER BY date\nLIMIT 1000\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 22.51 seconds*",
+        "timestamp": "2025-07-01T14:40:22.542612",
+        "attachments": {
+          "csv": {
+            "filename": "query_donne_moi_lévolution_journaliè_20250701_144020.csv",
+            "path": "exports/query_donne_moi_lévolution_journaliè_20250701_144020.csv",
+            "size": "0.5 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_144022.html",
+            "path": "visualizations/chart_20250701_144022.html",
+            "size": "11.5 KB"
+          },
+          "table_data": {
+            "columns": [
+              "date",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "2025-06-01",
+                14058241
+              ],
+              [
+                "2025-06-02",
+                30442474
+              ],
+              [
+                "2025-06-03",
+                30961309
+              ],
+              [
+                "2025-06-04",
+                30944225
+              ],
+              [
+                "2025-06-05",
+                31265259
+              ],
+              [
+                "2025-06-06",
+                32094263
+              ],
+              [
+                "2025-06-07",
+                26478624
+              ],
+              [
+                "2025-06-08",
+                19463099
+              ],
+              [
+                "2025-06-09",
+                25235713
+              ],
+              [
+                "2025-06-10",
+                30655530
+              ],
+              [
+                "2025-06-11",
+                3699235
+              ],
+              [
+                "2025-06-18",
+                16290023
+              ],
+              [
+                "2025-06-19",
+                30464417
+              ],
+              [
+                "2025-06-20",
+                31313232
+              ],
+              [
+                "2025-06-21",
+                26249030
+              ],
+              [
+                "2025-06-22",
+                20291497
+              ],
+              [
+                "2025-06-23",
+                38934763
+              ],
+              [
+                "2025-06-24",
+                52262937
+              ],
+              [
+                "2025-06-25",
+                52792771
+              ],
+              [
+                "2025-06-26",
+                54294134
+              ],
+              [
+                "2025-06-27",
+                55926368
+              ],
+              [
+                "2025-06-28",
+                43097129
+              ],
+              [
+                "2025-06-29",
+                33225555
+              ],
+              [
+                "2025-06-30",
+                50720823
+              ],
+              [
+                "2025-07-01",
+                26188662
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "role": "user",
+        "content": "donne moi les 25 clients qui ont générés le plus tickets en pie chart",
+        "timestamp": "2025-07-01T14:41:24.660972",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 25 records across 2 columns\n\n• **NAME:** 25 unique values\n\n• **ticket_count:** Range 18.7M - 807.4M, Avg 104.9M\n\n• **Range:** From STELLANTIS to SOLUTIONS M2M - MARCHE PUBLIC\n\n**⚡ Executed Query:**\n\n```sql\nSELECT CUSTOMER.NAME, COUNT(*) as ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 25\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 27.45 seconds*",
+        "timestamp": "2025-07-01T14:41:52.279917",
+        "attachments": {
+          "csv": {
+            "filename": "query_donne_moi_les_25_clients_qui_o_20250701_144150.csv",
+            "path": "exports/query_donne_moi_les_25_clients_qui_o_20250701_144150.csv",
+            "size": "0.7 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_144152.html",
+            "path": "visualizations/chart_20250701_144152.html",
+            "size": "11.0 KB"
+          },
+          "table_data": {
+            "columns": [
+              "NAME",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "STELLANTIS",
+                807421765
+              ],
+              [
+                "ERDF-LINKY-PROD",
+                529283231
+              ],
+              [
+                "VERISURE SAS",
+                259894287
+              ],
+              [
+                "EURO INFORMATION / EPS",
+                160105516
+              ],
+              [
+                "VOLTALIS",
+                158113688
+              ],
+              [
+                "ARVAL",
+                108402917
+              ],
+              [
+                "WSF_FIXE",
+                61099777
+              ],
+              [
+                "TRANSICS FRANCE",
+                52539207
+              ],
+              [
+                "LYRA NETWORK",
+                51801864
+              ],
+              [
+                "YUNEX TRAFFIC AUSTRIA GMBH",
+                46172437
+              ],
+              [
+                "ENEDIS-USR-ILE DE FRANCE",
+                40133108
+              ],
+              [
+                "NORALSY",
+                34394294
+              ],
+              [
+                "ENEDIS-USR-RHONE ALPES BOURGOGNE",
+                28904656
+              ],
+              [
+                "ENEDIS-USR-MEDITERRANEE",
+                28767408
+              ],
+              [
+                "SAUR",
+                28321411
+              ],
+              [
+                "ENEDIS-USR OUEST",
+                28270622
+              ],
+              [
+                "ENEDIS-USR-MANCHE MER DU NORD",
+                25734593
+              ],
+              [
+                "GETRALINE",
+                25494162
+              ],
+              [
+                "FLOWBIRD",
+                23736467
+              ],
+              [
+                "OTIS France",
+                22648921
+              ],
+              [
+                "ENEDIS-USR-SUD OUEST",
+                21877141
+              ],
+              [
+                "ENEDIS - USR ACL - AUVERGNE CENTRE LIMOUSIN",
+                21426428
+              ],
+              [
+                "VIEW",
+                19800377
+              ],
+              [
+                "JC DECAUX SA",
+                19796737
+              ],
+              [
+                "SOLUTIONS M2M - MARCHE PUBLIC",
+                18678304
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-01T14:41:52.280901",
+    "user": "wassime"
+  },
+  "ad3801ad-dc4b-4afa-b723-b4e07ebacb8b": {
+    "title": "🏆 Top Clients Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "listes moi les top 5 clients qui ont générés le plus de tickets",
+        "timestamp": "2025-07-01T15:05:59.179801",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 5 records across 2 columns\n\n• **customer_name:** 5 unique values\n\n• **ticket_count:** Range 158.2M - 808.8M, Avg 383.4M\n\n• **Range:** From STELLANTIS to VOLTALIS\n\n**⚡ Executed Query:**\n\n```sql\nSELECT c.NAME AS customer_name, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA r\nJOIN CUSTOMER c ON r.PARTY_ID = c.PARTY_ID\nGROUP BY c.NAME\nORDER BY ticket_count DESC\nLIMIT 5\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 28.82 seconds*",
+        "timestamp": "2025-07-01T15:07:03.285435",
+        "attachments": {
+          "csv": {
+            "filename": "query_listes_moi_les_top_5_clients_q_20250701_150700.csv",
+            "path": "exports/query_listes_moi_les_top_5_clients_q_20250701_150700.csv",
+            "size": "0.2 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_150703.html",
+            "path": "visualizations/chart_20250701_150703.html",
+            "size": "10.0 KB"
+          },
+          "table_data": {
+            "columns": [
+              "customer_name",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "STELLANTIS",
+                808796495
+              ],
+              [
+                "ERDF-LINKY-PROD",
+                529699743
+              ],
+              [
+                "VERISURE SAS",
+                260097029
+              ],
+              [
+                "EURO INFORMATION / EPS",
+                160249643
+              ],
+              [
+                "VOLTALIS",
+                158245471
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-01T15:07:03.285803",
+    "user": "wassime"
+  },
+  "69593fd1-3c5d-4ad9-b858-9c92798b166a": {
+    "title": "🏆 Top Clients Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "donnes moi les 10 top clients par nombres de tickets",
+        "timestamp": "2025-07-01T15:12:10.992195",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 2 columns\n\n• **NAME:** 10 unique values\n\n• **ticket_count:** Range 46.3M - 809.1M, Avg 223.8M\n\n• **Range:** From STELLANTIS to YUNEX TRAFFIC AUSTRIA GMBH\n\n**⚡ Executed Query:**\n\n```sql\nSELECT CUSTOMER.NAME, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 10\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 30.21 seconds*",
+        "timestamp": "2025-07-01T15:12:41.265373",
+        "attachments": {
+          "csv": {
+            "filename": "query_donnes_moi_les_10_top_clients__20250701_151239.csv",
+            "path": "exports/query_donnes_moi_les_10_top_clients__20250701_151239.csv",
+            "size": "0.3 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_151241.html",
+            "path": "visualizations/chart_20250701_151241.html",
+            "size": "10.3 KB"
+          },
+          "table_data": {
+            "columns": [
+              "NAME",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "STELLANTIS",
+                809109353
+              ],
+              [
+                "ERDF-LINKY-PROD",
+                529802382
+              ],
+              [
+                "VERISURE SAS",
+                260145811
+              ],
+              [
+                "EURO INFORMATION / EPS",
+                160283431
+              ],
+              [
+                "VOLTALIS",
+                158274311
+              ],
+              [
+                "ARVAL",
+                108569748
+              ],
+              [
+                "WSF_FIXE",
+                61159778
+              ],
+              [
+                "TRANSICS FRANCE",
+                52602746
+              ],
+              [
+                "LYRA NETWORK",
+                51866534
+              ],
+              [
+                "YUNEX TRAFFIC AUSTRIA GMBH",
+                46277993
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-01T15:12:41.265835",
+    "user": "wassime"
+  },
+  "d77aedb3-796a-417e-9aaf-dd5b473bba70": {
+    "title": "give me 10 random clients names",
+    "messages": [
+      {
+        "role": "user",
+        "content": "give me 10 random clients names",
+        "timestamp": "2025-07-01T13:44:28.778721",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 1 columns\n\n• **NAME:** 10 unique values\n\n**⚡ Executed Query:**\n\n```sql\nSELECT NAME\nFROM CUSTOMER\nORDER BY rand()\nLIMIT 10\n```\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 4.78 seconds*",
+        "timestamp": "2025-07-01T13:44:33.638061",
+        "attachments": {
+          "csv": {
+            "filename": "query_give_me_10_random_clients_name_20250701_134433.csv",
+            "path": "exports/query_give_me_10_random_clients_name_20250701_134433.csv",
+            "size": "0.2 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_132844.html",
+            "path": "visualizations/chart_20250701_132844.html",
+            "size": "12.7 KB"
+          },
+          "table_data": {
+            "columns": [
+              "NAME"
+            ],
+            "data": [
+              [
+                "QOVOLTIS"
+              ],
+              [
+                "EDF DIGIT INDUSTRIEL"
+              ],
+              [
+                "BIZZBEE"
+              ],
+              [
+                "CHECKPOINT SYSTEMS FRANCE"
+              ],
+              [
+                "MADAME MURIELLE DUCHENE"
+              ],
+              [
+                "ENERGISME"
+              ],
+              [
+                "GLOBOCONNECT BURKINA FASSO"
+              ],
+              [
+                "ZP-ALCOM ELECTRONICS B.V."
+              ],
+              [
+                "OKKO SARL "
+              ],
+              [
+                "JC DECAUX SA"
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "role": "user",
+        "content": "give top 20 clients by number of tickets",
+        "timestamp": "2025-07-01T13:44:53.450030",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 20 records across 2 columns\n\n• **NAME:** 20 unique values\n\n• **ticket_count:** Range 22.6M - 804.3M, Avg 125.7M\n\n• **Range:** From STELLANTIS to OTIS France\n\n**⚡ Executed Query:**\n\n```sql\nSELECT CUSTOMER.NAME, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 20\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 28.99 seconds*",
+        "timestamp": "2025-07-01T13:45:22.576258",
+        "attachments": {
+          "csv": {
+            "filename": "query_give_top_20_clients_by_number__20250701_134521.csv",
+            "path": "exports/query_give_top_20_clients_by_number__20250701_134521.csv",
+            "size": "0.5 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_134522.html",
+            "path": "visualizations/chart_20250701_134522.html",
+            "size": "12.2 KB"
+          },
+          "table_data": {
+            "columns": [
+              "NAME",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "STELLANTIS",
+                804327205
+              ],
+              [
+                "ERDF-LINKY-PROD",
+                528351988
+              ],
+              [
+                "VERISURE SAS",
+                259442944
+              ],
+              [
+                "EURO INFORMATION / EPS",
+                159800840
+              ],
+              [
+                "VOLTALIS",
+                157825610
+              ],
+              [
+                "ARVAL",
+                108104350
+              ],
+              [
+                "WSF_FIXE",
+                60994547
+              ],
+              [
+                "TRANSICS FRANCE",
+                52426999
+              ],
+              [
+                "LYRA NETWORK",
+                51681686
+              ],
+              [
+                "YUNEX TRAFFIC AUSTRIA GMBH",
+                45990573
+              ],
+              [
+                "ENEDIS-USR-ILE DE FRANCE",
+                40060505
+              ],
+              [
+                "NORALSY",
+                34333335
+              ],
+              [
+                "ENEDIS-USR-RHONE ALPES BOURGOGNE",
+                28852168
+              ],
+              [
+                "ENEDIS-USR-MEDITERRANEE",
+                28715263
+              ],
+              [
+                "SAUR",
+                28266219
+              ],
+              [
+                "ENEDIS-USR OUEST",
+                28218380
+              ],
+              [
+                "ENEDIS-USR-MANCHE MER DU NORD",
+                25687977
+              ],
+              [
+                "GETRALINE",
+                25448709
+              ],
+              [
+                "FLOWBIRD",
+                23664565
+              ],
+              [
+                "OTIS France",
+                22604890
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-01T13:47:08.676359",
+    "user": "wassime"
+  },
+  "285dcd81-7b5d-4788-97e1-479e9f33442c": {
+    "title": "🏆 Top Clients Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "give me 10 top clients by number of tickets",
+        "timestamp": "2025-07-01T15:37:16.387042",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 2 columns\n\n• **NAME:** 10 unique values\n\n• **ticket_count:** Range 46.4M - 810.5M, Avg 224.1M\n\n• **Range:** From STELLANTIS to YUNEX TRAFFIC AUSTRIA GMBH\n\n**⚡ Executed Query:**\n\n```sql\nSELECT CUSTOMER.NAME, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 10\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 24.72 seconds*",
+        "timestamp": "2025-07-01T15:37:41.477740",
+        "attachments": {
+          "csv": {
+            "filename": "query_give_me_10_top_clients_by_numb_20250701_153739.csv",
+            "path": "exports/query_give_me_10_top_clients_by_numb_20250701_153739.csv",
+            "size": "0.3 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_153741.html",
+            "path": "visualizations/chart_20250701_153741.html",
+            "size": "10.3 KB"
+          },
+          "table_data": {
+            "columns": [
+              "NAME",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "STELLANTIS",
+                810450128
+              ],
+              [
+                "ERDF-LINKY-PROD",
+                530206802
+              ],
+              [
+                "VERISURE SAS",
+                260345839
+              ],
+              [
+                "EURO INFORMATION / EPS",
+                160418864
+              ],
+              [
+                "VOLTALIS",
+                158396943
+              ],
+              [
+                "ARVAL",
+                108695515
+              ],
+              [
+                "WSF_FIXE",
+                61206660
+              ],
+              [
+                "TRANSICS FRANCE",
+                52652550
+              ],
+              [
+                "LYRA NETWORK",
+                51913553
+              ],
+              [
+                "YUNEX TRAFFIC AUSTRIA GMBH",
+                46359717
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-01T15:37:41.479843",
+    "user": "wassime"
+  },
+  "9a22f8ea-4bab-4afe-b25e-4037597035ba": {
+    "title": "🏆 Top Clients Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "give me the top 10 clients by number of tickets",
+        "timestamp": "2025-07-01T15:38:24.123886",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 2 columns\n\n• **NAME:** 10 unique values\n\n• **ticket_count:** Range 46.4M - 810.5M, Avg 224.1M\n\n• **Range:** From STELLANTIS to YUNEX TRAFFIC AUSTRIA GMBH\n\n**⚡ Executed Query:**\n\n```sql\nSELECT CUSTOMER.NAME, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 10\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 32.73 seconds*",
+        "timestamp": "2025-07-01T15:38:56.916892",
+        "attachments": {
+          "csv": {
+            "filename": "query_give_me_the_top_10_clients_by__20250701_153855.csv",
+            "path": "exports/query_give_me_the_top_10_clients_by__20250701_153855.csv",
+            "size": "0.3 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_153856.html",
+            "path": "visualizations/chart_20250701_153856.html",
+            "size": "10.3 KB"
+          },
+          "table_data": {
+            "columns": [
+              "NAME",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "STELLANTIS",
+                810496068
+              ],
+              [
+                "ERDF-LINKY-PROD",
+                530222087
+              ],
+              [
+                "VERISURE SAS",
+                260353365
+              ],
+              [
+                "EURO INFORMATION / EPS",
+                160424603
+              ],
+              [
+                "VOLTALIS",
+                158405436
+              ],
+              [
+                "ARVAL",
+                108701007
+              ],
+              [
+                "WSF_FIXE",
+                61208825
+              ],
+              [
+                "TRANSICS FRANCE",
+                52654168
+              ],
+              [
+                "LYRA NETWORK",
+                51916539
+              ],
+              [
+                "YUNEX TRAFFIC AUSTRIA GMBH",
+                46362762
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-01T15:38:56.917119",
+    "user": "wassime"
+  },
+  "ed11d3e3-35c9-4da0-901f-a2d8433d9fac": {
+    "title": "🏆 Top Clients Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "give me 10 top clients by number of tickets sales",
+        "timestamp": "2025-07-01T16:03:36.005953",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 2 columns\n\n• **customer_name:** 10 unique values\n\n• **ticket_count:** Range 46.4M - 811.9M, Avg 224.3M\n\n• **Range:** From STELLANTIS to YUNEX TRAFFIC AUSTRIA GMBH\n\n**⚡ Executed Query:**\n\n```sql\nSELECT CUSTOMER.NAME AS customer_name, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 10\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 28.03 seconds*",
+        "timestamp": "2025-07-01T16:04:04.100212",
+        "attachments": {
+          "csv": {
+            "filename": "query_give_me_10_top_clients_by_numb_20250701_160401.csv",
+            "path": "exports/query_give_me_10_top_clients_by_numb_20250701_160401.csv",
+            "size": "0.3 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_160404.html",
+            "path": "visualizations/chart_20250701_160404.html",
+            "size": "11.5 KB"
+          },
+          "table_data": {
+            "columns": [
+              "customer_name",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "STELLANTIS",
+                811869573
+              ],
+              [
+                "ERDF-LINKY-PROD",
+                530641294
+              ],
+              [
+                "VERISURE SAS",
+                260555254
+              ],
+              [
+                "EURO INFORMATION / EPS",
+                160578545
+              ],
+              [
+                "VOLTALIS",
+                158530419
+              ],
+              [
+                "ARVAL",
+                108826767
+              ],
+              [
+                "WSF_FIXE",
+                61255152
+              ],
+              [
+                "TRANSICS FRANCE",
+                52704393
+              ],
+              [
+                "LYRA NETWORK",
+                51964056
+              ],
+              [
+                "YUNEX TRAFFIC AUSTRIA GMBH",
+                46442672
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-01T16:04:04.100421",
+    "user": "wassime"
+  },
+  "8e1874d0-d484-4298-8d89-1d64c7ab0266": {
+    "title": "📈 Time Trend Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "donne moi l'évolution journalière des tickets de STELLANTIS",
+        "timestamp": "2025-07-01T16:04:58.072660",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 2 records across 2 columns\n\n• **date:** 2 unique values\n\n• **ticket_count:** Range 557.7K - 50.1M, Avg 25.4M\n\n• **Range:** From 2025-06-30 to 2025-07-01\n\n**⚡ Executed Query:**\n\n```sql\nSELECT toDate(RECORD_OPENING_TIME) AS date, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nWHERE CUSTOMER.NAME = 'STELLANTIS' AND RECORD_OPENING_TIME >= toDateTime(toDate(now() - INTERVAL 1 DAY)) AND RECORD_OPENING_TIME < toDateTime(toDate(now()))\nGROUP BY date\nORDER BY date\nLIMIT 100\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 8.29 seconds*",
+        "timestamp": "2025-07-01T16:05:06.419423",
+        "attachments": {
+          "csv": {
+            "filename": "query_donne_moi_lévolution_journaliè_20250701_160505.csv",
+            "path": "exports/query_donne_moi_lévolution_journaliè_20250701_160505.csv",
+            "size": "0.1 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_160506.html",
+            "path": "visualizations/chart_20250701_160506.html",
+            "size": "11.3 KB"
+          },
+          "table_data": {
+            "columns": [
+              "date",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "2025-06-30",
+                50148648
+              ],
+              [
+                "2025-07-01",
+                557699
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "role": "user",
+        "content": "donne moi l'évolution journalière des tickets de STELLANTIS de l'année 2025",
+        "timestamp": "2025-07-01T16:05:42.264446",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 25 records across 2 columns\n\n• **date:** 25 unique values\n\n• **ticket_count:** Range 3.7M - 55.9M, Avg 32.5M\n\n• **Range:** From 2025-06-01 to 2025-07-01\n\n**⚡ Executed Query:**\n\n```sql\nSELECT toDate(RECORD_OPENING_TIME) AS date, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nWHERE CUSTOMER.NAME = 'STELLANTIS' AND RECORD_OPENING_TIME >= toDateTime('2025-01-01 00:00:00') AND RECORD_OPENING_TIME < toDateTime('2026-01-01 00:00:00')\nGROUP BY date\nORDER BY date\nLIMIT 1000\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 22.86 seconds*",
+        "timestamp": "2025-07-01T16:06:05.254373",
+        "attachments": {
+          "csv": {
+            "filename": "query_donne_moi_lévolution_journaliè_20250701_160604.csv",
+            "path": "exports/query_donne_moi_lévolution_journaliè_20250701_160604.csv",
+            "size": "0.5 KB"
+          },
+          "chart": {
+            "filename": "chart_20250701_160605.html",
+            "path": "visualizations/chart_20250701_160605.html",
+            "size": "12.8 KB"
+          },
+          "table_data": {
+            "columns": [
+              "date",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "2025-06-01",
+                14058241
+              ],
+              [
+                "2025-06-02",
+                30442474
+              ],
+              [
+                "2025-06-03",
+                30961309
+              ],
+              [
+                "2025-06-04",
+                30944225
+              ],
+              [
+                "2025-06-05",
+                31265259
+              ],
+              [
+                "2025-06-06",
+                32094263
+              ],
+              [
+                "2025-06-07",
+                26478624
+              ],
+              [
+                "2025-06-08",
+                19463099
+              ],
+              [
+                "2025-06-09",
+                25235713
+              ],
+              [
+                "2025-06-10",
+                30655530
+              ],
+              [
+                "2025-06-11",
+                3699235
+              ],
+              [
+                "2025-06-18",
+                16290023
+              ],
+              [
+                "2025-06-19",
+                30464417
+              ],
+              [
+                "2025-06-20",
+                31313232
+              ],
+              [
+                "2025-06-21",
+                26249030
+              ],
+              [
+                "2025-06-22",
+                20291497
+              ],
+              [
+                "2025-06-23",
+                38934763
+              ],
+              [
+                "2025-06-24",
+                52262937
+              ],
+              [
+                "2025-06-25",
+                52792771
+              ],
+              [
+                "2025-06-26",
+                54294134
+              ],
+              [
+                "2025-06-27",
+                55926368
+              ],
+              [
+                "2025-06-28",
+                43097129
+              ],
+              [
+                "2025-06-29",
+                33225555
+              ],
+              [
+                "2025-06-30",
+                50720823
+              ],
+              [
+                "2025-07-01",
+                30834682
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-01T16:06:05.254500",
     "user": "wassime"
   }
 }
