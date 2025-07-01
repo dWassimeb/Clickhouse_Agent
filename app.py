@@ -708,16 +708,17 @@ class TelmiApp:
 
         cols = st.columns(len(download_items))
 
-        # SIMPLE: Create unique keys using current time and random number
+        # FIXED: Create unique keys using message index and timestamp
         import time
         import random
 
-        # Generate a simple unique identifier
-        unique_suffix = f"{int(time.time())}_{random.randint(1000, 9999)}"
+        # Get current message index from session state
+        current_message_index = len(st.session_state.current_messages) - 1
+        unique_suffix = f"{current_message_index}_{int(time.time() * 1000)}_{random.randint(1000, 9999)}"
 
         for i, (item_type, item_info) in enumerate(download_items):
             with cols[i]:
-                # Create a simple unique key
+                # Create a truly unique key
                 unique_key = f"{item_type}_download_{unique_suffix}_{i}"
 
                 if item_type == 'csv' and os.path.exists(item_info['path']):
@@ -898,32 +899,32 @@ class TelmiApp:
         # Common telecom analytics patterns
         if any(word in message_lower for word in ['top', 'ranking', 'best', 'highest']):
             if 'client' in message_lower or 'customer' in message_lower:
-                return "🏆 Top Clients Analysis"
+                return "Top Clients Analysis"
             elif 'usage' in message_lower or 'data' in message_lower:
-                return "📊 Top Data Usage"
+                return "Top Data Usage"
             else:
-                return "🥇 Ranking Analysis"
+                return "Ranking Analysis"
 
         elif any(word in message_lower for word in ['evolution', 'trend', 'time', 'journalière', 'daily']):
-            return "📈 Time Trend Analysis"
+            return "Time Trend Analysis"
 
         elif any(word in message_lower for word in ['ticket', 'tickets']):
             if 'between' in message_lower or 'entre' in message_lower:
-                return "🎫 Ticket Time Analysis"
+                return "Ticket Time Analysis"
             else:
-                return "🎫 Ticket Analysis"
+                return "Ticket Analysis"
 
         elif any(word in message_lower for word in ['country', 'pays', 'geographic']):
-            return "🌍 Geographic Analysis"
+            return "Geographic Analysis"
 
         elif any(word in message_lower for word in ['distribution', 'répartition', 'breakdown']):
-            return "📊 Distribution Analysis"
+            return "Distribution Analysis"
 
         elif any(word in message_lower for word in ['chart', 'pie', 'graph', 'graphique']):
-            return "📈 Chart Request"
+            return "Chart Request"
 
         elif any(word in message_lower for word in ['table', 'schema', 'structure']):
-            return "🗂️ Schema Query"
+            return "Schema Query"
 
         # Fallback: Use first few words with smart truncation
         words = first_user_message.split()

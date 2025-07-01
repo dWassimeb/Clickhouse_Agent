@@ -156,7 +156,7 @@ class SidebarManager:
         with col1:
             # Simple title truncation
             display_title = self._truncate_title(title, 30)
-            button_text = f"📝 {display_title}"
+            button_text = f"{display_title}"
 
             if st.button(
                 button_text,

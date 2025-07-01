@@ -1608,94 +1608,94 @@ class ModernVisualizationTool(BaseTool):
     def _inject_callback_functions(self, config_json: str, chart_type: str) -> str:
         """Inject JavaScript callback functions into the JSON configuration."""
 
-        # Inject number formatting callback for tick labels (only for charts with scales)
-        if chart_type in ['bar', 'horizontal_bar', 'line', 'area']:
-            if chart_type == 'horizontal_bar':
-                # X-axis gets the number formatting for horizontal bars
-                config_json = config_json.replace(
-                    '"x": {\n        "beginAtZero": true,\n        "grid": {\n          "color": "#f1f5f9",\n          "lineWidth": 1\n        },\n        "ticks": {\n          "color": "#718096",\n          "font": {\n            "size": 11,\n            "family": "Inter"\n          }\n        }',
-                    '''      "x": {
-            "beginAtZero": true,
-            "grid": {
-              "color": "#f1f5f9",
-              "lineWidth": 1
-            },
-            "ticks": {
-              "color": "#718096",
-              "font": {
-                "size": 11,
-                "family": "Inter"
-              },
-              "callback": function(value) {
-                if (Math.abs(value) >= 1000000) {
-                  return (value / 1000000).toFixed(1) + "M";
-                } else if (Math.abs(value) >= 1000) {
-                  return (value / 1000).toFixed(1) + "K";
-                } else {
-                  return value.toLocaleString();
-                }
-              }
-            }'''
-                )
-            else:
-                # Y-axis gets the number formatting for vertical charts
-                config_json = config_json.replace(
-                    '"y": {\n        "beginAtZero": true,\n        "grid": {\n          "color": "#f1f5f9",\n          "lineWidth": 1\n        },\n        "ticks": {\n          "color": "#718096",\n          "font": {\n            "size": 11,\n            "family": "Inter"\n          }\n        }',
-                    '''      "y": {
-            "beginAtZero": true,
-            "grid": {
-              "color": "#f1f5f9",
-              "lineWidth": 1
-            },
-            "ticks": {
-              "color": "#718096",
-              "font": {
-                "size": 11,
-                "family": "Inter"
-              },
-              "callback": function(value) {
-                if (Math.abs(value) >= 1000000) {
-                  return (value / 1000000).toFixed(1) + "M";
-                } else if (Math.abs(value) >= 1000) {
-                  return (value / 1000).toFixed(1) + "K";
-                } else {
-                  return value.toLocaleString();
-                }
-              }
-            }'''
-                )
-
-        # Inject tooltip callbacks based on chart type
+        # Simple tooltip callbacks that work reliably
         if chart_type in ['pie', 'doughnut']:
             config_json = config_json.replace(
-                '"tooltip": {',
-                '''        "tooltip": {
-                "callbacks": {
-                    "label": function(context) {
-                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                        const percentage = ((context.parsed / total) * 100).toFixed(1);
-                        return context.label + ": " + context.parsed.toLocaleString() + " (" + percentage + "%)";
-                    }
-                },'''
+                '"label": "PLACEHOLDER_PIE_CALLBACK"',
+                '''function(context) {
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                    return context.label + ": " + context.parsed.toLocaleString() + " (" + percentage + "%)";
+                  }'''
+            )
+        elif chart_type in ['scatter', 'bubble']:
+            config_json = config_json.replace(
+                '"label": "PLACEHOLDER_SCATTER_CALLBACK"',
+                '''function(context) {
+                    return context.dataset.label + ": (" + context.parsed.x + ", " + context.parsed.y + ")";
+                  }'''
             )
         else:
             config_json = config_json.replace(
-                '"tooltip": {',
-                '''        "tooltip": {
-                "callbacks": {
-                    "label": function(context) {
-                        const value = context.parsed.y || context.parsed.x;
-                        let formatted;
-                        if (Math.abs(value) >= 1000000) {
-                            formatted = (value / 1000000).toFixed(2) + "M";
-                        } else if (Math.abs(value) >= 1000) {
-                            formatted = (value / 1000).toFixed(2) + "K";
-                        } else {
-                            formatted = value.toLocaleString();
-                        }
-                        return context.dataset.label + ": " + formatted;
+                '"label": "PLACEHOLDER_DEFAULT_CALLBACK"',
+                '''function(context) {
+                    const value = context.parsed.y || context.parsed.x;
+                    let formatted;
+                    if (Math.abs(value) >= 1000000) {
+                      formatted = (value / 1000000).toFixed(2) + "M";
+                    } else if (Math.abs(value) >= 1000) {
+                      formatted = (value / 1000).toFixed(2) + "K";
+                    } else {
+                      formatted = value.toLocaleString();
                     }
-                },'''
+                    return context.dataset.label + ": " + formatted;
+                  }'''
+            )
+
+        # Simple axis formatting (only for scales that exist)
+        if chart_type in ['bar', 'line', 'area']:
+            # Y-axis formatting for vertical charts
+            config_json = config_json.replace(
+                '"y": {\n        "beginAtZero": true,\n        "grid": {\n          "color": "#f1f5f9",\n          "lineWidth": 1\n        },\n        "ticks": {\n          "color": "#718096",\n          "font": {\n            "size": 11,\n            "family": "Inter"\n          }\n        }',
+                '''      "y": {
+                "beginAtZero": true,
+                "grid": {
+                  "color": "#f1f5f9",
+                  "lineWidth": 1
+                },
+                "ticks": {
+                  "color": "#718096",
+                  "font": {
+                    "size": 11,
+                    "family": "Inter"
+                  },
+                  "callback": function(value) {
+                    if (Math.abs(value) >= 1000000) {
+                      return (value / 1000000).toFixed(1) + "M";
+                    } else if (Math.abs(value) >= 1000) {
+                      return (value / 1000).toFixed(1) + "K";
+                    } else {
+                      return value.toLocaleString();
+                    }
+                  }
+                }'''
+            )
+        elif chart_type == 'horizontal_bar':
+            # X-axis formatting for horizontal bars
+            config_json = config_json.replace(
+                '"x": {\n        "beginAtZero": true,\n        "grid": {\n          "color": "#f1f5f9",\n          "lineWidth": 1\n        },\n        "ticks": {\n          "color": "#718096",\n          "font": {\n            "size": 11,\n            "family": "Inter"\n          }\n        }',
+                '''      "x": {
+                "beginAtZero": true,
+                "grid": {
+                  "color": "#f1f5f9",
+                  "lineWidth": 1
+                },
+                "ticks": {
+                  "color": "#718096",
+                  "font": {
+                    "size": 11,
+                    "family": "Inter"
+                  },
+                  "callback": function(value) {
+                    if (Math.abs(value) >= 1000000) {
+                      return (value / 1000000).toFixed(1) + "M";
+                    } else if (Math.abs(value) >= 1000) {
+                      return (value / 1000).toFixed(1) + "K";
+                    } else {
+                      return value.toLocaleString();
+                    }
+                  }
+                }'''
             )
 
         return config_json
@@ -1714,23 +1714,11 @@ class ModernVisualizationTool(BaseTool):
             'displayColors': True,
             'titleFont': {'size': 13, 'family': 'Inter', 'weight': '500'},
             'bodyFont': {'size': 12, 'family': 'Inter', 'weight': '400'},
-            'padding': 12
+            'padding': 12,
+            'callbacks': {
+                'label': f'PLACEHOLDER_{chart_type.upper()}_CALLBACK' if chart_type in ['pie', 'doughnut', 'scatter', 'bubble'] else 'PLACEHOLDER_DEFAULT_CALLBACK'
+            }
         }
-
-        # Chart-specific tooltip customizations
-        if chart_type in ['pie', 'doughnut']:
-            base_tooltip['displayColors'] = False
-            base_tooltip['callbacks'] = {
-                'label': 'PLACEHOLDER_PIE_CALLBACK'
-            }
-        elif chart_type in ['scatter', 'bubble']:
-            base_tooltip['callbacks'] = {
-                'label': 'PLACEHOLDER_SCATTER_CALLBACK'
-            }
-        else:
-            base_tooltip['callbacks'] = {
-                'label': 'PLACEHOLDER_DEFAULT_CALLBACK'
-            }
 
         return base_tooltip
 

@@ -1,290 +1,158 @@
 {
-  "test_session": {
-    "title": "Test Session",
+  "342d117d-e8d7-4c5e-8947-855398c0f599": {
+    "title": "Top Clients Analysis",
     "messages": [
       {
         "role": "user",
-        "content": "test message",
-        "timestamp": "2025-06-29T15:51:15.073793"
-      }
-    ],
-    "timestamp": "2025-06-29T15:51:15.073873",
-    "user": "test_user"
-  },
-  "80c5e8e8-fd31-4e8f-a9ef-4bc13abc3b97": {
-    "title": "\ud83d\udcc8 Trend Analysis",
-    "messages": [
-      {
-        "role": "user",
-        "content": "l'evolution journaliere des ticket de STELLANTIS de l'annee 2025",
-        "timestamp": "2025-07-01T16:58:17.017364",
+        "content": "give me 10 top clients by number of tickets sales",
+        "timestamp": "2025-07-01T21:52:56.006444",
         "attachments": {}
       },
       {
         "role": "agent",
-        "content": "**\ud83d\udcca Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**\ud83d\udd0d Key Insights:**\n\n\u2022 **Dataset Size:** 25 records across 2 columns\n\n\u2022 **date:** 25 unique values\n\n\u2022 **ticket_count:** Range 682.7K - 8.7M, Avg 5.2M\n\n\u2022 **Range:** From 2025-06-01 to 2025-07-01\n\n**\u26a1 Executed Query:**\n\n```sql\nSELECT toDate(RECORD_OPENING_TIME) as date, COUNT(*) as ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nJOIN PLMN ON RM_AGGREGATED_DATA.PLMN = PLMN.PLMN\nJOIN CELL ON RM_AGGREGATED_DATA.CELL_ID = CELL.CELL_ID\nWHERE CUSTOMER.NAME = 'STELLANTIS' AND RECORD_OPENING_TIME >= toDateTime('2025-01-01 00:00:00') AND RECORD_OPENING_TIME < toDateTime('2026-01-01 00:00:00')\nGROUP BY date\nORDER BY date ASC\nLIMIT 100\n```\n\n**\ud83d\udcc8 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**\ud83d\udcc1 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*\u23f1\ufe0f Processed in 75.10 seconds*",
-        "timestamp": "2025-07-01T16:59:32.179288",
+        "content": "**\ud83d\udcca Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**\ud83d\udd0d Key Insights:**\n\n\u2022 **Dataset Size:** 10 records across 2 columns\n\n\u2022 **NAME:** 10 unique values\n\n\u2022 **ticket_count:** Range 47.2M - 818.2M, Avg 224.7M\n\n\u2022 **Range:** From STELLANTIS to YUNEX TRAFFIC AUSTRIA GMBH\n\n**\u26a1 Executed Query:**\n\n```sql\nSELECT CUSTOMER.NAME, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 10\n```\n\n**\ud83d\udcc8 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**\ud83d\udcc1 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*\u23f1\ufe0f Processed in 27.74 seconds*",
+        "timestamp": "2025-07-01T21:53:23.834826",
         "attachments": {
           "csv": {
-            "filename": "query_levolution_journaliere_des_tic_20250701_165930.csv",
-            "path": "exports/query_levolution_journaliere_des_tic_20250701_165930.csv",
-            "size": "0.5 KB"
+            "filename": "query_give_me_10_top_clients_by_numb_20250701_215322.csv",
+            "path": "exports/query_give_me_10_top_clients_by_numb_20250701_215322.csv",
+            "size": "0.3 KB"
           },
           "chart": {
-            "filename": "chart_20250701_165932.html",
-            "path": "visualizations/chart_20250701_165932.html",
-            "size": "12.8 KB"
+            "filename": "chart_20250701_215323.html",
+            "path": "visualizations/chart_20250701_215323.html",
+            "size": "10.9 KB"
           },
           "table_data": {
             "columns": [
-              "date",
+              "NAME",
               "ticket_count"
             ],
             "data": [
               [
-                "2025-06-01",
-                1394115
+                "STELLANTIS",
+                818161129
               ],
               [
-                "2025-06-02",
-                5148518
+                "ERDF-LINKY-PROD",
+                528733741
               ],
               [
-                "2025-06-03",
-                5195978
+                "VERISURE SAS",
+                259770180
               ],
               [
-                "2025-06-04",
-                5036872
+                "EURO INFORMATION / EPS",
+                160427135
               ],
               [
-                "2025-06-05",
-                5226938
+                "VOLTALIS",
+                158018581
               ],
               [
-                "2025-06-06",
-                5520847
+                "ARVAL",
+                109243778
               ],
               [
-                "2025-06-07",
-                4692952
+                "WSF_FIXE",
+                61016096
               ],
               [
-                "2025-06-08",
-                3342544
+                "TRANSICS FRANCE",
+                52757867
               ],
               [
-                "2025-06-09",
-                3771057
+                "LYRA NETWORK",
+                52058986
               ],
               [
-                "2025-06-10",
-                5258412
-              ],
-              [
-                "2025-06-11",
-                682720
-              ],
-              [
-                "2025-06-18",
-                2561462
-              ],
-              [
-                "2025-06-19",
-                5342278
-              ],
-              [
-                "2025-06-20",
-                5410779
-              ],
-              [
-                "2025-06-21",
-                4659973
-              ],
-              [
-                "2025-06-22",
-                3472768
-              ],
-              [
-                "2025-06-23",
-                6094373
-              ],
-              [
-                "2025-06-24",
-                7935152
-              ],
-              [
-                "2025-06-25",
-                7829962
-              ],
-              [
-                "2025-06-26",
-                8240393
-              ],
-              [
-                "2025-06-27",
-                8654313
-              ],
-              [
-                "2025-06-28",
-                6945415
-              ],
-              [
-                "2025-06-29",
-                5151252
-              ],
-              [
-                "2025-06-30",
-                7453100
-              ],
-              [
-                "2025-07-01",
-                5131442
+                "YUNEX TRAFFIC AUSTRIA GMBH",
+                47168651
               ]
             ]
           }
         }
       }
     ],
-    "timestamp": "2025-07-01T17:00:29.891954",
+    "timestamp": "2025-07-01T21:53:23.835553",
     "user": "wassime"
   },
-  "c35366ac-0ca2-478e-abf4-26ea437759cd": {
-    "title": "Nhkjhk",
+  "bfb4a4d8-0995-4528-addc-3c445935affa": {
+    "title": "Top Clients Analysis",
     "messages": [
       {
         "role": "user",
-        "content": "nhkjhk",
-        "timestamp": "2025-07-01T17:00:42.834154",
+        "content": "give top 10 clients by number of tickets",
+        "timestamp": "2025-07-01T21:56:08.418177",
         "attachments": {}
       },
       {
         "role": "agent",
-        "content": "\n**\ud83d\udd2e Telmi - Your Telecom Analytics Assistant**\n\n**What can I help you with?**\n\n\u2022 **\ud83d\udcca Data Analysis:** Ask questions about your telecom data in natural language\n\u2022 **\ud83c\udfc6 Top Rankings:** \"Show me the top 10 customers by data usage\"\n\u2022 **\ud83c\udf0d Geographic Analysis:** \"What's the distribution of users by country?\"\n\u2022 **\u23f0 Time-based Queries:** \"How much data was used last month?\"\n\u2022 **\ud83d\udcc8 Custom Reports:** \"Generate a summary of device activity\"\n\n**\u2728 Features:**\n\u2022 **Automatic CSV exports** for all query results\n\u2022 **Interactive visualizations** with professional charts\n\u2022 **Smart SQL generation** from your questions\n\u2022 **Mobile-friendly** interface and charts\n\n**\ud83d\udca1 Example Questions:**\n\u2022 \"Who are our top 20 customers by ticket count?\"\n\u2022 \"Show data usage by country this week\"\n\u2022 \"What devices are most active?\"\n\u2022 \"List all available tables\"\n\n**\ud83d\ude80 Just ask your question in natural language, and I'll analyze your data!**\n        \n\n*\u23f1\ufe0f Processed in 1.29 seconds*",
-        "timestamp": "2025-07-01T17:00:44.205360",
+        "content": "**\ud83d\udcca Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**\ud83d\udd0d Key Insights:**\n\n\u2022 **Dataset Size:** 10 records across 2 columns\n\n\u2022 **customer_name:** 10 unique values\n\n\u2022 **ticket_count:** Range 47.2M - 818.3M, Avg 224.8M\n\n\u2022 **Range:** From STELLANTIS to YUNEX TRAFFIC AUSTRIA GMBH\n\n**\u26a1 Executed Query:**\n\n```sql\nSELECT c.NAME AS customer_name, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA r\nJOIN CUSTOMER c ON r.PARTY_ID = c.PARTY_ID\nGROUP BY c.NAME\nORDER BY ticket_count DESC\nLIMIT 10\n```\n\n**\ud83d\udcc8 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**\ud83d\udcc1 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*\u23f1\ufe0f Processed in 22.69 seconds*",
+        "timestamp": "2025-07-01T21:56:31.163654",
         "attachments": {
           "csv": {
-            "filename": "query_levolution_journaliere_des_tic_20250701_165930.csv",
-            "path": "exports/query_levolution_journaliere_des_tic_20250701_165930.csv",
-            "size": "0.5 KB"
+            "filename": "query_give_top_10_clients_by_number__20250701_215629.csv",
+            "path": "exports/query_give_top_10_clients_by_number__20250701_215629.csv",
+            "size": "0.3 KB"
           },
           "chart": {
-            "filename": "chart_20250701_165932.html",
-            "path": "visualizations/chart_20250701_165932.html",
-            "size": "12.8 KB"
+            "filename": "chart_20250701_215631.html",
+            "path": "visualizations/chart_20250701_215631.html",
+            "size": "11.4 KB"
           },
           "table_data": {
             "columns": [
-              "date",
+              "customer_name",
               "ticket_count"
             ],
             "data": [
               [
-                "2025-06-01",
-                1394115
+                "STELLANTIS",
+                818269837
               ],
               [
-                "2025-06-02",
-                5148518
+                "ERDF-LINKY-PROD",
+                528797768
               ],
               [
-                "2025-06-03",
-                5195978
+                "VERISURE SAS",
+                259803860
               ],
               [
-                "2025-06-04",
-                5036872
+                "EURO INFORMATION / EPS",
+                160451448
               ],
               [
-                "2025-06-05",
-                5226938
+                "VOLTALIS",
+                158036023
               ],
               [
-                "2025-06-06",
-                5520847
+                "ARVAL",
+                109258903
               ],
               [
-                "2025-06-07",
-                4692952
+                "WSF_FIXE",
+                61024124
               ],
               [
-                "2025-06-08",
-                3342544
+                "TRANSICS FRANCE",
+                52764821
               ],
               [
-                "2025-06-09",
-                3771057
+                "LYRA NETWORK",
+                52066070
               ],
               [
-                "2025-06-10",
-                5258412
-              ],
-              [
-                "2025-06-11",
-                682720
-              ],
-              [
-                "2025-06-18",
-                2561462
-              ],
-              [
-                "2025-06-19",
-                5342278
-              ],
-              [
-                "2025-06-20",
-                5410779
-              ],
-              [
-                "2025-06-21",
-                4659973
-              ],
-              [
-                "2025-06-22",
-                3472768
-              ],
-              [
-                "2025-06-23",
-                6094373
-              ],
-              [
-                "2025-06-24",
-                7935152
-              ],
-              [
-                "2025-06-25",
-                7829962
-              ],
-              [
-                "2025-06-26",
-                8240393
-              ],
-              [
-                "2025-06-27",
-                8654313
-              ],
-              [
-                "2025-06-28",
-                6945415
-              ],
-              [
-                "2025-06-29",
-                5151252
-              ],
-              [
-                "2025-06-30",
-                7453100
-              ],
-              [
-                "2025-07-01",
-                5131442
+                "YUNEX TRAFFIC AUSTRIA GMBH",
+                47175450
               ]
             ]
           }
         }
       }
     ],
-    "timestamp": "2025-07-01T17:00:54.096657",
+    "timestamp": "2025-07-01T21:56:31.164047",
     "user": "wassime"
   }
 }
