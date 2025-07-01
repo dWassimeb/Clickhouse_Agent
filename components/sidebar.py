@@ -1,9 +1,9 @@
 """
-IMPROVED Sidebar Manager for Telmi - Better styling and UX improvements
-- Bold, bigger section headers
-- Chat history closed by default
-- Left-aligned stats with better emoji
-- Intelligent session titles
+FIXED Sidebar Manager for Telmi - Permanent Delete & Optimized Performance
+- Fixed caching issues causing deleted conversations to reappear
+- Permanent deletion with proper file sync
+- Fast performance with smart caching
+- No UI blocking or success messages
 """
 
 import streamlit as st
@@ -15,28 +15,31 @@ from typing import Dict, Any, List
 from components.auth import AuthManager
 
 class SidebarManager:
-    """Manages the sidebar interface with improved styling and UX."""
+    """Manages the sidebar interface with permanent deletion and optimized performance."""
 
     def __init__(self):
         self.auth_manager = AuthManager()
         self.sessions_file = "data/chat_sessions.json"
         self._ensure_data_directory()
+        # FIXED: Cache conversations to avoid repeated file reads
+        self._conversations_cache = None
+        self._cache_timestamp = None
 
     def _ensure_data_directory(self):
         """Ensure the data directory exists."""
         os.makedirs("data", exist_ok=True)
 
     def render_sidebar(self):
-        """Render the complete sidebar interface with improved styling."""
+        """Render the complete sidebar interface with optimized performance."""
         with st.sidebar:
             # Header
             self._render_sidebar_header()
 
-            # IMPROVED: Section headers with better styling
+            # Section headers styling
             self._add_section_header_styling()
 
-            # Section 1: Chat History (CLOSED BY DEFAULT)
-            self._render_chat_history_section()
+            # Section 1: Chat History (FIXED VERSION)
+            self._render_fast_chat_history_section()
 
             # Section 2: System Status
             self._render_system_status_section()
@@ -44,14 +47,14 @@ class SidebarManager:
             # Section 3: Account Settings
             self._render_account_settings_section()
 
-            # Footer with IMPROVED stats styling
+            # Footer with stats
             self._render_sidebar_footer()
 
     def _add_section_header_styling(self):
         """Add CSS for better section header styling."""
         st.markdown("""
             <style>
-            /* IMPROVED: Make section headers more prominent */
+            /* FIXED: Make section headers more prominent */
             .streamlit-expanderHeader {
                 font-weight: 600 !important;
                 font-size: 16px !important;
@@ -75,14 +78,14 @@ class SidebarManager:
                 margin-bottom: 8px !important;
             }
             
-            /* IMPROVED: Stats container - left aligned */
+            /* FIXED: Stats container - left aligned */
             .sidebar-stats-improved {
                 background: #f8fafc !important;
                 border: 1px solid #e2e8f0 !important;
                 border-radius: 8px !important;
                 padding: 12px !important;
                 margin: 8px 0 !important;
-                text-align: left !important;  /* LEFT ALIGNED */
+                text-align: left !important;
             }
             
             .stats-text-improved {
@@ -103,9 +106,8 @@ class SidebarManager:
             </div>
         """, unsafe_allow_html=True)
 
-    def _render_chat_history_section(self):
-        """Render the chat history section - CLOSED BY DEFAULT."""
-        # IMPROVED: Use expanded=False to start closed
+    def _render_fast_chat_history_section(self):
+        """FIXED: Render chat history with fast loading and permanent deletion."""
         with st.expander("💬 Chat History", expanded=False):
             # New chat button at the top
             if st.button("➕ New Chat", use_container_width=True, key="new_chat_btn"):
@@ -113,22 +115,295 @@ class SidebarManager:
 
             st.markdown("---")
 
-            # Load and display sessions
-            sessions = self._load_user_sessions()
+            # FIXED: Load conversations with proper caching
+            conversations = self._load_conversations_cached()
 
-            if not sessions:
+            if not conversations:
                 st.markdown("*No chat history yet*")
                 st.caption("Start a conversation to see your chat history here!")
             else:
-                # Sort sessions by timestamp (newest first)
-                sorted_sessions = sorted(
-                    sessions.items(),
+                # Sort conversations by timestamp (newest first)
+                sorted_conversations = sorted(
+                    conversations.items(),
                     key=lambda x: x[1].get('timestamp', ''),
                     reverse=True
                 )
 
-                for session_id, session_data in sorted_sessions:
-                    self._render_session_item(session_id, session_data)
+                for conversation_id, conversation_data in sorted_conversations:
+                    self._render_fast_conversation_item(conversation_id, conversation_data)
+
+    def _render_fast_conversation_item(self, conversation_id: str, conversation_data: Dict[str, Any]):
+        """FIXED: Render conversation item with instant delete."""
+
+        # Get conversation metadata
+        title = conversation_data.get('title', 'Untitled Chat')
+        timestamp = conversation_data.get('timestamp', '')
+        message_count = len(conversation_data.get('messages', []))
+
+        # Simple timestamp formatting
+        try:
+            dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+            time_str = dt.strftime("%m/%d %H:%M")
+        except:
+            time_str = "Unknown"
+
+        # Check if this is the current conversation
+        is_current = conversation_id == st.session_state.current_session_id
+
+        # Layout
+        col1, col2 = st.columns([4, 1])
+
+        with col1:
+            # Simple title truncation
+            display_title = self._truncate_title(title, 30)
+            button_text = f"📝 {display_title}"
+
+            if st.button(
+                button_text,
+                key=f"load_conv_{conversation_id}",
+                help=f"{message_count} messages • {time_str}",
+                use_container_width=True,
+                disabled=is_current
+            ):
+                self._load_conversation_fast(conversation_id)
+
+        with col2:
+            # FIXED: Instant permanent delete
+            if st.button("🗑️", key=f"delete_conv_{conversation_id}", help="Delete"):
+                self._instant_delete_conversation(conversation_id)
+
+        # Show metadata
+        st.caption(f"💬 {message_count} • ⏰ {time_str}")
+
+    def _truncate_title(self, title: str, max_length: int) -> str:
+        """Truncate title with ellipsis if too long."""
+        if len(title) <= max_length:
+            return title
+        return title[:max_length-3] + "..."
+
+    def _load_conversations_cached(self) -> Dict[str, Any]:
+        """FIXED: Load conversations with proper cache invalidation and permanent deletion support."""
+        if not st.session_state.user_info:
+            return {}
+
+        username = st.session_state.user_info['username']
+
+        try:
+            # FIXED: Always check file existence and read fresh data after deletions
+            if not os.path.exists(self.sessions_file):
+                # File doesn't exist, clear cache and return empty
+                self._conversations_cache = None
+                self._cache_timestamp = None
+                return {}
+
+            file_mtime = os.path.getmtime(self.sessions_file)
+
+            # FIXED: Force reload if cache is None or file is newer
+            if (self._conversations_cache is None or
+                self._cache_timestamp is None or
+                file_mtime > self._cache_timestamp):
+
+                # Read fresh data from file
+                with open(self.sessions_file, 'r') as f:
+                    content = f.read().strip()
+                    if not content:
+                        # Empty file, clear cache
+                        self._conversations_cache = {username: {}}
+                        self._cache_timestamp = file_mtime
+                        return {}
+
+                    all_sessions = json.loads(content)
+
+                # Filter sessions for current user only
+                user_conversations = {
+                    session_id: session_data
+                    for session_id, session_data in all_sessions.items()
+                    if session_data.get('user') == username
+                }
+
+                # Update cache with fresh data
+                self._conversations_cache = {username: user_conversations}
+                self._cache_timestamp = file_mtime
+
+                return user_conversations
+
+            # Return cached data if it's still valid
+            return self._conversations_cache.get(username, {})
+
+        except (json.JSONDecodeError, FileNotFoundError, OSError):
+            # On any error, clear cache and return empty
+            self._conversations_cache = None
+            self._cache_timestamp = None
+            return {}
+
+    def _start_new_chat(self):
+        """FIXED: Start new chat with cache refresh."""
+        # Save current session first if it has messages
+        if st.session_state.current_messages:
+            if not st.session_state.current_session_id:
+                st.session_state.current_session_id = str(uuid.uuid4())
+            self._save_current_session_fast()
+
+        # Reset for new chat
+        st.session_state.current_session_id = None
+        st.session_state.current_messages = []
+
+        # FIXED: Force cache refresh when starting new chat
+        self._conversations_cache = None
+        self._cache_timestamp = None
+
+        st.rerun()
+
+    def _load_conversation_fast(self, conversation_id: str):
+        """FIXED: Load a conversation quickly."""
+        # Save current session first if it has messages
+        if st.session_state.current_messages and st.session_state.current_session_id:
+            self._save_current_session_fast()
+
+        # Load the conversation data
+        conversations = self._load_conversations_cached()
+        if conversation_id in conversations:
+            conversation_data = conversations[conversation_id]
+            st.session_state.current_session_id = conversation_id
+            st.session_state.current_messages = conversation_data.get('messages', [])
+            st.rerun()
+
+    def _instant_delete_conversation(self, conversation_id: str):
+        """FIXED: Permanent delete with proper cache and file handling."""
+        try:
+            # STEP 1: Immediately clear cache to force fresh read
+            self._conversations_cache = None
+            self._cache_timestamp = None
+
+            # STEP 2: Update session state if deleting current conversation
+            if conversation_id == st.session_state.current_session_id:
+                st.session_state.current_session_id = None
+                st.session_state.current_messages = []
+
+            # STEP 3: Permanent file deletion
+            if os.path.exists(self.sessions_file):
+                # Read current file
+                with open(self.sessions_file, 'r') as f:
+                    content = f.read().strip()
+
+                if content:
+                    all_sessions = json.loads(content)
+
+                    # Remove the conversation permanently
+                    if conversation_id in all_sessions:
+                        del all_sessions[conversation_id]
+
+                        # Write back to file immediately
+                        with open(self.sessions_file, 'w') as f:
+                            json.dump(all_sessions, f, indent=2)
+                            f.flush()
+                            # FIXED: Force file system sync
+                            if hasattr(os, 'fsync'):
+                                os.fsync(f.fileno())
+
+            # STEP 4: Clear any potential session state caches
+            if hasattr(st.session_state, 'chat_sessions'):
+                if conversation_id in st.session_state.chat_sessions:
+                    del st.session_state.chat_sessions[conversation_id]
+
+            # STEP 5: Immediate rerun to refresh UI
+            st.rerun()
+
+        except Exception as e:
+            # FIXED: Clear cache even on error and rerun
+            self._conversations_cache = None
+            self._cache_timestamp = None
+            st.rerun()
+
+    def _save_current_session_fast(self):
+        """FIXED: Save current session with proper cache invalidation."""
+        if not st.session_state.current_messages or not st.session_state.user_info:
+            return
+
+        if not st.session_state.current_session_id:
+            st.session_state.current_session_id = str(uuid.uuid4())
+
+        # Generate simple title
+        first_user_message = next(
+            (msg['content'] for msg in st.session_state.current_messages if msg['role'] == 'user'),
+            'New Chat'
+        )
+
+        simple_title = self._create_simple_title(first_user_message)
+
+        session_data = {
+            'title': simple_title,
+            'messages': st.session_state.current_messages,
+            'timestamp': datetime.now().isoformat(),
+            'user': st.session_state.user_info['username']
+        }
+
+        try:
+            # FIXED: Clear cache before file operations
+            self._conversations_cache = None
+            self._cache_timestamp = None
+
+            # Load existing sessions
+            all_sessions = {}
+            if os.path.exists(self.sessions_file):
+                with open(self.sessions_file, 'r') as f:
+                    content = f.read().strip()
+                    if content:
+                        all_sessions = json.loads(content)
+
+            # Add/update this session
+            all_sessions[st.session_state.current_session_id] = session_data
+
+            # Save to file with forced sync
+            with open(self.sessions_file, 'w') as f:
+                json.dump(all_sessions, f, indent=2)
+                f.flush()
+                if hasattr(os, 'fsync'):
+                    os.fsync(f.fileno())
+
+            # FIXED: Update app.py session state as well (if it exists)
+            if hasattr(st.session_state, 'chat_sessions'):
+                st.session_state.chat_sessions[st.session_state.current_session_id] = session_data
+
+        except Exception:
+            # On error, ensure cache is cleared
+            self._conversations_cache = None
+            self._cache_timestamp = None
+
+    def _create_simple_title(self, first_question: str) -> str:
+        """FIXED: Create simple title without LLM calls."""
+        question_lower = first_question.lower()
+
+        # Fast pattern matching
+        if any(word in question_lower for word in ['top', 'ranking', 'best']):
+            if 'client' in question_lower or 'customer' in question_lower:
+                return "🏆 Top Clients Analysis"
+            return "🥇 Ranking Analysis"
+
+        elif any(word in question_lower for word in ['evolution', 'trend', 'daily']):
+            return "📈 Trend Analysis"
+
+        elif 'ticket' in question_lower:
+            return "🎫 Ticket Analysis"
+
+        elif any(word in question_lower for word in ['country', 'pays', 'geographic']):
+            return "🌍 Geographic Analysis"
+
+        elif any(word in question_lower for word in ['distribution', 'répartition']):
+            return "📊 Distribution Analysis"
+
+        elif any(word in question_lower for word in ['table', 'schema']):
+            return "🗂️ Schema Query"
+
+        else:
+            # Simple word extraction
+            words = first_question.split()[:4]
+            meaningful_words = [w for w in words if len(w) > 2]
+            if meaningful_words:
+                title = ' '.join(meaningful_words[:3])
+                return title.title()
+            else:
+                return "💬 Chat Session"
 
     def _render_system_status_section(self):
         """Render the system status section."""
@@ -166,7 +441,7 @@ class SidebarManager:
                         st.session_state.agent_status = status
                         st.rerun()
                 except ImportError:
-                    st.error("❌ Integration module not found. Please ensure integration/agent_bridge.py exists.")
+                    st.error("❌ Integration module not found.")
                 except Exception as e:
                     st.error(f"❌ Status check failed: {e}")
 
@@ -205,7 +480,6 @@ class SidebarManager:
                     if old_password and new_password:
                         if self.auth_manager.change_password(username, old_password, new_password):
                             st.success("✅ Password changed successfully!")
-                            # Clear password fields
                             st.session_state.sidebar_old_password = ""
                             st.session_state.sidebar_new_password = ""
                             st.rerun()
@@ -219,12 +493,10 @@ class SidebarManager:
                 # Account Actions Section
                 st.markdown("**⚙️ Account Actions:**")
 
-                # Delete Account button FIRST
                 if st.button("🗑️ Delete Account", key="delete_account_sidebar", use_container_width=True, type="secondary"):
                     st.session_state.show_delete_confirmation = True
                     st.rerun()
 
-                # Logout button SECOND
                 if st.button("🚪 Logout", key="logout_sidebar", use_container_width=True):
                     self._logout()
 
@@ -239,9 +511,6 @@ class SidebarManager:
                     • Your user account and profile
                     • All chat history and conversations
                     • All saved preferences and settings
-                    • All exported files and data
-                    
-                    Are you sure you want to proceed?
                     """)
 
                     col1, col2 = st.columns(2)
@@ -255,130 +524,27 @@ class SidebarManager:
                             self._delete_user_account(username)
 
         else:
-            # No user logged in
             with st.expander("👤 Account Settings", expanded=False):
                 st.info("⚠️ Please log in to access account settings")
-
-    def _render_session_item(self, session_id: str, session_data: Dict[str, Any]):
-        """Render a single chat session item with IMPROVED titles."""
-        title = session_data.get('title', 'Untitled Chat')
-        timestamp = session_data.get('timestamp', '')
-        message_count = len(session_data.get('messages', []))
-
-        # Format timestamp
-        try:
-            dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-            time_str = dt.strftime("%m/%d %H:%M")
-        except:
-            time_str = "Unknown"
-
-        # Session container
-        is_current = session_id == st.session_state.current_session_id
-
-        col1, col2 = st.columns([4, 1])
-
-        with col1:
-            # IMPROVED: Show smarter title truncation
-            display_title = title if len(title) <= 30 else title[:27] + "..."
-
-            if st.button(
-                    f"📝 {display_title}",
-                    key=f"session_{session_id}",
-                    help=f"{message_count} messages • {time_str}",
-                    use_container_width=True,
-                    disabled=is_current
-            ):
-                self._load_chat_session(session_id)
-
-        with col2:
-            if st.button("🗑️", key=f"delete_{session_id}", help="Delete chat"):
-                self._delete_chat_session(session_id)
-
-    def _start_new_chat(self):
-        """Start a new chat session properly."""
-        # Save current session first if it has messages
-        if st.session_state.current_messages:
-            # Make sure we have a session ID
-            if not st.session_state.current_session_id:
-                st.session_state.current_session_id = str(uuid.uuid4())
-
-            # Save current session
-            self._save_current_session()
-
-        # Reset for new chat
-        st.session_state.current_session_id = None
-        st.session_state.current_messages = []
-        st.rerun()
-
-    def _load_chat_session(self, session_id: str):
-        """Load a specific chat session."""
-        # Save current session first if it has messages
-        if st.session_state.current_messages and st.session_state.current_session_id:
-            self._save_current_session()
-
-        # Load the selected session
-        sessions = self._load_user_sessions()
-        if session_id in sessions:
-            session_data = sessions[session_id]
-            st.session_state.current_session_id = session_id
-            st.session_state.current_messages = session_data.get('messages', [])
-            st.rerun()
-
-    def _delete_chat_session(self, session_id: str):
-        """Delete a chat session."""
-        try:
-            # Load all sessions from file
-            all_sessions = {}
-            if os.path.exists(self.sessions_file):
-                with open(self.sessions_file, 'r') as f:
-                    content = f.read().strip()
-                    if content:
-                        all_sessions = json.loads(content)
-
-            # Remove the specific session
-            if session_id in all_sessions:
-                del all_sessions[session_id]
-
-                # Save back to file
-                with open(self.sessions_file, 'w') as f:
-                    json.dump(all_sessions, f, indent=2)
-
-                # Update in-memory sessions for current user
-                user_sessions = self._load_user_sessions()
-                if session_id in user_sessions:
-                    del user_sessions[session_id]
-
-                # If deleting current session, start new chat
-                if session_id == st.session_state.current_session_id:
-                    st.session_state.current_session_id = None
-                    st.session_state.current_messages = []
-
-                st.success(f"✅ Chat deleted successfully!")
-                st.rerun()
-            else:
-                st.error("❌ Session not found")
-
-        except Exception as e:
-            st.error(f"❌ Failed to delete session: {e}")
 
     def _delete_user_account(self, username: str):
         """Delete user account and all associated data."""
         try:
-            # 1. Delete user from users.json
             if self.auth_manager.delete_user(username):
-
-                # 2. Delete all user's chat sessions
                 self._delete_all_user_sessions(username)
 
-                # 3. Clear session state
+                # Clear session state
                 st.session_state.authenticated = False
                 st.session_state.user_info = None
                 st.session_state.current_messages = []
                 st.session_state.current_session_id = None
                 st.session_state.show_delete_confirmation = False
 
-                # 4. Show success message and redirect
-                st.success("✅ Account deleted successfully. You have been logged out.")
+                # Clear cache
+                self._conversations_cache = None
+                self._cache_timestamp = None
+
+                st.success("✅ Account deleted successfully.")
                 st.rerun()
             else:
                 st.error("❌ Failed to delete account")
@@ -389,7 +555,6 @@ class SidebarManager:
     def _delete_all_user_sessions(self, username: str):
         """Delete all chat sessions for a specific user."""
         try:
-            # Load all sessions
             all_sessions = {}
             if os.path.exists(self.sessions_file):
                 with open(self.sessions_file, 'r') as f:
@@ -404,88 +569,20 @@ class SidebarManager:
                 if session_data.get('user') != username
             }
 
-            # Save filtered sessions back to file
             with open(self.sessions_file, 'w') as f:
                 json.dump(remaining_sessions, f, indent=2)
+                f.flush()
+                if hasattr(os, 'fsync'):
+                    os.fsync(f.fileno())
 
-        except Exception as e:
-            print(f"Error deleting user sessions: {e}")
-
-    def _load_user_sessions(self) -> Dict[str, Any]:
-        """Load chat sessions for the current user."""
-        if not st.session_state.user_info:
-            return {}
-
-        username = st.session_state.user_info['username']
-
-        try:
-            if os.path.exists(self.sessions_file):
-                with open(self.sessions_file, 'r') as f:
-                    content = f.read().strip()
-                    if not content:
-                        return {}
-                    all_sessions = json.loads(content)
-
-                    # Return only sessions for current user
-                    return {
-                        session_id: session_data
-                        for session_id, session_data in all_sessions.items()
-                        if session_data.get('user') == username
-                    }
-        except (json.JSONDecodeError, FileNotFoundError):
+        except Exception:
             pass
-
-        return {}
-
-    def _save_current_session(self):
-        """Save the current chat session."""
-        if not st.session_state.current_messages or not st.session_state.user_info:
-            return
-
-        if not st.session_state.current_session_id:
-            st.session_state.current_session_id = str(uuid.uuid4())
-
-        session_data = {
-            'title': self._generate_session_title(),
-            'messages': st.session_state.current_messages,
-            'timestamp': datetime.now().isoformat(),
-            'user': st.session_state.user_info['username']
-        }
-
-        try:
-            # Load all existing sessions
-            all_sessions = {}
-            if os.path.exists(self.sessions_file):
-                with open(self.sessions_file, 'r') as f:
-                    content = f.read().strip()
-                    if content:
-                        all_sessions = json.loads(content)
-
-            # Add/update this session
-            all_sessions[st.session_state.current_session_id] = session_data
-
-            # Save back to file
-            with open(self.sessions_file, 'w') as f:
-                json.dump(all_sessions, f, indent=2)
-
-        except Exception as e:
-            print(f"Error saving session: {e}")
-
-    def _generate_session_title(self) -> str:
-        """Generate a title for the chat session."""
-        if st.session_state.current_messages:
-            first_user_message = next(
-                (msg['content'] for msg in st.session_state.current_messages if msg['role'] == 'user'),
-                "New Chat"
-            )
-            return first_user_message[:50] + "..." if len(first_user_message) > 50 else first_user_message
-        return "New Chat"
 
     def _logout(self):
         """Logout the current user."""
         # Save current session before logout
         if st.session_state.current_messages and st.session_state.current_session_id:
-            self._save_current_session()
+            self._save_current_session_fast()
 
         # Clear session state
         st.session_state.authenticated = False
@@ -493,23 +590,31 @@ class SidebarManager:
         st.session_state.current_messages = []
         st.session_state.current_session_id = None
         st.session_state.show_account_settings = False
+
+        # Clear cache
+        self._conversations_cache = None
+        self._cache_timestamp = None
+
         st.rerun()
 
     def _render_sidebar_footer(self):
-        """Render the sidebar footer with IMPROVED stats styling."""
+        """Render the sidebar footer with stats."""
         st.markdown("---")
 
-        # IMPROVED: Statistics with better styling and left alignment
+        # Simple stats without complex calculations
         if st.session_state.user_info:
-            sessions = self._load_user_sessions()
-            total_sessions = len(sessions)
-            total_messages = sum(len(session.get('messages', [])) for session in sessions.values())
+            conversations = self._load_conversations_cached()
+            total_conversations = len(conversations)
 
-            # IMPROVED: Use better emoji for conversations and left-aligned layout
+            # Simple message count
+            total_messages = 0
+            for conv in conversations.values():
+                total_messages += len(conv.get('messages', []))
+
             st.markdown(f"""
                 <div class="sidebar-stats-improved">
                     <div class="stats-text-improved">
-                        💭 {total_sessions} conversations<br>
+                        💭 {total_conversations} conversations<br>
                         💬 {total_messages} messages
                     </div>
                 </div>

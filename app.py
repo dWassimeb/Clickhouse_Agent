@@ -789,6 +789,11 @@ class TelmiApp:
         self._ensure_session_exists()
         self._save_session_to_history()
 
+        # FIXED: Clear sidebar cache to ensure consistency
+        if hasattr(self, 'sidebar_manager') and hasattr(self.sidebar_manager, '_conversations_cache'):
+            self.sidebar_manager._conversations_cache = None
+            self.sidebar_manager._cache_timestamp = None
+
     def _ensure_session_exists(self):
         """Ensure we have a session ID for saving."""
         if not st.session_state.current_session_id:
@@ -857,7 +862,7 @@ class TelmiApp:
         try:
             self._ensure_session_exists()
 
-            # IMPROVED: Generate intelligent session title
+            # Generate intelligent session title
             session_data = {
                 'title': self._generate_intelligent_session_title(),
                 'messages': st.session_state.current_messages.copy(),
@@ -867,6 +872,11 @@ class TelmiApp:
 
             st.session_state.chat_sessions[st.session_state.current_session_id] = session_data
             self._save_sessions_to_file()
+
+            # FIXED: Clear sidebar cache after saving
+            if hasattr(self, 'sidebar_manager') and hasattr(self.sidebar_manager, '_conversations_cache'):
+                self.sidebar_manager._conversations_cache = None
+                self.sidebar_manager._cache_timestamp = None
 
         except Exception as e:
             logger.error(f"❌ Failed to save session: {e}")
