@@ -266,13 +266,17 @@ class TelmiApp:
                             st.session_state.authenticated = True
                             st.session_state.user_info = self.auth_manager.get_user_info(username)
                             st.success("✅ Login successful!")
+                            # REMOVED THE PROBLEMATIC LINE - Don't try to clear form fields
                             st.rerun()
                         else:
                             st.error("❌ Invalid username or password")
 
             # REGISTER TAB
             with register_tab:
-                with st.form("register_form", clear_on_submit=True):
+                # FIXED: Add a flag to control form clearing
+                clear_form = st.session_state.get('registration_success', False)
+
+                with st.form("register_form", clear_on_submit=clear_form):
                     st.markdown("### Create Your Account")
                     st.markdown("Join Telmi and start analyzing your telecom data")
 
@@ -287,7 +291,8 @@ class TelmiApp:
                             "Username *",
                             placeholder="Choose a username",
                             key="reg_username",
-                            help="This will be your unique identifier"
+                            help="This will be your unique identifier",
+                            value="" if clear_form else st.session_state.get("reg_username", "")
                         )
 
                     with col_reg2:
@@ -295,7 +300,8 @@ class TelmiApp:
                             "Email Address *",
                             placeholder="your.email@company.com",
                             key="reg_email",
-                            help="We'll use this for account recovery"
+                            help="We'll use this for account recovery",
+                            value="" if clear_form else st.session_state.get("reg_email", "")
                         )
 
                     reg_password = st.text_input(
@@ -303,14 +309,16 @@ class TelmiApp:
                         type="password",
                         placeholder="Create a secure password",
                         key="reg_password",
-                        help="Choose a strong password for your account"
+                        help="Choose a strong password for your account",
+                        value="" if clear_form else ""
                     )
 
                     reg_password_confirm = st.text_input(
                         "Confirm Password *",
                         type="password",
                         placeholder="Confirm your password",
-                        key="reg_password_confirm"
+                        key="reg_password_confirm",
+                        value="" if clear_form else ""
                     )
 
                     # Add some spacing
@@ -323,6 +331,9 @@ class TelmiApp:
                     )
 
                     if register_submitted:
+                        # Reset the success flag first
+                        st.session_state.registration_success = False
+
                         # Validation
                         if not all([reg_username, reg_email, reg_password, reg_password_confirm]):
                             st.error("⚠️ Please fill in all required fields")
@@ -337,10 +348,9 @@ class TelmiApp:
                             if result['success']:
                                 st.success(f"✅ {result['message']}")
                                 st.info("💡 You can now sign in using the Sign In tab")
-                                # Clear form fields
-                                for key in ['reg_username', 'reg_email', 'reg_password', 'reg_password_confirm']:
-                                    if key in st.session_state:
-                                        st.session_state[key] = ""
+                                # FIXED: Set flag to clear form on next run
+                                st.session_state.registration_success = True
+                                st.rerun()
                             else:
                                 st.error(f"❌ {result['message']}")
 
@@ -684,7 +694,7 @@ class TelmiApp:
             st.warning("Chart file not found")
 
     def _render_downloads_clean(self, attachments: Dict[str, Any]):
-        """Render download buttons with clean styling."""
+        """Render download buttons with unique keys to prevent duplicate ID errors."""
         download_items = []
 
         if 'csv' in attachments:
@@ -698,27 +708,18 @@ class TelmiApp:
 
         cols = st.columns(len(download_items))
 
-        # Green download buttons styling
-        st.markdown("""
-            <style>
-            .stDownloadButton > button {
-                background-color: #22c55e !important;
-                color: white !important;
-                border: none !important;
-                border-radius: 8px !important;
-                font-weight: 500 !important;
-                transition: all 0.2s ease !important;
-            }
-            .stDownloadButton > button:hover {
-                background-color: #16a34a !important;
-                transform: translateY(-1px) !important;
-                box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3) !important;
-            }
-            </style>
-        """, unsafe_allow_html=True)
+        # SIMPLE: Create unique keys using current time and random number
+        import time
+        import random
+
+        # Generate a simple unique identifier
+        unique_suffix = f"{int(time.time())}_{random.randint(1000, 9999)}"
 
         for i, (item_type, item_info) in enumerate(download_items):
             with cols[i]:
+                # Create a simple unique key
+                unique_key = f"{item_type}_download_{unique_suffix}_{i}"
+
                 if item_type == 'csv' and os.path.exists(item_info['path']):
                     with open(item_info['path'], 'rb') as file:
                         st.download_button(
@@ -727,7 +728,8 @@ class TelmiApp:
                             file_name=item_info['filename'],
                             mime='text/csv',
                             use_container_width=True,
-                            help="Download the complete dataset as CSV file"
+                            help="Download the complete dataset as CSV file",
+                            key=unique_key
                         )
                 elif item_type == 'chart' and os.path.exists(item_info['path']):
                     with open(item_info['path'], 'rb') as file:
@@ -737,7 +739,8 @@ class TelmiApp:
                             file_name=item_info['filename'],
                             mime='text/html',
                             use_container_width=True,
-                            help="Download the interactive chart as HTML file"
+                            help="Download the interactive chart as HTML file",
+                            key=unique_key
                         )
 
     def _render_input_area(self):

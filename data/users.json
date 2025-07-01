@@ -17,12 +17,31 @@
       "password": ""
     }
   },
-  "Wassime": {
+  "Castor-Demo": {
+    "password": "f2d81a260dea8a100dd517984e53c56a7523d96942a834b9cdc249bd4e8c7aa9",
+    "email": "demo@castor.com",
+    "username": "Castor-Demo",
+    "created_at": "2025-06-30T17:21:59.832713",
+    "last_login": "2025-06-30T17:22:23.685825",
+    "preferences": {
+      "theme": "light",
+      "language": "en",
+      "notifications": true
+    },
+    "database_settings": {
+      "host": "172.20.157.162",
+      "port": 8123,
+      "database": "default",
+      "username": "default",
+      "password": ""
+    }
+  },
+  "wassime": {
     "password": "f2d81a260dea8a100dd517984e53c56a7523d96942a834b9cdc249bd4e8c7aa9",
     "email": "wassime.elyamani@gmail.com",
-    "username": "Wassime",
-    "created_at": "2025-06-30T16:43:41.567191",
-    "last_login": "2025-06-30T17:00:25.081153",
+    "username": "wassime",
+    "created_at": "2025-07-01T13:21:35.577086",
+    "last_login": "2025-07-01T14:00:31.923294",
     "preferences": {
       "theme": "light",
       "language": "en",

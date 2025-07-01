@@ -1,24 +1,23 @@
 """
-CSS Styling and Themes for Telmi - FIXED VERSION
-Modern, minimalist ChatGPT-like interface styling with better section headers and form fixes
+CSS Styling for Telmi - OPTIMIZED AND FIXED VERSION
+Cleaner, focused styling with proper form alignment and reduced complexity
 """
 
 import streamlit as st
 
 def apply_custom_styling():
-    """Apply custom CSS styling to the Streamlit app with improved visual hierarchy and fixed forms."""
+    """Apply optimized CSS styling with fixed form alignment and reduced complexity."""
 
     st.markdown("""
     <style>
     /* Import Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-    /* Root variables for consistent theming - ChatGPT-like colors */
+    /* Root variables for consistent theming */
     :root {
         --primary-color: #4299e1;
         --primary-hover: #3182ce;
         --primary-light: #63b3ed;
-        --secondary-color: #f7fafc;
         --background-color: #ffffff;
         --surface-color: #f7fafc;
         --text-primary: #1a202c;
@@ -27,14 +26,11 @@ def apply_custom_styling():
         --border-color: #e2e8f0;
         --success-color: #48bb78;
         --error-color: #f56565;
-        --warning-color: #ed8936;
         --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
         --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-        --radius-sm: 6px;
         --radius-md: 8px;
         --radius-lg: 12px;
-        --radius-xl: 16px;
     }
 
     /* Global styles */
@@ -55,7 +51,7 @@ def apply_custom_styling():
     .stDeployButton {display: none;}
     .stActionButton {display: none;}
 
-    /* === ENHANCED Authentication Page Styling === */
+    /* === ENHANCED AUTHENTICATION STYLING === */
 
     /* Tab styling for login/register */
     .stTabs [data-baseweb="tab-list"] {
@@ -97,7 +93,7 @@ def apply_custom_styling():
         color: #4a5568;
     }
 
-    /* Enhanced login container */
+    /* Login container */
     .login-container {
         background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         border-radius: 20px;
@@ -105,7 +101,6 @@ def apply_custom_styling():
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         border: 1px solid #e2e8f0;
         margin: 2rem 0;
-        backdrop-filter: blur(10px);
         animation: slideUp 0.6s ease-out;
     }
 
@@ -135,48 +130,48 @@ def apply_custom_styling():
 
     /* === FIXED FORM STYLING === */
 
-    /* Fixed input boxes for authentication forms */
+    /* FIXED: Authentication form inputs with perfect alignment - NO OVERLAPPING */
+    .login-container .stTextInput > div > div > input,
     .stForm .stTextInput > div > div > input {
         border: 2px solid #e2e8f0 !important;
         border-radius: 10px !important;
-        padding: 12px 16px !important;
+        padding: 14px 16px !important;
         background: #ffffff !important;
         color: #2d3748 !important;
         font-size: 15px !important;
         font-weight: 400 !important;
-        transition: all 0.2s ease !important;
-        height: 48px !important;
-        line-height: 1.4 !important;
-        text-align: left !important;
-        vertical-align: middle !important;
+        font-family: 'Inter', sans-serif !important;
+        height: 50px !important;
+        line-height: 1.2 !important;
         box-sizing: border-box !important;
         width: 100% !important;
+        transition: all 0.2s ease !important;
+        position: relative !important;
+        outline: none !important;
     }
 
+    /* FIXED: Remove any potential overlapping containers */
+    .login-container .stTextInput > div > div,
+    .stForm .stTextInput > div > div {
+        position: relative !important;
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* FIXED: Focus state without overlapping */
+    .login-container .stTextInput > div > div > input:focus,
     .stForm .stTextInput > div > div > input:focus {
         border-color: #4299e1 !important;
         outline: none !important;
         box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1) !important;
+        z-index: 1 !important;
     }
 
-    .stForm .stTextInput > div > div > input::placeholder {
-        color: #a0aec0 !important;
-        font-weight: 400 !important;
-        opacity: 1 !important;
-    }
-
-    /* Remove the "Press Enter to submit" message for auth forms */
-    .stForm .stTextInput > div > div > div[data-testid="InputInstructions"] {
-        display: none !important;
-    }
-
-    /* Hide the show/hide password button for auth forms to prevent overlap */
-    .stForm .stTextInput button[kind="tertiary"] {
-        display: none !important;
-    }
-
-    /* Fixed button styling for authentication forms */
-    .stForm button[kind="primary"] {
+    /* FIXED: Authentication form buttons with perfect alignment and white text */
+    .login-container .stButton > button,
+    .stForm .stButton > button {
         background: linear-gradient(135deg, #4299e1, #3182ce) !important;
         color: white !important;
         border: none !important;
@@ -184,30 +179,32 @@ def apply_custom_styling():
         padding: 0 !important;
         font-weight: 600 !important;
         font-size: 15px !important;
-        height: 48px !important;
-        line-height: 48px !important;
-        transition: all 0.2s ease !important;
-        box-shadow: 0 2px 8px rgba(66, 153, 225, 0.3) !important;
+        height: 50px !important;
         width: 100% !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         text-align: center !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 2px 8px rgba(66, 153, 225, 0.3) !important;
         cursor: pointer !important;
     }
 
-    .stForm button[kind="primary"]:hover {
+    .login-container .stButton > button:hover,
+    .stForm .stButton > button:hover {
         background: linear-gradient(135deg, #3182ce, #2c5aa0) !important;
         transform: translateY(-1px) !important;
         box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4) !important;
+        color: white !important;
     }
 
-    .stForm button[kind="primary"]:active {
-        transform: translateY(0) !important;
-    }
-
-    /* Ensure button text is white and centered */
-    .stForm button[kind="primary"] p {
+    /* FIXED: Ensure button text is white and properly centered */
+    .login-container .stButton > button p,
+    .stForm .stButton > button p,
+    .login-container .stButton > button span,
+    .stForm .stButton > button span,
+    .login-container .stButton > button div,
+    .stForm .stButton > button div {
         color: white !important;
         margin: 0 !important;
         font-weight: 600 !important;
@@ -215,90 +212,87 @@ def apply_custom_styling():
         line-height: 1 !important;
     }
 
-    /* Fixed form labels */
-    .stForm .stTextInput > label {
-        font-weight: 600 !important;
-        color: #2d3748 !important;
-        font-size: 14px !important;
-        margin-bottom: 6px !important;
-        display: block !important;
+    /* FIXED: Remove conflicting placeholder text for auth forms */
+    .login-container .stTextInput > div > div > div[data-testid="InputInstructions"],
+    .stForm .stTextInput > div > div > div[data-testid="InputInstructions"] {
+        display: none !important;
     }
 
-    /* === CHAT INTERFACE FIXES === */
+    /* FIXED: Hide show/hide password button for auth forms to prevent overlap */
+    .login-container .stTextInput button[kind="tertiary"],
+    .stForm .stTextInput button[kind="tertiary"] {
+        display: none !important;
+    }
 
-    /* Chat input box - different styling, keep "Press Enter" message and show/hide button */
-    .main .stForm:not(.stForm .stForm) .stTextInput > div > div > input {
+    /* === CHAT INPUT STYLING (Different from auth forms) === */
+
+    /* Chat input - keep it separate from auth forms */
+    .main .stTextInput > div > div > input:not(.login-container .stTextInput > div > div > input):not(.stForm .stTextInput > div > div > input) {
         border: 2px solid #e2e8f0 !important;
         border-radius: 8px !important;
         padding: 12px 16px !important;
         background: #ffffff !important;
         color: #2d3748 !important;
         font-size: 15px !important;
-        font-weight: 400 !important;
-        transition: all 0.2s ease !important;
-        height: 44px !important;
+        height: 46px !important;
         line-height: 1.4 !important;
-        text-align: left !important;
-        vertical-align: middle !important;
         box-sizing: border-box !important;
         width: 100% !important;
+        transition: all 0.2s ease !important;
     }
 
-    /* Chat input focus state */
-    .main .stForm:not(.stForm .stForm) .stTextInput > div > div > input:focus {
+    .main .stTextInput > div > div > input:not(.login-container .stTextInput > div > div > input):not(.stForm .stTextInput > div > div > input):focus {
         border-color: #4299e1 !important;
         outline: none !important;
         box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1) !important;
     }
 
-    /* Chat send button - match input height */
-    .main .stForm:not(.stForm .stForm) button[kind="primary"] {
+    /* FIXED: Chat form layout - perfect alignment */
+    .main form[data-testid="stForm"]:not(.login-container form):not(.stForm form) {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important; /* Prevent wrapping */
+        gap: 8px !important;
+        align-items: center !important;
+        width: 100% !important;
+        overflow: hidden !important; /* Prevent mobile overflow-induced wrapping */
+    }
+
+    .main form[data-testid="stForm"]:not(.login-container form):not(.stForm form) > div:first-child {
+        flex: 1 1 auto !important;
+        min-width: 0 !important; /* Prevents overflowing on small screens */
+        margin: 0 !important;
+    }
+    
+    .main form[data-testid="stForm"]:not(.login-container form):not(.stForm form) > div:last-child {
+        flex-shrink: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* FIXED: Chat send button - matches input height exactly */
+    .main form[data-testid="stForm"]:not(.login-container form):not(.stForm form) .stButton > button {
         background: #4299e1 !important;
         color: white !important;
         border: none !important;
         border-radius: 8px !important;
-        padding: 0 !important;
         font-weight: 600 !important;
         font-size: 14px !important;
-        height: 44px !important;
-        line-height: 44px !important;
+        height: 46px !important;
+        min-height: 46px !important;
+        padding: 0 20px !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
         transition: all 0.2s ease !important;
         box-shadow: 0 2px 4px rgba(66, 153, 225, 0.2) !important;
-        width: 100% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        text-align: center !important;
-        cursor: pointer !important;
     }
 
-    .main .stForm:not(.stForm .stForm) button[kind="primary"]:hover {
+    .main form[data-testid="stForm"]:not(.login-container form):not(.stForm form) .stButton > button:hover {
         background: #3182ce !important;
         transform: translateY(-1px) !important;
         box-shadow: 0 4px 8px rgba(66, 153, 225, 0.3) !important;
     }
 
-    /* Ensure chat button text is properly styled */
-    .main .stForm:not(.stForm .stForm) button[kind="primary"] p {
-        color: white !important;
-        margin: 0 !important;
-        font-weight: 600 !important;
-        text-align: center !important;
-        line-height: 1 !important;
-    }
-
-    /* Keep "Press Enter" message visible for chat input only */
-    .main .stForm:not(.stForm .stForm) .stTextInput > div > div > div[data-testid="InputInstructions"] {
-        display: block !important;
-        font-size: 12px !important;
-        color: #718096 !important;
-        margin-top: 4px !important;
-    }
-
-    /* Allow show/hide password button for chat (though rare) */
-    .main .stForm:not(.stForm .stForm) .stTextInput button[kind="tertiary"] {
-        display: block !important;
-    }
+    /* === CHAT INTERFACE === */
 
     /* Chat header */
     .chat-header {
@@ -357,17 +351,16 @@ def apply_custom_styling():
     .user-bubble {
         background: var(--primary-color);
         color: white;
-        border-bottom-right-radius: var(--radius-sm);
+        border-bottom-right-radius: 6px;
     }
 
     .agent-bubble {
         background: var(--surface-color);
         color: var(--text-primary);
         border: 1px solid var(--border-color);
-        border-bottom-left-radius: var(--radius-sm);
+        border-bottom-left-radius: 6px;
     }
 
-    /* Avatar alignment */
     .message-avatar {
         width: 2.5rem;
         height: 2.5rem;
@@ -392,10 +385,10 @@ def apply_custom_styling():
         color: var(--text-primary);
     }
 
-    /* IMPROVED: Section titles - BIGGER size for better visual hierarchy */
+    /* Section titles */
     .message-bubble h3,
     .message-bubble strong,
-    h3, h4, .section-title {
+    h3, h4 {
         font-size: 1.25rem !important;
         font-weight: 600;
         color: var(--text-primary);
@@ -443,7 +436,8 @@ def apply_custom_styling():
         line-height: 1.5;
     }
 
-    /* Sidebar styling - IMPROVED SECTION HEADERS */
+    /* === SIDEBAR STYLING === */
+
     .sidebar-header {
         text-align: center;
         padding: 1rem 0;
@@ -468,17 +462,16 @@ def apply_custom_styling():
         margin: 0.25rem 0 0 0;
     }
 
-    /* IMPROVED: Sidebar section headers - BOLD and BIGGER */
+    /* Sidebar section headers */
     .streamlit-expanderHeader {
-        font-weight: 700 !important;          /* BOLD */
-        font-size: 17px !important;           /* BIGGER */
+        font-weight: 700 !important;
+        font-size: 17px !important;
         color: #2d3748 !important;
         background: #f8fafc !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 8px !important;
         margin: 8px 0 !important;
-        padding: 12px 16px !important;        /* More padding for prominence */
-        letter-spacing: 0.3px !important;     /* Slight letter spacing */
+        padding: 12px 16px !important;
     }
 
     .streamlit-expanderHeader:hover {
@@ -496,245 +489,27 @@ def apply_custom_styling():
         margin-bottom: 8px !important;
     }
 
-    /* IMPROVED: Stats container - LEFT ALIGNED with better emoji */
-    .sidebar-stats-improved {
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        padding: 12px !important;
-        margin: 8px 0 !important;
-        text-align: left !important;
-    }
+    /* === REGULAR BUTTONS (Non-form) === */
 
-    .stats-text-improved {
-        font-size: 13px !important;
-        color: #4a5568 !important;
-        line-height: 1.4 !important;
-        margin: 0 !important;
-    }
-
-    .account-section {
-        margin: 1rem 0;
-    }
-
-    .user-info {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem;
-        background: var(--surface-color);
-        border-radius: var(--radius-md);
-        border: 1px solid var(--border-color);
-    }
-
-    .user-avatar {
-        width: 2rem;
-        height: 2rem;
-        border-radius: 50%;
-        background: var(--primary-color);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.9rem;
-    }
-
-    .username {
-        font-weight: 500;
-        color: var(--text-primary);
-    }
-
-    .session-item {
-        margin: 0.5rem 0;
-    }
-
-    .session-item.current {
-        opacity: 0.6;
-    }
-
-    .sidebar-footer {
-        text-align: center;
-        color: var(--text-muted);
-        padding: 1rem 0;
-    }
-
-    /* === GENERAL FORM IMPROVEMENTS === */
-
-    /* Better spacing between form elements */
-    .stForm > div {
-        margin-bottom: 16px;
-    }
-
-    .stForm > div:last-child {
-        margin-bottom: 0;
-    }
-
-    /* Improved form section headers */
-    .stForm h3 {
-        color: #2d3748 !important;
-        font-weight: 600 !important;
-        font-size: 1.4rem !important;
-        margin-bottom: 8px !important;
-        line-height: 1.3 !important;
-    }
-
-    .stForm p {
-        color: #718096 !important;
-        font-size: 1rem !important;
-        margin-bottom: 1rem !important;
-        line-height: 1.5 !important;
-    }
-
-    /* Remove any conflicting styles */
-    .stTextInput > div > div {
-        border-radius: 0 !important;
-        border: none !important;
-    }
-
-    /* Ensure consistent button appearance across all forms */
-    button[kind="primary"] div p {
+    .stButton > button:not(.login-container .stButton > button):not(.stForm .stButton > button) {
+        background: var(--primary-color) !important;
         color: white !important;
-        font-weight: 600 !important;
+        border: none !important;
+        border-radius: var(--radius-md) !important;
+        padding: 0.75rem 1.5rem !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease !important;
+        box-shadow: var(--shadow-sm) !important;
     }
 
-    /* Fix any alignment issues with form containers */
-    .stForm {
-        width: 100%;
+    .stButton > button:not(.login-container .stButton > button):not(.stForm .stButton > button):hover {
+        background: var(--primary-hover) !important;
+        box-shadow: var(--shadow-md) !important;
+        transform: translateY(-1px) !important;
     }
 
-    .stForm > div > div {
-        width: 100%;
-    }
+    /* === SUCCESS/ERROR MESSAGES === */
 
-    /* === BUTTON STYLING FIXES === */
-
-    /* Regular buttons (non-form) */
-    .stButton > button {
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        border-radius: var(--radius-md);
-        padding: 0.75rem 1.5rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        box-shadow: var(--shadow-sm);
-        height: auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .stButton > button:hover {
-        background: var(--primary-hover);
-        box-shadow: var(--shadow-md);
-        transform: translateY(-1px);
-    }
-
-    .stButton > button:focus {
-        outline: 2px solid var(--primary-color);
-        outline-offset: 2px;
-    }
-
-    /* === OTHER INPUT STYLING === */
-
-    /* General input styling (non-form) */
-    .stTextInput > div > div > input {
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        padding: 0.75rem;
-        background: var(--background-color);
-        color: var(--text-primary);
-        transition: border-color 0.2s ease;
-    }
-
-    .stTextInput > div > div > input:focus {
-        border-color: var(--primary-color);
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    }
-
-    .stSelectbox > div > div > select {
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        background: var(--background-color);
-        color: var(--text-primary);
-    }
-
-    .stNumberInput > div > div > input {
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        background: var(--background-color);
-        color: var(--text-primary);
-    }
-
-    /* === RESPONSIVE FIXES === */
-
-    /* Mobile responsiveness for forms */
-    @media (max-width: 768px) {
-        .stForm .stTextInput > div > div > input {
-            font-size: 14px !important;
-            height: 44px !important;
-            padding: 10px 14px !important;
-        }
-
-        .stForm button[kind="primary"] {
-            height: 44px !important;
-            line-height: 44px !important;
-            font-size: 14px !important;
-        }
-
-        .main .stForm:not(.stForm .stForm) .stTextInput > div > div > input {
-            height: 40px !important;
-            font-size: 14px !important;
-        }
-
-        .main .stForm:not(.stForm .stForm) button[kind="primary"] {
-            height: 40px !important;
-            line-height: 40px !important;
-            font-size: 13px !important;
-        }
-
-        .stTabs [data-baseweb="tab"] {
-            height: 40px;
-            font-size: 14px;
-            padding: 0 16px;
-        }
-
-        .message-bubble {
-            max-width: 85%;
-        }
-
-        .message-container.user-message {
-            margin-left: 1rem;
-        }
-
-        .message-container.agent-message {
-            margin-right: 1rem;
-        }
-
-        .welcome-message {
-            margin: 1rem;
-            padding: 1.5rem;
-        }
-
-        .chat-header h1 {
-            font-size: 1.5rem;
-        }
-
-        .login-header h1 {
-            font-size: 2rem;
-        }
-
-        /* IMPROVED: Sidebar section headers on mobile */
-        .streamlit-expanderHeader {
-            font-size: 15px !important;
-            padding: 10px 12px !important;
-        }
-    }
-
-    /* === SUCCESS/ERROR/INFO MESSAGES === */
-
-    /* Enhanced Success/Error messages for auth */
     .stSuccess {
         background: #f0fdf4 !important;
         border: 1px solid #bbf7d0 !important;
@@ -775,16 +550,78 @@ def apply_custom_styling():
         font-weight: 500 !important;
     }
 
-    /* === HELP TEXT AND ANIMATIONS === */
+    /* === DOWNLOAD BUTTONS === */
 
-    /* Help text styling */
-    .stTextInput div[data-testid="help"] {
-        color: #718096 !important;
-        font-size: 0.875rem !important;
-        margin-top: 0.25rem !important;
+    .stDownloadButton > button {
+        background: var(--success-color) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: var(--radius-md) !important;
+        padding: 0.75rem 1.5rem !important;
+        font-weight: 500 !important;
+        font-size: 0.9rem !important;
+        transition: all 0.2s ease !important;
+        box-shadow: var(--shadow-sm) !important;
+        margin: 0.25rem 0 !important;
     }
 
-    /* Slide up animation */
+    .stDownloadButton > button:hover {
+        background: #38a169 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: var(--shadow-md) !important;
+    }
+
+    /* === RESPONSIVE DESIGN === */
+
+    @media (max-width: 768px) {
+        .login-container .stTextInput > div > div > input,
+        .stForm .stTextInput > div > div > input {
+            height: 46px !important;
+            font-size: 14px !important;
+            padding: 12px 14px !important;
+        }
+
+        .login-container .stButton > button,
+        .stForm .stButton > button {
+            height: 46px !important;
+            font-size: 14px !important;
+        }
+
+        .main .stTextInput > div > div > input:not(.login-container .stTextInput > div > div > input):not(.stForm .stTextInput > div > div > input) {
+            height: 42px !important;
+            font-size: 14px !important;
+        }
+
+        .main form[data-testid="stForm"]:not(.login-container form):not(.stForm form) .stButton > button {
+            height: 42px !important;
+            min-height: 42px !important;
+            font-size: 13px !important;
+            padding: 0 16px !important;
+        }
+
+        .message-bubble {
+            max-width: 85%;
+        }
+
+        .message-container.user-message {
+            margin-left: 1rem;
+        }
+
+        .message-container.agent-message {
+            margin-right: 1rem;
+        }
+
+        .login-header h1 {
+            font-size: 2.2rem;
+        }
+
+        .chat-header h1 {
+            font-size: 1.5rem;
+        }
+    }
+
+    /* === ANIMATIONS === */
+
     @keyframes slideUp {
         from {
             opacity: 0;
@@ -796,87 +633,8 @@ def apply_custom_styling():
         }
     }
 
-    /* === DOWNLOAD BUTTON STYLING === */
+    /* === SCROLLBAR === */
 
-    /* Download button styling - Modern design */
-    .stDownloadButton > button {
-        background: var(--success-color);
-        color: white;
-        border: none;
-        border-radius: var(--radius-md);
-        padding: 0.75rem 1.5rem;
-        font-weight: 500;
-        font-size: 0.9rem;
-        transition: all 0.2s ease;
-        box-shadow: var(--shadow-sm);
-        margin: 0.25rem 0;
-    }
-
-    .stDownloadButton > button:hover {
-        background: #38a169;
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-md);
-    }
-
-    /* Secondary download button styling */
-    .stDownloadButton > button[kind="secondary"] {
-        background: var(--primary-color);
-        color: white;
-    }
-
-    .stDownloadButton > button[kind="secondary"]:hover {
-        background: var(--primary-hover);
-    }
-
-    /* === CHART AND TABLE STYLING === */
-
-    /* Chart container styling */
-    .chart-container {
-        margin: 1rem 0;
-        border-radius: var(--radius-lg);
-        overflow: hidden;
-        box-shadow: var(--shadow-md);
-        border: 1px solid var(--border-color);
-        max-height: 600px;
-    }
-
-    /* Download buttons container */
-    .download-buttons-container {
-        margin: 1rem 0;
-        padding: 1rem;
-        background: var(--surface-color);
-        border-radius: var(--radius-md);
-        border: 1px solid var(--border-color);
-    }
-
-    /* Code block styling */
-    .stCode {
-        background: var(--surface-color);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        padding: 1rem;
-    }
-
-    /* Table styling */
-    .dataframe {
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        overflow: hidden;
-    }
-
-    .dataframe th {
-        background: var(--surface-color);
-        color: var(--text-primary);
-        font-weight: 600;
-    }
-
-    .dataframe td {
-        color: var(--text-primary);
-    }
-
-    /* === SCROLLBAR STYLING === */
-
-    /* Custom scrollbar */
     ::-webkit-scrollbar {
         width: 8px;
     }
@@ -894,18 +652,8 @@ def apply_custom_styling():
         background: var(--text-muted);
     }
 
-    /* === STREAMLIT LAYOUT FIXES === */
+    /* === LAYOUT FIXES === */
 
-    /* Hide Streamlit's main menu and footer in the sidebar */
-    .css-1d391kg {
-        padding-top: 1rem;
-    }
-
-    .css-1y4p8pa {
-        padding: 1rem;
-    }
-
-    /* Ensure the main content area uses full width */
     .block-container {
         padding-top: 0;
         padding-bottom: 0;
