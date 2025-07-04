@@ -1,0 +1,103 @@
+trigger:
+  branches:
+    include:
+      - main
+      - dev
+
+resources:
+  - repo: self
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  azureSubscription: 'rg-castor-all-resource-manager2025'
+  resourceGroupName: 'rg-castor'
+  appName: "Telmi"
+  keyVaultName: 'kv-castor2025'
+  secrets: 'MIXTRAL-API-BASE,MIXTRAL-API-KEY,GPT-API-KEY,STORAGE-ACC-NAME,STORAGE-ACC-KEY'
+  containerRegistry: 'crcastor2025.azurecr.io'
+  dockerRegistryServiceConnection: '7590ae0d-38bc-404d-b70b-1750549262aa'
+  imageRepository: "telmi"  # lowercase for Docker compatibility
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  imageName: "telmi"
+  tag: 'latest'
+  vmImageName: 'ubuntu-latest'
+
+stages:
+  - stage: Build
+    displayName: Build and push stage
+    jobs:
+      - job: Build
+        displayName: Build Telmi Image
+        pool:
+          vmImage: $(vmImageName)
+        steps:
+          - task: AzureKeyVault@2
+            displayName: 'Get secrets from Key Vault'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              KeyVaultName: $(keyVaultName)
+              SecretsFilter: '$(secrets)'
+              RunAsPreJob: true
+
+          - script: |
+              echo "Cleaning up disk space..."
+              docker system prune -af
+              sudo apt-get clean
+              sudo rm -rf /var/lib/apt/lists/*
+              sudo rm -rf /opt/hostedtoolcache
+              df -h
+            displayName: 'Clean up disk space'
+
+          - task: Docker@2
+            displayName: 'Login to Container Registry'
+            inputs:
+              containerRegistry: $(dockerRegistryServiceConnection)
+              command: 'login'
+
+          - script: |
+              echo "Building Docker image..."
+              echo "Source directory: $(Build.SourcesDirectory)"
+              echo "Dockerfile path: $(dockerfilePath)"
+              ls -la $(Build.SourcesDirectory)
+              
+              # Build with all necessary build args
+              docker build \
+                --build-arg GPT_API_KEY="$(GPT-API-KEY)" \
+                --no-cache \
+                -f $(dockerfilePath) \
+                -t $(containerRegistry)/$(imageRepository):$(tag) \
+                -t $(containerRegistry)/$(imageRepository):$(Build.BuildId) \
+                $(Build.SourcesDirectory)
+              
+              echo "Image built successfully!"
+              docker images | grep $(imageRepository)
+            displayName: 'Build Docker Image'
+
+          - script: |
+              echo "Pushing Docker images..."
+              docker push $(containerRegistry)/$(imageRepository):$(tag)
+              docker push $(containerRegistry)/$(imageRepository):$(Build.BuildId)
+              echo "Images pushed successfully!"
+            displayName: 'Push Docker Images to ACR'
+
+          - script: |
+              echo "Cleaning up local images to save space..."
+              docker rmi $(containerRegistry)/$(imageRepository):$(tag) || true
+              docker rmi $(containerRegistry)/$(imageRepository):$(Build.BuildId) || true
+              docker system prune -f
+            displayName: 'Cleanup local images'
+
+          # Deploy to Azure Container Instance or App Service (uncomment when ready)
+          # - task: AzureWebAppContainer@1
+          #   displayName: 'Deploy to Azure Web App for Containers'
+          #   inputs:
+          #     azureSubscription: $(azureSubscription)
+          #     resourceGroupName: $(resourceGroupName)
+          #     appName: $(appName)
+          #     containers: $(containerRegistry)/$(imageRepository):$(tag)
+          #     configurationStrings: |
+          #       POWERBI_DATASET_ID=$(POWERBI-DATASET-ID)
+          #       POWERBI_WORKSPACE_ID=$(POWERBI-WORKSPACE-ID)
+          #       GPT_API_KEY=$(GPT-API-KEY)

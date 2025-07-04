@@ -3,9 +3,9 @@ developmentMode = false
 
 [server]
 headless = true
-port = 3001
+port = 8501
 address = "0.0.0.0"
-baseUrlPath = "/clickhouseagent"
+baseUrlPath = "/"  # No base path for local
 enableCORS = false
 enableXsrfProtection = false
 
