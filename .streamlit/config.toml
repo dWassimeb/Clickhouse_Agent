@@ -5,7 +5,6 @@ developmentMode = false
 headless = true
 port = 8501
 address = "0.0.0.0"
-baseUrlPath = "/telmi"
 enableCORS = false
 enableXsrfProtection = false
 
