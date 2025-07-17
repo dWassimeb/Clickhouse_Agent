@@ -822,21 +822,32 @@ class TelmiApp:
                         'size': f"{stat.st_size/1024:.1f} KB"
                     }
 
-            # Find the most recent chart file
-            chart_dir = "visualizations"
-            if os.path.exists(chart_dir):
-                chart_files = [f for f in os.listdir(chart_dir) if f.endswith('.html')]
-                if chart_files:
-                    chart_files.sort(key=lambda x: os.path.getmtime(os.path.join(chart_dir, x)), reverse=True)
-                    latest_chart = chart_files[0]
-                    chart_path = os.path.join(chart_dir, latest_chart)
+                    # Find recent chart files (only from last 2 minutes to avoid old charts)
+                    chart_dir = "visualizations"
+                    if os.path.exists(chart_dir):
+                        import time
+                        current_time = time.time()
 
-                    stat = os.stat(chart_path)
-                    attachments['chart'] = {
-                        'filename': latest_chart,
-                        'path': chart_path,
-                        'size': f"{stat.st_size/1024:.1f} KB"
-                    }
+                        chart_files = []
+                        for f in os.listdir(chart_dir):
+                            if f.endswith('.html'):
+                                file_path = os.path.join(chart_dir, f)
+                                file_age = current_time - os.path.getmtime(file_path)
+                                # Only include files created in the last 2 minutes
+                                if file_age <= 120:  # 2 minutes
+                                    chart_files.append(f)
+
+                        if chart_files:
+                            chart_files.sort(key=lambda x: os.path.getmtime(os.path.join(chart_dir, x)), reverse=True)
+                            latest_chart = chart_files[0]
+                            chart_path = os.path.join(chart_dir, latest_chart)
+
+                            stat = os.stat(chart_path)
+                            attachments['chart'] = {
+                                'filename': latest_chart,
+                                'path': chart_path,
+                                'size': f"{stat.st_size/1024:.1f} KB"
+                            }
 
             # Extract table data from CSV for display
             if 'csv' in attachments:

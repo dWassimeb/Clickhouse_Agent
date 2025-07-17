@@ -173,7 +173,7 @@ class SidebarManager:
                 self._instant_delete_conversation(conversation_id)
 
         # Show metadata
-        st.caption(f"💬 {message_count} • ⏰ {time_str}")
+        st.caption(f"💬 {message_count} • {time_str}")
 
     def _truncate_title(self, title: str, max_length: int) -> str:
         """Truncate title with ellipsis if too long."""
@@ -377,23 +377,23 @@ class SidebarManager:
         # Fast pattern matching
         if any(word in question_lower for word in ['top', 'ranking', 'best']):
             if 'client' in question_lower or 'customer' in question_lower:
-                return "🏆 Top Clients Analysis"
-            return "🥇 Ranking Analysis"
+                return "Top Clients Analysis"
+            return "Ranking Analysis"
 
         elif any(word in question_lower for word in ['evolution', 'trend', 'daily']):
-            return "📈 Trend Analysis"
+            return "Trend Analysis"
 
         elif 'ticket' in question_lower:
-            return "🎫 Ticket Analysis"
+            return "Ticket Analysis"
 
         elif any(word in question_lower for word in ['country', 'pays', 'geographic']):
-            return "🌍 Geographic Analysis"
+            return "Geographic Analysis"
 
         elif any(word in question_lower for word in ['distribution', 'répartition']):
-            return "📊 Distribution Analysis"
+            return "Distribution Analysis"
 
         elif any(word in question_lower for word in ['table', 'schema']):
-            return "🗂️ Schema Query"
+            return "Schema Query"
 
         else:
             # Simple word extraction

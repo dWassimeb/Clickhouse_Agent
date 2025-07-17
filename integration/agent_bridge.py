@@ -1,6 +1,5 @@
 """
-Fixed Agent Bridge - Direct execution without threading
-Since your agent completes in 4.25 seconds, threading is unnecessary and causing issues
+Simple Agent Bridge with Global Token Tracking - No Shared LLM Needed
 """
 
 import sys
@@ -22,15 +21,13 @@ for path in [project_root, current_dir]:
 logger = logging.getLogger(__name__)
 
 class TelmiAgentBridge:
-    """Simplified bridge without threading - direct execution."""
+    """Simple bridge with global token tracking - no shared LLM complexity."""
 
     def __init__(self):
         self.agent = None
         self.connection_tested = False
         self.last_error = None
         self._setup_logging()
-
-        # Try to initialize immediately
         self._attempt_initial_setup()
 
     def _setup_logging(self):
@@ -79,7 +76,7 @@ class TelmiAgentBridge:
             # Import the agent class
             from core.agent import ClickHouseGraphAgent
 
-            # Create the agent instance - DISABLE VERBOSE for Streamlit
+            # 🔥 NO SHARED LLM NEEDED - Just create agent normally
             self.agent = ClickHouseGraphAgent(verbose=verbose)
 
             if self.agent is not None:
@@ -150,15 +147,14 @@ class TelmiAgentBridge:
                 'suggestion': 'Check database configuration and network connectivity'
             }
 
-    def process_question(self, user_question: str) -> Dict[str, Any]:
-        """Process user question DIRECTLY without threading."""
+    def process_question(self, user_question: str, username: str = "unknown") -> Dict[str, Any]:
+        """🔥 Process user question with SIMPLE global token tracking."""
         try:
             logger.info(f"🤔 Processing question: {user_question[:50]}...")
 
             # Ensure agent is initialized
             if self.agent is None:
                 logger.info("🔧 Agent not initialized, attempting to initialize...")
-                # Initialize with VERBOSE=False for Streamlit to reduce noise
                 if not self.initialize_agent(verbose=False):
                     return {
                         'success': False,
@@ -190,16 +186,47 @@ class TelmiAgentBridge:
                         'error': db_test['message']
                     }
 
+            # 🔥 START GLOBAL TOKEN TRACKING SESSION
+            try:
+                # Import with proper path handling
+                import sys
+                import os
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                project_root = os.path.dirname(current_dir)
+
+                # Add paths to ensure import works
+                for path in [current_dir, project_root]:
+                    if path not in sys.path:
+                        sys.path.insert(0, path)
+
+                from llm.global_token_tracker import global_token_tracker
+                global_token_tracker.start_session(user_question, username)
+                logger.info(f"🔥 Started global token tracking session for user: {username}")
+            except ImportError as e:
+                logger.warning(f"⚠️ Global token tracker not available: {e}")
+                global_token_tracker = None
+
             # Process DIRECTLY without threading
             logger.info(f"🧠 Starting direct LangGraph processing...")
             start_time = datetime.now()
 
             try:
-                # Call agent directly - this is where it was getting stuck in threading
+                # Call agent directly
                 response = self.agent.process_question(user_question)
 
                 end_time = datetime.now()
                 processing_time = (end_time - start_time).total_seconds()
+
+                # 🔥 EXPORT TOKEN USAGE TO CSV
+                csv_file = None
+                token_summary = None
+                if global_token_tracker:
+                    try:
+                        csv_file = global_token_tracker.export_session()
+                        token_summary = global_token_tracker.get_session_summary()
+                        logger.info(f"🔥 Token tracking completed: {token_summary}")
+                    except Exception as e:
+                        logger.warning(f"⚠️ Could not export token usage: {e}")
 
                 logger.info(f"✅ LangGraph processing completed in {processing_time:.2f} seconds")
 
@@ -207,12 +234,24 @@ class TelmiAgentBridge:
                     'success': True,
                     'response': response,
                     'processing_time': processing_time,
+                    'token_usage': token_summary,
+                    'token_report_file': csv_file,
                     'message': 'Question processed successfully'
                 }
 
             except Exception as e:
                 end_time = datetime.now()
                 processing_time = (end_time - start_time).total_seconds()
+
+                # 🔥 STILL EXPORT TOKEN USAGE EVEN ON ERROR
+                csv_file = None
+                token_summary = None
+                try:
+                    from llm.global_token_tracker import global_token_tracker
+                    csv_file = global_token_tracker.export_session()
+                    token_summary = global_token_tracker.get_session_summary()
+                except ImportError:
+                    pass
 
                 error_msg = f"LangGraph processing failed after {processing_time:.2f}s: {e}"
                 logger.error(f"❌ {error_msg}")
@@ -228,10 +267,14 @@ class TelmiAgentBridge:
 
 **Type:** {type(e).__name__}
 
+**Token Usage:** {token_summary.get('total_tokens', 0) if token_summary else 0} tokens
+
 **Debug Info:** The agent workflow failed during execution. Check the terminal console for detailed traceback.
 
 **Your Question:** "{user_question}" """,
-                    'error': str(e)
+                    'error': str(e),
+                    'token_usage': token_summary,
+                    'token_report_file': csv_file
                 }
 
         except Exception as e:
@@ -261,7 +304,7 @@ class TelmiAgentBridge:
             'last_error': self.last_error,
             'project_structure_ok': self._check_project_structure(),
             'timestamp': datetime.now().isoformat(),
-            'threading_disabled': True,  # Indicate we're not using threading
+            'threading_disabled': True,
             'mode': 'direct_execution'
         }
 

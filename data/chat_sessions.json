@@ -1,65 +1,417 @@
 {
-  "f465aad7-4ede-4bf3-80e2-8418ae3e7b51": {
-    "title": "Time Trend Analysis",
+  "e890975f-97c9-4554-84d7-77f7f2b68d5a": {
+    "title": "Liste Moi Les",
     "messages": [
       {
         "role": "user",
-        "content": "donne moi l'évolution journalière de nombre de tickets du client STELLANTIS pour l'éannée 2025",
-        "timestamp": "2025-07-03T10:39:39.960504",
+        "content": "liste moi les équipements qui sont sortis en dehors de la france cette dernière semaine",
+        "timestamp": "2025-07-08T14:13:09.492725",
         "attachments": {}
       },
       {
         "role": "agent",
-        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 25 records across 2 columns\n\n• **day:** 25 unique values\n\n• **ticket_count:** Range 3.7M - 55.9M, Avg 34.0M\n\n• **Range:** From 2025-06-03 to 2025-07-03\n\n**⚡ Executed Query:**\n\n```sql\nSELECT toDate(RECORD_OPENING_TIME) AS day, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nWHERE CUSTOMER.NAME = 'STELLANTIS' AND RECORD_OPENING_TIME >= toDateTime('2025-01-01 00:00:00', 'Europe/Paris') AND RECORD_OPENING_TIME < toDateTime('2026-01-01 00:00:00', 'Europe/Paris')\nGROUP BY day\nORDER BY day\nLIMIT 1000\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 19.70 seconds*",
-        "timestamp": "2025-07-03T10:39:59.819217",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 1,000 records across 1 columns\n\n• **a.IMEI:** 1000 unique values\n\n**⚡ Executed Query:**\n\n```sql\nSELECT DISTINCT a.IMEI\nFROM RM_AGGREGATED_DATA a\nJOIN RM_AGGREGATED_DATA b ON a.IMEI = b.IMEI\nJOIN PLMN pa ON a.PLMN = pa.PLMN\nJOIN PLMN pb ON b.PLMN = pb.PLMN\nWHERE pa.COUNTRY_ISO3 = 'FRA' AND pb.COUNTRY_ISO3 != 'FRA' AND a.RECORD_OPENING_TIME < b.RECORD_OPENING_TIME AND a.RECORD_OPENING_TIME >= now() - INTERVAL 7 DAY\nLIMIT 1000\n```\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 127.71 seconds*",
+        "timestamp": "2025-07-08T14:15:17.384878",
+        "attachments": {
+          "chart": {
+            "filename": "chart_20250708_122259.html",
+            "path": "visualizations/chart_20250708_122259.html",
+            "size": "11.9 KB"
+          }
+        }
+      },
+      {
+        "role": "user",
+        "content": "give me the top 10 clients by number of tickets",
+        "timestamp": "2025-07-08T14:21:29.749610",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 2 columns\n\n• **NAME:** 10 unique values\n\n• **ticket_count:** Range 51.4M - 940.3M, Avg 241.7M\n\n• **Range:** From STELLANTIS to YUNEX TRAFFIC AUSTRIA GMBH\n\n**⚡ Executed Query:**\n\n```sql\nSELECT CUSTOMER.NAME, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 10\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 28.93 seconds*",
+        "timestamp": "2025-07-08T14:21:58.829494",
+        "attachments": {
+          "chart": {
+            "filename": "chart_20250708_142158.html",
+            "path": "visualizations/chart_20250708_142158.html",
+            "size": "11.4 KB"
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-08T14:25:34.067836",
+    "user": "wassime"
+  },
+  "445aa9e5-b4cd-46e4-addf-a321b724fd5b": {
+    "title": "liste moi les équipements qui",
+    "messages": [
+      {
+        "role": "user",
+        "content": "liste moi les équipements qui sont sortis en dehors de la france cette dernière semaine",
+        "timestamp": "2025-07-08T14:25:36.079309",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "❌ **Error:** HTTPDriver for http://172.20.157.162:8123 received ClickHouse error code 241\n\n*⏱️ Processed in 4123.02 seconds*",
+        "timestamp": "2025-07-08T15:34:19.277767",
         "attachments": {
           "csv": {
-            "filename": "query_donne_moi_lévolution_journaliè_20250703_103957.csv",
-            "path": "exports/query_donne_moi_lévolution_journaliè_20250703_103957.csv",
-            "size": "0.5 KB"
-          },
-          "chart": {
-            "filename": "chart_20250703_103959.html",
-            "path": "visualizations/chart_20250703_103959.html",
-            "size": "12.8 KB"
+            "filename": "query_give_me_the_top_10_clients_by__20250708_142156.csv",
+            "path": "exports/query_give_me_the_top_10_clients_by__20250708_142156.csv",
+            "size": "0.3 KB"
           },
           "table_data": {
             "columns": [
-              "day",
+              "NAME",
               "ticket_count"
             ],
             "data": [
               [
-                "2025-06-03",
-                27588049
+                "STELLANTIS",
+                940330039
               ],
               [
-                "2025-06-04",
-                30944225
+                "ERDF-LINKY-PROD",
+                534337755
               ],
               [
-                "2025-06-05",
-                31265259
+                "VERISURE SAS",
+                267328447
               ],
               [
-                "2025-06-06",
-                32094263
+                "EURO INFORMATION / EPS",
+                178937248
               ],
               [
-                "2025-06-07",
-                26478624
+                "VOLTALIS",
+                160426676
               ],
               [
-                "2025-06-08",
-                19463099
+                "ARVAL",
+                112436049
               ],
               [
-                "2025-06-09",
-                25235713
+                "WSF_FIXE",
+                61473520
               ],
+              [
+                "LYRA NETWORK",
+                57428463
+              ],
+              [
+                "TRANSICS FRANCE",
+                52628454
+              ],
+              [
+                "YUNEX TRAFFIC AUSTRIA GMBH",
+                51350042
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-08T15:34:19.280199",
+    "user": "wassime"
+  },
+  "534f0f2c-bb95-4e8b-9edb-301be0fb47de": {
+    "title": "Ticket Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "listes moi les 10 clients qui ont générés le plus de tickets",
+        "timestamp": "2025-07-10T09:48:36.194900",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 2 columns\n\n• **customer_name:** 10 unique values\n\n• **ticket_count:** Range 17.2M - 346.2M, Avg 84.0M\n\n• **Range:** From STELLANTIS to TRANSICS FRANCE\n\n**⚡ Executed Query:**\n\n```sql\nSELECT c.NAME as customer_name, COUNT(*) as ticket_count\nFROM RM_AGGREGATED_DATA r\nJOIN CUSTOMER c ON r.PARTY_ID = c.PARTY_ID\nWHERE r.RECORD_OPENING_TIME >= toDateTime(toDate(now()) - INTERVAL 7 DAY)\nGROUP BY c.NAME\nORDER BY ticket_count DESC\nLIMIT 10\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 14.97 seconds*",
+        "timestamp": "2025-07-10T09:48:51.410586",
+        "attachments": {
+          "csv": {
+            "filename": "query_listes_moi_les_10_clients_qui__20250710_094849.csv",
+            "path": "exports/query_listes_moi_les_10_clients_qui__20250710_094849.csv",
+            "size": "0.3 KB"
+          },
+          "chart": {
+            "filename": "chart_20250710_094851.html",
+            "path": "visualizations/chart_20250710_094851.html",
+            "size": "11.4 KB"
+          },
+          "table_data": {
+            "columns": [
+              "customer_name",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "STELLANTIS",
+                346204390
+              ],
+              [
+                "ERDF-LINKY-PROD",
+                173245110
+              ],
+              [
+                "VERISURE SAS",
+                88460968
+              ],
+              [
+                "EURO INFORMATION / EPS",
+                64458498
+              ],
+              [
+                "VOLTALIS",
+                52289482
+              ],
+              [
+                "ARVAL",
+                37301330
+              ],
+              [
+                "LYRA NETWORK",
+                20784038
+              ],
+              [
+                "WSF_FIXE",
+                20214443
+              ],
+              [
+                "YUNEX TRAFFIC AUSTRIA GMBH",
+                19324157
+              ],
+              [
+                "TRANSICS FRANCE",
+                17230894
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-10T09:56:33.308877",
+    "user": "wassime"
+  },
+  "001a5e70-48b2-4432-8727-a0abb79de80a": {
+    "title": "Ticket Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Quel est le nombre de tickets générés hier entre 14h00 et 14h30 par le client LYRA NETWORK réparti par offre tarifaire ? donne moi le résultat en pie chart",
+        "timestamp": "2025-07-10T09:55:40.973658",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 7 records across 2 columns\n\n• **offer_tariff:** 7 unique values\n\n• **percentage:** Range 0 - 59, Avg 14\n\n• **Range:** From LYRA_EU2 to LYRA7\n\n**⚡ Executed Query:**\n\n```sql\nSELECT rd.OFFER_CODE AS offer_tariff, COUNT(*) * 100.0 / (SELECT COUNT(*)\nFROM RM_AGGREGATED_DATA rd\nJOIN CUSTOMER cs ON rd.PARTY_ID = cs.PARTY_ID\nWHERE cs.NAME = 'LYRA NETWORK' AND rd.RECORD_OPENING_TIME >= toDateTime(toDate(now() - INTERVAL 1 DAY)) + INTERVAL 14 HOUR AND rd.RECORD_OPENING_TIME < toDateTime(toDate(now() - INTERVAL 1 DAY)) + INTERVAL 14 HOUR + INTERVAL 30 MINUTE) AS percentage\nFROM RM_AGGREGATED_DATA rd\nJOIN CUSTOMER cs ON rd.PARTY_ID = cs.PARTY_ID\nWHERE cs.NAME = 'LYRA NETWORK' AND rd.RECORD_OPENING_TIME >= toDateTime(toDate(now() - INTERVAL 1 DAY)) + INTERVAL 14 HOUR AND rd.RECORD_OPENING_TIME < toDateTime(toDate(now() - INTERVAL 1 DAY)) + INTERVAL 14 HOUR + INTERVAL 30 MINUTE\nGROUP BY rd.OFFER_CODE\nORDER BY percentage DESC\nLIMIT 100\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 10.85 seconds*",
+        "timestamp": "2025-07-10T09:55:52.003988",
+        "attachments": {
+          "csv": {
+            "filename": "query_quel_est_le_nombre_de_tickets__20250710_095550.csv",
+            "path": "exports/query_quel_est_le_nombre_de_tickets__20250710_095550.csv",
+            "size": "0.2 KB"
+          },
+          "chart": {
+            "filename": "chart_20250710_095551.html",
+            "path": "visualizations/chart_20250710_095551.html",
+            "size": "9.8 KB"
+          },
+          "table_data": {
+            "columns": [
+              "offer_tariff",
+              "percentage"
+            ],
+            "data": [
+              [
+                "LYRA_EU2",
+                59.44457556447172
+              ],
+              [
+                "LYRA8",
+                24.441822043898984
+              ],
+              [
+                "LYRA_EU",
+                9.87491149398159
+              ],
+              [
+                "OFFRE_PALIERS_LYRA",
+                5.173471796082134
+              ],
+              [
+                "LYR_CMPT",
+                0.9456376366926283
+              ],
+              [
+                "PALIERS_RCARD",
+                0.0676579340728502
+              ],
+              [
+                "LYRA7",
+                0.0519235308000944
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-10T09:57:00.795967",
+    "user": "wassime"
+  },
+  "a0f51504-4c20-4803-a9e8-492f2db4cb0a": {
+    "title": "Ticket Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Quel est le nombre de tickets générés hier entre 14h00 et 14h30 par le client LYRA NETWORK réparti par offre tarifaire ? donnes moi le résultat sous forme de pie chart",
+        "timestamp": "2025-07-10T09:57:12.994490",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 7 records across 3 columns\n\n• **OFFER_CODE:** 7 unique values\n\n• **ticket_count:** Range 33 - 37.8K, Avg 9.1K\n\n• **percentage:** Range 0 - 59, Avg 14\n\n• **Range:** From LYRA7 to LYRA_EU2\n\n**⚡ Executed Query:**\n\n```sql\nSELECT OFFER_CODE, COUNT(*) AS ticket_count, COUNT(*) * 100.0 / (SELECT COUNT(*)\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nWHERE CUSTOMER.NAME = 'LYRA NETWORK' AND RECORD_OPENING_TIME >= toDateTime(toDate(now() - INTERVAL 1 DAY)) + INTERVAL 14 HOUR AND RECORD_OPENING_TIME < toDateTime(toDate(now() - INTERVAL 1 DAY)) + INTERVAL 14 HOUR + INTERVAL 30 MINUTE) AS percentage\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nWHERE CUSTOMER.NAME = 'LYRA NETWORK' AND RECORD_OPENING_TIME >= toDateTime(toDate(now() - INTERVAL 1 DAY)) + INTERVAL 14 HOUR AND RECORD_OPENING_TIME < toDateTime(toDate(now() - INTERVAL 1 DAY)) + INTERVAL 14 HOUR + INTERVAL 30 MINUTE\nGROUP BY OFFER_CODE\nLIMIT 100\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 10.88 seconds*",
+        "timestamp": "2025-07-10T09:57:24.002802",
+        "attachments": {
+          "csv": {
+            "filename": "query_quel_est_le_nombre_de_tickets__20250710_095722.csv",
+            "path": "exports/query_quel_est_le_nombre_de_tickets__20250710_095722.csv",
+            "size": "0.3 KB"
+          },
+          "chart": {
+            "filename": "chart_20250710_095723.html",
+            "path": "visualizations/chart_20250710_095723.html",
+            "size": "9.6 KB"
+          },
+          "table_data": {
+            "columns": [
+              "OFFER_CODE",
+              "ticket_count",
+              "percentage"
+            ],
+            "data": [
+              [
+                "LYRA7",
+                33,
+                0.0519235308000944
+              ],
+              [
+                "LYRA_EU",
+                6276,
+                9.87491149398159
+              ],
+              [
+                "LYR_CMPT",
+                601,
+                0.9456376366926283
+              ],
+              [
+                "PALIERS_RCARD",
+                43,
+                0.0676579340728502
+              ],
+              [
+                "LYRA8",
+                15534,
+                24.441822043898984
+              ],
+              [
+                "OFFRE_PALIERS_LYRA",
+                3288,
+                5.173471796082134
+              ],
+              [
+                "LYRA_EU2",
+                37780,
+                59.44457556447172
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-10T09:59:47.192921",
+    "user": "wassime"
+  },
+  "ee8f21ae-2eb0-402a-b244-5051f5f89668": {
+    "title": "Ticket Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "donnes moi l'évolution mensuelle de nombre de tickets du client STELLANTIS pour l'année 2025",
+        "timestamp": "2025-07-10T10:00:51.141326",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 2 records across 2 columns\n\n• **month:** 2 unique values\n\n• **ticket_count:** Range 451.7M - 536.4M, Avg 494.0M\n\n• **Range:** From 2025-06-01 to 2025-07-01\n\n**⚡ Executed Query:**\n\n```sql\nSELECT toStartOfMonth(RECORD_OPENING_TIME) AS month, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nWHERE CUSTOMER.NAME = 'STELLANTIS' AND RECORD_OPENING_TIME >= toDateTime('2025-01-01 00:00:00') AND RECORD_OPENING_TIME < toDateTime('2026-01-01 00:00:00')\nGROUP BY toStartOfMonth(RECORD_OPENING_TIME)\nORDER BY month\nLIMIT 100\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 26.42 seconds*",
+        "timestamp": "2025-07-10T10:01:17.717431",
+        "attachments": {
+          "csv": {
+            "filename": "query_donnes_moi_lévolution_mensuell_20250710_100115.csv",
+            "path": "exports/query_donnes_moi_lévolution_mensuell_20250710_100115.csv",
+            "size": "0.1 KB"
+          },
+          "chart": {
+            "filename": "chart_20250710_100117.html",
+            "path": "visualizations/chart_20250710_100117.html",
+            "size": "11.3 KB"
+          },
+          "table_data": {
+            "columns": [
+              "month",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "2025-06-01",
+                536428240
+              ],
+              [
+                "2025-07-01",
+                451663306
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-10T10:01:24.627165",
+    "user": "wassime"
+  },
+  "5239ba71-bb20-45ac-93b5-da87661b1bd1": {
+    "title": "Ticket Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "donnes moi l'évolution journalière de nombre de tickets du client STELLANTIS pour l'année 2025",
+        "timestamp": "2025-07-10T10:01:31.115323",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 25 records across 2 columns\n\n• **date:** 25 unique values\n\n• **ticket_count:** Range 3.7M - 55.9M, Avg 39.5M\n\n• **Range:** From 2025-06-10 to 2025-07-10\n\n**⚡ Executed Query:**\n\n```sql\nSELECT toDate(RECORD_OPENING_TIME) as date, COUNT(*) as ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nWHERE CUSTOMER.NAME = 'STELLANTIS' AND RECORD_OPENING_TIME >= toDate(toStartOfYear(toDate('2025-01-01'))) AND RECORD_OPENING_TIME < toDate(toStartOfYear(toDate('2026-01-01')))\nGROUP BY date\nLIMIT 365\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 24.89 seconds*",
+        "timestamp": "2025-07-10T10:01:56.119850",
+        "attachments": {
+          "csv": {
+            "filename": "query_donnes_moi_lévolution_journali_20250710_100154.csv",
+            "path": "exports/query_donnes_moi_lévolution_journali_20250710_100154.csv",
+            "size": "0.5 KB"
+          },
+          "chart": {
+            "filename": "chart_20250710_100156.html",
+            "path": "visualizations/chart_20250710_100156.html",
+            "size": "12.8 KB"
+          },
+          "table_data": {
+            "columns": [
+              "date",
+              "ticket_count"
+            ],
+            "data": [
               [
                 "2025-06-10",
-                30655530
+                26866326
               ],
               [
                 "2025-06-11",
@@ -127,38 +479,199 @@
               ],
               [
                 "2025-07-03",
-                13041126
+                53798206
+              ],
+              [
+                "2025-07-04",
+                55065906
+              ],
+              [
+                "2025-07-05",
+                42574899
+              ],
+              [
+                "2025-07-06",
+                31827779
+              ],
+              [
+                "2025-07-07",
+                51003071
+              ],
+              [
+                "2025-07-08",
+                51404959
+              ],
+              [
+                "2025-07-09",
+                51593787
+              ],
+              [
+                "2025-07-10",
+                10383853
               ]
             ]
           }
         }
       }
     ],
-    "timestamp": "2025-07-03T10:39:59.819490",
+    "timestamp": "2025-07-11T14:46:12.214854",
     "user": "wassime"
   },
-  "dabaf92f-2a92-45f4-983a-15d28b8f8fb2": {
-    "title": "Top Clients Analysis",
+  "da4f905e-8de7-4e91-a32b-68e99b081b7b": {
+    "title": "Help",
     "messages": [
       {
         "role": "user",
-        "content": "give me the top 10 clients by number of tickets",
-        "timestamp": "2025-07-03T17:06:21.337547",
+        "content": "help",
+        "timestamp": "2025-07-10T11:53:11.863778",
         "attachments": {}
       },
       {
         "role": "agent",
-        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 2 columns\n\n• **NAME:** 10 unique values\n\n• **ticket_count:** Range 49.0M - 855.2M, Avg 229.8M\n\n• **Range:** From STELLANTIS to YUNEX TRAFFIC AUSTRIA GMBH\n\n**⚡ Executed Query:**\n\n```sql\nSELECT CUSTOMER.NAME, COUNT(*) as ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 10\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 28.36 seconds*",
-        "timestamp": "2025-07-03T17:06:49.823481",
+        "content": "\n**🔮 Telmi - Your Telecom Analytics Assistant**\n\n**What can I help you with?**\n\n• **📊 Data Analysis:** Ask questions about your telecom data in natural language\n• **🏆 Top Rankings:** \"Show me the top 10 customers by data usage\"\n• **🌍 Geographic Analysis:** \"What's the distribution of users by country?\"\n• **⏰ Time-based Queries:** \"How much data was used last month?\"\n• **📈 Custom Reports:** \"Generate a summary of device activity\"\n\n**✨ Features:**\n• **Automatic CSV exports** for all query results\n• **Interactive visualizations** with professional charts\n• **Smart SQL generation** from your questions\n• **Mobile-friendly** interface and charts\n\n**💡 Example Questions:**\n• \"Who are our top 20 customers by ticket count?\"\n• \"Show data usage by country this week\"\n• \"What devices are most active?\"\n• \"List all available tables\"\n\n**🚀 Just ask your question in natural language, and I'll analyze your data!**\n        \n\n*⏱️ Processed in 1.00 seconds*",
+        "timestamp": "2025-07-10T11:53:12.954919",
         "attachments": {
           "csv": {
-            "filename": "query_give_me_the_top_10_clients_by__20250703_170647.csv",
-            "path": "exports/query_give_me_the_top_10_clients_by__20250703_170647.csv",
+            "filename": "query_donnes_moi_lévolution_journali_20250710_100154.csv",
+            "path": "exports/query_donnes_moi_lévolution_journali_20250710_100154.csv",
+            "size": "0.5 KB"
+          },
+          "table_data": {
+            "columns": [
+              "date",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "2025-06-10",
+                26866326
+              ],
+              [
+                "2025-06-11",
+                3699235
+              ],
+              [
+                "2025-06-18",
+                16290023
+              ],
+              [
+                "2025-06-19",
+                30464417
+              ],
+              [
+                "2025-06-20",
+                31313232
+              ],
+              [
+                "2025-06-21",
+                26249030
+              ],
+              [
+                "2025-06-22",
+                20291497
+              ],
+              [
+                "2025-06-23",
+                38934763
+              ],
+              [
+                "2025-06-24",
+                52262937
+              ],
+              [
+                "2025-06-25",
+                52792771
+              ],
+              [
+                "2025-06-26",
+                54294134
+              ],
+              [
+                "2025-06-27",
+                55926368
+              ],
+              [
+                "2025-06-28",
+                43097129
+              ],
+              [
+                "2025-06-29",
+                33225555
+              ],
+              [
+                "2025-06-30",
+                50720823
+              ],
+              [
+                "2025-07-01",
+                52022010
+              ],
+              [
+                "2025-07-02",
+                52139431
+              ],
+              [
+                "2025-07-03",
+                53798206
+              ],
+              [
+                "2025-07-04",
+                55065906
+              ],
+              [
+                "2025-07-05",
+                42574899
+              ],
+              [
+                "2025-07-06",
+                31827779
+              ],
+              [
+                "2025-07-07",
+                51003071
+              ],
+              [
+                "2025-07-08",
+                51404959
+              ],
+              [
+                "2025-07-09",
+                51593787
+              ],
+              [
+                "2025-07-10",
+                10383853
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-11T14:42:27.131717",
+    "user": "wassime"
+  },
+  "191def17-7a9a-4fac-97fb-ac021fb1216d": {
+    "title": "Top Clients Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "give me 10 top clients by number of tickets",
+        "timestamp": "2025-07-17T10:49:14.294352",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 2 columns\n\n• **NAME:** 10 unique values\n\n• **ticket_count:** Range 67.5M - 1285.2M, Avg 320.0M\n\n• **Range:** From STELLANTIS to TRANSICS FRANCE\n\n**⚡ Executed Query:**\n\n```sql\nSELECT CUSTOMER.NAME, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 10\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 43.73 seconds*",
+        "timestamp": "2025-07-17T10:49:58.169282",
+        "attachments": {
+          "csv": {
+            "filename": "query_give_me_10_top_clients_by_numb_20250717_104956.csv",
+            "path": "exports/query_give_me_10_top_clients_by_numb_20250717_104956.csv",
             "size": "0.3 KB"
           },
           "chart": {
-            "filename": "chart_20250703_170649.html",
-            "path": "visualizations/chart_20250703_170649.html",
+            "filename": "chart_20250717_104958.html",
+            "path": "visualizations/chart_20250717_104958.html",
             "size": "11.4 KB"
           },
           "table_data": {
@@ -169,50 +682,513 @@
             "data": [
               [
                 "STELLANTIS",
-                855178657
+                1285163137
               ],
               [
                 "ERDF-LINKY-PROD",
-                529639062
+                679728737
               ],
               [
                 "VERISURE SAS",
-                261439961
+                345931686
               ],
               [
                 "EURO INFORMATION / EPS",
-                165567431
+                241031143
               ],
               [
                 "VOLTALIS",
-                158531656
+                206319704
               ],
               [
                 "ARVAL",
-                111235575
+                146067986
               ],
               [
                 "WSF_FIXE",
-                61005691
+                78995976
               ],
               [
                 "LYRA NETWORK",
-                53790847
-              ],
-              [
-                "TRANSICS FRANCE",
-                52985543
+                77778646
               ],
               [
                 "YUNEX TRAFFIC AUSTRIA GMBH",
-                49033481
+                71557353
+              ],
+              [
+                "TRANSICS FRANCE",
+                67538260
               ]
             ]
           }
         }
       }
     ],
-    "timestamp": "2025-07-03T17:06:49.823647",
+    "timestamp": "2025-07-17T10:49:58.169572",
+    "user": "wassime"
+  },
+  "12fd7b90-f01e-4788-8681-f13784da243d": {
+    "title": "Top Clients Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "give me the top 10 clients by number of tickets",
+        "timestamp": "2025-07-17T10:54:42.181022",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 2 columns\n\n• **NAME:** 10 unique values\n\n• **ticket_count:** Range 67.6M - 1285.5M, Avg 320.1M\n\n• **Range:** From STELLANTIS to TRANSICS FRANCE\n\n**⚡ Executed Query:**\n\n```sql\nSELECT CUSTOMER.NAME, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 10\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 42.27 seconds*",
+        "timestamp": "2025-07-17T10:55:24.541203",
+        "attachments": {
+          "csv": {
+            "filename": "query_give_me_the_top_10_clients_by__20250717_105523.csv",
+            "path": "exports/query_give_me_the_top_10_clients_by__20250717_105523.csv",
+            "size": "0.3 KB"
+          },
+          "chart": {
+            "filename": "chart_20250717_105524.html",
+            "path": "visualizations/chart_20250717_105524.html",
+            "size": "11.4 KB"
+          },
+          "table_data": {
+            "columns": [
+              "NAME",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "STELLANTIS",
+                1285484933
+              ],
+              [
+                "ERDF-LINKY-PROD",
+                679817819
+              ],
+              [
+                "VERISURE SAS",
+                345979744
+              ],
+              [
+                "EURO INFORMATION / EPS",
+                241073692
+              ],
+              [
+                "VOLTALIS",
+                206349899
+              ],
+              [
+                "ARVAL",
+                146101062
+              ],
+              [
+                "WSF_FIXE",
+                79008756
+              ],
+              [
+                "LYRA NETWORK",
+                77792019
+              ],
+              [
+                "YUNEX TRAFFIC AUSTRIA GMBH",
+                71581423
+              ],
+              [
+                "TRANSICS FRANCE",
+                67550033
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-17T10:55:24.541287",
+    "user": "wassime"
+  },
+  "67d87e05-7603-428b-b424-ff6fde403989": {
+    "title": "Top Clients Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "give me 10 top clients by number of tickets sales",
+        "timestamp": "2025-07-17T11:32:10.742571",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "❌ **Processing Error**\n\n**Issue:** 'DummyTracker' object has no attribute 'start_session'\n**Type:** AttributeError\n\n**Debug Info:** Check the terminal for full error details.\n\n**Timestamp:** 2025-07-17 11:32:10",
+        "timestamp": "2025-07-17T11:32:10.807788",
+        "attachments": {}
+      }
+    ],
+    "timestamp": "2025-07-17T11:32:10.807819",
+    "user": "wassime"
+  },
+  "b6e3e262-2131-4409-84a4-32b16cad2bfb": {
+    "title": "Top Clients Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "give me 10 top clients by number of tickets",
+        "timestamp": "2025-07-17T11:37:55.159994",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 2 columns\n\n• **NAME:** 10 unique values\n\n• **ticket_count:** Range 67.6M - 1288.1M, Avg 320.6M\n\n• **Range:** From STELLANTIS to TRANSICS FRANCE\n\n**⚡ Executed Query:**\n\n```sql\nSELECT CUSTOMER.NAME, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nGROUP BY CUSTOMER.NAME\nORDER BY ticket_count DESC\nLIMIT 10\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 40.60 seconds*",
+        "timestamp": "2025-07-17T11:38:35.836108",
+        "attachments": {
+          "csv": {
+            "filename": "query_give_me_10_top_clients_by_numb_20250717_113833.csv",
+            "path": "exports/query_give_me_10_top_clients_by_numb_20250717_113833.csv",
+            "size": "0.3 KB"
+          },
+          "chart": {
+            "filename": "chart_20250717_113835.html",
+            "path": "visualizations/chart_20250717_113835.html",
+            "size": "11.4 KB"
+          },
+          "table_data": {
+            "columns": [
+              "NAME",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "STELLANTIS",
+                1288054080
+              ],
+              [
+                "ERDF-LINKY-PROD",
+                680528808
+              ],
+              [
+                "VERISURE SAS",
+                346355246
+              ],
+              [
+                "EURO INFORMATION / EPS",
+                241368697
+              ],
+              [
+                "VOLTALIS",
+                206561039
+              ],
+              [
+                "ARVAL",
+                146345208
+              ],
+              [
+                "WSF_FIXE",
+                79097519
+              ],
+              [
+                "LYRA NETWORK",
+                77887289
+              ],
+              [
+                "YUNEX TRAFFIC AUSTRIA GMBH",
+                71753087
+              ],
+              [
+                "TRANSICS FRANCE",
+                67638788
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-17T12:01:05.549004",
+    "user": "wassime"
+  },
+  "183582a4-a9de-4094-b419-01ead3db770e": {
+    "title": "Ticket Analysis",
+    "messages": [
+      {
+        "role": "user",
+        "content": "tu peux me donner la répartition géographique en pourcentage des tickets par pays sur les deux dernières journées ? Tu te limiteras au 10 premiers résultats",
+        "timestamp": "2025-07-17T12:01:18.051819",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 10 records across 2 columns\n\n• **COUNTRY_ISO3:** 10 unique values\n\n• **percentage:** Range 0 - 72, Avg 9\n\n• **Range:** From FRA to AUT\n\n**⚡ Executed Query:**\n\n```sql\nSELECT PLMN.COUNTRY_ISO3, COUNT(*) * 100.0 / (SELECT COUNT(*)\nFROM RM_AGGREGATED_DATA\nWHERE toDate(RECORD_OPENING_TIME) BETWEEN toDate(now() - INTERVAL 2 DAY) AND toDate(now())) AS percentage\nFROM RM_AGGREGATED_DATA\nJOIN PLMN ON RM_AGGREGATED_DATA.PLMN = PLMN.PLMN\nWHERE toDate(RECORD_OPENING_TIME) BETWEEN toDate(now() - INTERVAL 2 DAY) AND toDate(now())\nGROUP BY PLMN.COUNTRY_ISO3\nORDER BY percentage DESC\nLIMIT 10\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 12.45 seconds*",
+        "timestamp": "2025-07-17T12:01:30.616437",
+        "attachments": {
+          "csv": {
+            "filename": "query_tu_peux_me_donner_la_répartiti_20250717_120129.csv",
+            "path": "exports/query_tu_peux_me_donner_la_répartiti_20250717_120129.csv",
+            "size": "0.3 KB"
+          },
+          "chart": {
+            "filename": "chart_20250717_120130.html",
+            "path": "visualizations/chart_20250717_120130.html",
+            "size": "11.6 KB"
+          },
+          "table_data": {
+            "columns": [
+              "COUNTRY_ISO3",
+              "percentage"
+            ],
+            "data": [
+              [
+                "FRA",
+                71.56987997763954
+              ],
+              [
+                "GBR",
+                6.962008158971585
+              ],
+              [
+                "DEU",
+                3.672444885861937
+              ],
+              [
+                "ESP",
+                2.9533396881725777
+              ],
+              [
+                "ITA",
+                2.073764161512734
+              ],
+              [
+                "BEL",
+                1.9315977499421857
+              ],
+              [
+                "NLD",
+                1.714682657038803
+              ],
+              [
+                "POL",
+                1.0818103805571786
+              ],
+              [
+                "PRT",
+                0.7982843773114922
+              ],
+              [
+                "AUT",
+                0.4135874197945317
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "role": "user",
+        "content": "donne moi l'évolution journalière de nombre de tickets du client STELLANTIS pour l'éannée 2025",
+        "timestamp": "2025-07-17T12:02:04.899025",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 30 records across 2 columns\n\n• **date:** 30 unique values\n\n• **ticket_count:** Range 16.3M - 55.9M, Avg 43.0M\n\n• **Range:** From 2025-06-18 to 2025-07-17\n\n**⚡ Executed Query:**\n\n```sql\nSELECT toDate(RECORD_OPENING_TIME) as date, COUNT(*) as ticket_count\nFROM RM_AGGREGATED_DATA\nJOIN CUSTOMER ON RM_AGGREGATED_DATA.PARTY_ID = CUSTOMER.PARTY_ID\nWHERE CUSTOMER.NAME = 'STELLANTIS' AND toYear(RECORD_OPENING_TIME) = 2025\nGROUP BY date\nORDER BY date\nLIMIT 1000\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 22.99 seconds*",
+        "timestamp": "2025-07-17T12:02:28.015150",
+        "attachments": {
+          "csv": {
+            "filename": "query_donne_moi_lévolution_journaliè_20250717_120226.csv",
+            "path": "exports/query_donne_moi_lévolution_journaliè_20250717_120226.csv",
+            "size": "0.6 KB"
+          },
+          "chart": {
+            "filename": "chart_20250717_120227.html",
+            "path": "visualizations/chart_20250717_120227.html",
+            "size": "13.1 KB"
+          },
+          "table_data": {
+            "columns": [
+              "date",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "2025-06-18",
+                16290023
+              ],
+              [
+                "2025-06-19",
+                30464417
+              ],
+              [
+                "2025-06-20",
+                31313232
+              ],
+              [
+                "2025-06-21",
+                26249030
+              ],
+              [
+                "2025-06-22",
+                20291497
+              ],
+              [
+                "2025-06-23",
+                38934763
+              ],
+              [
+                "2025-06-24",
+                52262937
+              ],
+              [
+                "2025-06-25",
+                52792771
+              ],
+              [
+                "2025-06-26",
+                54294134
+              ],
+              [
+                "2025-06-27",
+                55926368
+              ],
+              [
+                "2025-06-28",
+                43097129
+              ],
+              [
+                "2025-06-29",
+                33225555
+              ],
+              [
+                "2025-06-30",
+                50720823
+              ],
+              [
+                "2025-07-01",
+                52022010
+              ],
+              [
+                "2025-07-02",
+                52139431
+              ],
+              [
+                "2025-07-03",
+                53798206
+              ],
+              [
+                "2025-07-04",
+                55065906
+              ],
+              [
+                "2025-07-05",
+                42574899
+              ],
+              [
+                "2025-07-06",
+                31827779
+              ],
+              [
+                "2025-07-07",
+                51003071
+              ],
+              [
+                "2025-07-08",
+                51404959
+              ],
+              [
+                "2025-07-09",
+                51593787
+              ],
+              [
+                "2025-07-10",
+                52568006
+              ],
+              [
+                "2025-07-11",
+                53705970
+              ],
+              [
+                "2025-07-12",
+                42144480
+              ],
+              [
+                "2025-07-13",
+                32489811
+              ],
+              [
+                "2025-07-14",
+                43868415
+              ],
+              [
+                "2025-07-15",
+                49778606
+              ],
+              [
+                "2025-07-16",
+                50585937
+              ],
+              [
+                "2025-07-17",
+                16935859
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "role": "user",
+        "content": "Quel est le nombre de tickets générés hier entre 14h00 et 14h30  pour le client LYRA NETWORK réparti par offre tarifaire ?",
+        "timestamp": "2025-07-17T12:02:57.171538",
+        "attachments": {}
+      },
+      {
+        "role": "agent",
+        "content": "**📊 Data Results:**\n\n[TABLE_DATA_PLACEHOLDER]\n\n**🔍 Key Insights:**\n\n• **Dataset Size:** 7 records across 2 columns\n\n• **OFFER_CODE:** 7 unique values\n\n• **ticket_count:** Range 32 - 36.9K, Avg 8.9K\n\n• **Range:** From LYRA7 to LYRA_EU2\n\n**⚡ Executed Query:**\n\n```sql\nSELECT rd.OFFER_CODE, COUNT(*) AS ticket_count\nFROM RM_AGGREGATED_DATA AS rd\nJOIN CUSTOMER AS c ON rd.PARTY_ID = c.PARTY_ID\nWHERE c.NAME = 'LYRA NETWORK' AND rd.RECORD_OPENING_TIME >= toDateTime(toDate(now() - INTERVAL 1 DAY)) + INTERVAL 14 HOUR AND rd.RECORD_OPENING_TIME < toDateTime(toDate(now() - INTERVAL 1 DAY)) + INTERVAL 14 HOUR + INTERVAL 30 MINUTE\nGROUP BY rd.OFFER_CODE\nLIMIT 100\n```\n\n**📈 Chart Generated:**\n\n[CHART_DISPLAY_PLACEHOLDER]\n\n**📁 Downloads:**\n\n[DOWNLOAD_BUTTONS_PLACEHOLDER]\n\n*⏱️ Processed in 8.61 seconds*",
+        "timestamp": "2025-07-17T12:03:05.887653",
+        "attachments": {
+          "csv": {
+            "filename": "query_quel_est_le_nombre_de_tickets__20250717_120304.csv",
+            "path": "exports/query_quel_est_le_nombre_de_tickets__20250717_120304.csv",
+            "size": "0.1 KB"
+          },
+          "chart": {
+            "filename": "chart_20250717_120305.html",
+            "path": "visualizations/chart_20250717_120305.html",
+            "size": "9.6 KB"
+          },
+          "table_data": {
+            "columns": [
+              "OFFER_CODE",
+              "ticket_count"
+            ],
+            "data": [
+              [
+                "LYRA7",
+                32
+              ],
+              [
+                "LYRA_EU",
+                5867
+              ],
+              [
+                "LYR_CMPT",
+                534
+              ],
+              [
+                "PALIERS_RCARD",
+                47
+              ],
+              [
+                "LYRA8",
+                15696
+              ],
+              [
+                "OFFRE_PALIERS_LYRA",
+                3273
+              ],
+              [
+                "LYRA_EU2",
+                36919
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "timestamp": "2025-07-17T12:03:05.887732",
     "user": "wassime"
   }
 }

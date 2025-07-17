@@ -14,3 +14,4 @@ exports/
 visualizations/
 __pycache__/
 .env
+token_usage_reports/
